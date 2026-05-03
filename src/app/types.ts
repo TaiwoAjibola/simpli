@@ -9,7 +9,6 @@ export type Role = {
 export type Permission =
   | 'create_app'
   | 'create_goal'
-  | 'create_milestone'
   | 'assign_tasks'
   | 'manage_users'
   | 'configure_notifications'
@@ -43,18 +42,9 @@ export type Goal = {
   createdAt: Date;
 };
 
-export type Milestone = {
-  id: string;
-  goalId: string;
-  name: string;
-  description: string;
-  dueDate: Date;
-  status: 'not_started' | 'in_progress' | 'completed';
-};
-
 export type Task = {
   id: string;
-  milestoneId: string;
+  goalId: string;
   name: string;
   description: string;
   assignedTo: string[];
@@ -68,7 +58,7 @@ export type Task = {
 
 export type NotificationRule = {
   id: string;
-  event: 'task_completed' | 'milestone_completed' | 'task_approved';
+  event: 'task_completed' | 'task_approved';
   recipients: {
     type: 'role' | 'user';
     id: string;
@@ -80,26 +70,26 @@ export type NotificationRule = {
 
 export type Notification = {
   id: string;
-  type: 'task_completed' | 'milestone_completed' | 'task_approved' | 'task_assigned';
+  type: 'task_completed' | 'task_approved' | 'task_assigned';
   title: string;
   message: string;
   createdAt: Date;
   read: boolean;
   relatedTo?: {
-    type: 'task' | 'milestone' | 'app';
+    type: 'task' | 'app';
     id: string;
   };
 };
 
 export type Activity = {
   id: string;
-  type: 'task_created' | 'task_completed' | 'task_approved' | 'milestone_completed' | 'app_created' | 'goal_created' | 'milestone_created';
+  type: 'task_created' | 'task_completed' | 'task_approved' | 'app_created' | 'goal_created';
   userId: string;
   userName: string;
   description: string;
   timestamp: Date;
   relatedTo?: {
-    type: 'task' | 'milestone' | 'app' | 'goal';
+    type: 'task' | 'app' | 'goal';
     id: string;
     name: string;
   };

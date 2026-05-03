@@ -18,17 +18,17 @@ const roles = [
   {
     id: 'role-admin',
     name: 'Admin',
-    permissions: ['create_app', 'create_goal', 'create_milestone', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps']
+    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps']
   },
   {
     id: 'role-ceo',
     name: 'CEO',
-    permissions: ['create_app', 'create_goal', 'create_milestone', 'approve_tasks', 'view_all_apps']
+    permissions: ['create_app', 'create_goal', 'approve_tasks', 'view_all_apps']
   },
   {
     id: 'role-manager',
     name: 'Manager',
-    permissions: ['create_goal', 'create_milestone', 'assign_tasks', 'approve_tasks', 'view_all_apps']
+    permissions: ['create_goal', 'assign_tasks', 'approve_tasks', 'view_all_apps']
   },
   {
     id: 'role-employee',

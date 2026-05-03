@@ -31,7 +31,6 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     updateTask,
     approveTask,
     getEmployeeById,
-    getMilestoneById,
     getGoalById,
     getAppById,
     addComment,
@@ -44,8 +43,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   const task = tasks.find(t => t.id === initialTask.id) || initialTask;
 
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
-  const milestone = getMilestoneById(task.milestoneId);
-  const goal = milestone ? getGoalById(milestone.goalId) : null;
+  const goal = getGoalById(task.goalId);
   const app = goal ? getAppById(goal.appId) : null;
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
 
@@ -95,7 +93,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               )}
             </div>
             <p className="text-sm text-[#6b6b80]">
-              {app?.name} → {goal?.name} → {milestone?.name}
+              {app?.name} → {goal?.name}
             </p>
           </div>
           <button
@@ -135,7 +133,6 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
             <DetailsTab
               task={task}
               assignees={assignees}
-              milestone={milestone}
               goal={goal}
               app={app}
               approver={approver}
@@ -206,7 +203,6 @@ function TabButton({
 function DetailsTab({
   task,
   assignees,
-  milestone,
   goal,
   app,
   approver,
@@ -300,13 +296,6 @@ function DetailsTab({
           </div>
         )}
       </div>
-
-      {milestone && (
-        <div>
-          <h3 className="text-sm font-semibold text-[#f0f0f5] mb-3">Milestone Due Date</h3>
-          <p className="text-[#f0f0f5]">{format(milestone.dueDate, 'MMMM d, yyyy')}</p>
-        </div>
-      )}
 
       {task.status === 'completed' && !task.approvedBy && canApprove && (
         <div className="pt-4 border-t border-[rgba(0,229,255,0.1)]">

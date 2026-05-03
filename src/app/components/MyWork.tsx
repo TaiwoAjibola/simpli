@@ -22,17 +22,13 @@ export function MyWork() {
     getTasksForEmployee,
     getAppById,
     getGoalById,
-    getMilestoneById,
     updateTask
   } = useApp();
 
   const myTasks = getTasksForEmployee(currentUser!.id);
 
   const groupedTasks = myTasks.reduce((acc, task) => {
-    const milestone = getMilestoneById(task.milestoneId);
-    if (!milestone) return acc;
-
-    const goal = getGoalById(milestone.goalId);
+    const goal = getGoalById(task.goalId);
     if (!goal) return acc;
 
     const app = getAppById(goal.appId);
@@ -48,18 +44,11 @@ export function MyWork() {
     if (!acc[app.id].goals[goal.id]) {
       acc[app.id].goals[goal.id] = {
         goal,
-        milestones: {}
-      };
-    }
-
-    if (!acc[app.id].goals[goal.id].milestones[milestone.id]) {
-      acc[app.id].goals[goal.id].milestones[milestone.id] = {
-        milestone,
         tasks: []
       };
     }
 
-    acc[app.id].goals[goal.id].milestones[milestone.id].tasks.push(task);
+    acc[app.id].goals[goal.id].tasks.push(task);
 
     return acc;
   }, {} as any);
@@ -68,7 +57,6 @@ export function MyWork() {
     new Set(Object.keys(groupedTasks))
   );
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
-  const [expandedMilestones, setExpandedMilestones] = useState<Set<string>>(new Set());
 
   const toggleApp = (appId: string) => {
     setExpandedApps((prev) => {
@@ -89,18 +77,6 @@ export function MyWork() {
         next.delete(goalId);
       } else {
         next.add(goalId);
-      }
-      return next;
-    });
-  };
-
-  const toggleMilestone = (milestoneId: string) => {
-    setExpandedMilestones((prev) => {
-      const next = new Set(prev);
-      if (next.has(milestoneId)) {
-        next.delete(milestoneId);
-      } else {
-        next.add(milestoneId);
       }
       return next;
     });
@@ -142,12 +118,7 @@ export function MyWork() {
                   </div>
                   <span className="text-sm text-[#6b6b80]">
                     {Object.values(appData.goals).reduce(
-                      (sum: number, g: any) =>
-                        sum +
-                        Object.values(g.milestones).reduce(
-                          (s: number, m: any) => s + m.tasks.length,
-                          0
-                        ),
+                      (sum: number, g: any) => sum + g.tasks.length,
                       0
                     )}{' '}
                     tasks
@@ -173,56 +144,20 @@ export function MyWork() {
                             </p>
                           </div>
                           <span className="text-xs text-[#6b6b80]">
-                            {Object.values(goalData.milestones).reduce(
-                              (s: number, m: any) => s + m.tasks.length,
-                              0
-                            )}{' '}
-                            tasks
+                            {goalData.tasks.length} tasks
                           </span>
                         </button>
 
                         {expandedGoals.has(goalId) && (
-                          <div className="bg-[#12121a]">
-                            {Object.entries(goalData.milestones).map(
-                              ([milestoneId, milestoneData]: any) => (
-                                <div key={milestoneId}>
-                                  <button
-                                    onClick={() => toggleMilestone(milestoneId)}
-                                    className="w-full px-20 py-3 flex items-center gap-3 hover:bg-[rgba(255,255,255,0.02)] transition"
-                                  >
-                                    {expandedMilestones.has(milestoneId) ? (
-                                      <ChevronDown className="w-4 h-4 text-[#6b6b80]" />
-                                    ) : (
-                                      <ChevronRight className="w-4 h-4 text-[#6b6b80]" />
-                                    )}
-                                    <div className="flex-1 text-left">
-                                      <p className="text-sm font-medium text-[#f0f0f5]">
-                                        {milestoneData.milestone.name}
-                                      </p>
-                                      <p className="text-xs text-[#6b6b80] mt-0.5">
-                                        Due: {format(milestoneData.milestone.dueDate, 'MMM d, yyyy')}
-                                      </p>
-                                    </div>
-                                    <span className="text-xs text-[#6b6b80]">
-                                      {milestoneData.tasks.length} tasks
-                                    </span>
-                                  </button>
-
-                                  {expandedMilestones.has(milestoneId) && (
-                                    <div className="px-20 py-2 space-y-2">
-                                      {milestoneData.tasks.map((task: Task) => (
-                                        <TaskItem
-                                          key={task.id}
-                                          task={task}
-                                          onStatusChange={handleStatusChange}
-                                          onClick={() => setSelectedTask(task)}
-                                        />
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )
-                            )}
+                          <div className="px-12 py-2 space-y-2">
+                            {goalData.tasks.map((task: Task) => (
+                              <TaskItem
+                                key={task.id}
+                                task={task}
+                                onStatusChange={handleStatusChange}
+                                onClick={() => setSelectedTask(task)}
+                              />
+                            ))}
                           </div>
                         )}
                       </div>

@@ -22,11 +22,9 @@ export function ActivitiesPage() {
     switch (type) {
       case 'task_approved': return 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border-[rgba(16,185,129,0.2)]';
       case 'task_completed': return 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border-[rgba(0,229,255,0.2)]';
-      case 'milestone_completed': return 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border-[rgba(139,92,246,0.2)]';
       case 'task_created': return 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border-[rgba(245,158,11,0.2)]';
       case 'app_created': return 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border-[rgba(0,229,255,0.2)]';
       case 'goal_created': return 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border-[rgba(16,185,129,0.2)]';
-      case 'milestone_created': return 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border-[rgba(139,92,246,0.2)]';
       default: return 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80] border-[rgba(107,107,128,0.2)]';
     }
   };
@@ -55,7 +53,6 @@ export function ActivitiesPage() {
                 <div className={`w-10 h-10 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${
                   activity.type === 'task_approved' ? 'bg-[#10b981]' :
                   activity.type === 'task_completed' ? 'bg-[#00e5ff]' :
-                  activity.type === 'milestone_completed' ? 'bg-[#8b5cf6]' :
                   activity.type === 'task_created' ? 'bg-[#f59e0b]' :
                   activity.type === 'app_created' ? 'bg-[#00e5ff]' :
                   'bg-[#6b6b80]'

@@ -26,13 +26,12 @@ export function TasksModule() {
   const { currentUser, hasPermission } = useAuth();
   const {
     tasks,
-    milestones,
+    goals,
     employees,
     addTask,
     updateTask,
     deleteTask,
     approveTask,
-    getMilestoneById,
     getGoalById,
     getAppById,
     getEmployeeById
@@ -44,7 +43,7 @@ export function TasksModule() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    milestoneId: '',
+    goalId: '',
     assignedTo: [] as string[],
     priority: 'medium' as const
   });
@@ -65,7 +64,7 @@ export function TasksModule() {
     setFormData({
       name: '',
       description: '',
-      milestoneId: '',
+      goalId: '',
       assignedTo: [],
       priority: 'medium'
     });
@@ -77,7 +76,7 @@ export function TasksModule() {
     setFormData({
       name: task.name,
       description: task.description,
-      milestoneId: task.milestoneId,
+      goalId: task.goalId,
       assignedTo: [...task.assignedTo],
       priority: task.priority
     });
@@ -132,7 +131,7 @@ export function TasksModule() {
             onClick={() => {
               setShowAddForm(!showAddForm);
               setEditingTask(null);
-              setFormData({ name: '', description: '', milestoneId: '', assignedTo: [], priority: 'medium' });
+              setFormData({ name: '', description: '', goalId: '', assignedTo: [], priority: 'medium' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
@@ -175,21 +174,20 @@ export function TasksModule() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                  Milestone
+                  Goal
                 </label>
                 <select
-                  value={formData.milestoneId}
-                  onChange={(e) => setFormData({ ...formData, milestoneId: e.target.value })}
+                  value={formData.goalId}
+                  onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
                   className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                   required
                 >
-                  <option value="">Select milestone</option>
-                  {milestones.map((milestone) => {
-                    const goal = getGoalById(milestone.goalId);
-                    const app = goal ? getAppById(goal.appId) : null;
+                  <option value="">Select goal</option>
+                  {goals.map((goal) => {
+                    const app = getAppById(goal.appId);
                     return (
-                      <option key={milestone.id} value={milestone.id}>
-                        {app?.name} / {goal?.name} / {milestone.name}
+                      <option key={goal.id} value={goal.id}>
+                        {app?.name} / {goal.name}
                       </option>
                     );
                   })}
@@ -259,7 +257,7 @@ export function TasksModule() {
                   setFormData({
                     name: '',
                     description: '',
-                    milestoneId: '',
+                    goalId: '',
                     assignedTo: [],
                     priority: 'medium'
                   });
@@ -292,20 +290,19 @@ export function TasksModule() {
       {viewMode === 'list' ? (
         <div className="space-y-3">
           {filteredTasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onStatusChange={(status) => updateTask(task.id, { status })}
-              onApprove={() => handleApprove(task.id)}
-              onEdit={() => handleEdit(task)}
-              onDelete={() => handleDelete(task.id)}
-              onClick={() => setSelectedTask(task)}
-              canApprove={canApprove}
-              getMilestoneById={getMilestoneById}
-              getGoalById={getGoalById}
-              getAppById={getAppById}
-              getEmployeeById={getEmployeeById}
-            />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onStatusChange={(status) => updateTask(task.id, { status })}
+                onApprove={() => handleApprove(task.id)}
+                onEdit={() => handleEdit(task)}
+                onDelete={() => handleDelete(task.id)}
+                onClick={() => setSelectedTask(task)}
+                canApprove={canApprove}
+                getGoalById={getGoalById}
+                getAppById={getAppById}
+                getEmployeeById={getEmployeeById}
+              />
           ))}
         </div>
       ) : (
@@ -384,7 +381,6 @@ type TaskCardProps = {
   onDelete: () => void;
   onClick: () => void;
   canApprove: boolean;
-  getMilestoneById: (id: string) => any;
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   getEmployeeById: (id: string) => any;
@@ -398,13 +394,11 @@ function TaskCard({
   onDelete,
   onClick,
   canApprove,
-  getMilestoneById,
   getGoalById,
   getAppById,
   getEmployeeById
 }: TaskCardProps) {
-  const milestone = getMilestoneById(task.milestoneId);
-  const goal = milestone ? getGoalById(milestone.goalId) : null;
+  const goal = getGoalById(task.goalId);
   const app = goal ? getAppById(goal.appId) : null;
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
@@ -464,7 +458,7 @@ function TaskCard({
 
           <div className="mb-3">
             <p className="text-xs text-[#6b6b80]">
-              {app?.name} → {goal?.name} → {milestone?.name}
+              {app?.name} → {goal?.name}
             </p>
           </div>
 

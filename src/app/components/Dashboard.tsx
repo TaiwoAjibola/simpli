@@ -8,7 +8,6 @@ import {
   TrendingUp,
   Layers,
   Target,
-  Flag,
   Users,
   ArrowUpRight,
   Activity as ActivityIcon,
@@ -26,9 +25,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     tasks,
     apps,
     goals,
-    milestones,
     activities,
     getTasksForEmployee,
+    getTasksForGoal,
     employees
   } = useApp();
 
@@ -116,7 +115,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <div className={`w-8 h-8 flex items-center justify-center text-white text-sm font-semibold ${
                   activity.type === 'task_approved' ? 'bg-[#10b981]' :
                   activity.type === 'task_completed' ? 'bg-[#00e5ff]' :
-                  activity.type === 'milestone_completed' ? 'bg-[#8b5cf6]' :
                   'bg-[#6b6b80]'
                 }`}>
                   {activity.userName.charAt(0)}
@@ -156,12 +154,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   label="Total Goals"
                   value={goals.length}
                   onClick={() => onNavigate('goals')}
-                />
-                <QuickStat
-                  icon={Flag}
-                  label="Milestones"
-                  value={milestones.length}
-                  onClick={() => onNavigate('milestones')}
                 />
                 <QuickStat
                   icon={Users}
@@ -214,11 +206,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {activeApps.slice(0, 3).map((app) => {
               const appGoals = goals.filter(g => g.appId === app.id);
-              const appMilestones = appGoals.flatMap(g =>
-                milestones.filter(m => m.goalId === g.id)
-              );
-              const appTasks = appMilestones.flatMap(m =>
-                tasks.filter(t => t.milestoneId === m.id)
+              const appTasks = appGoals.flatMap(g =>
+                tasks.filter(t => t.goalId === g.id)
               );
               const completedTasks = appTasks.filter(t => t.status === 'approved');
               const progress = appTasks.length > 0

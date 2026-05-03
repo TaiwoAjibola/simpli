@@ -1,4 +1,4 @@
-import { Role, Employee, App, Goal, Milestone, Task, NotificationRule, Activity } from '../types';
+import { Role, Employee, App, Goal, Task, NotificationRule, Activity } from '../types';
 
 export const roles: Role[] = [
   {
@@ -7,7 +7,6 @@ export const roles: Role[] = [
     permissions: [
       'create_app',
       'create_goal',
-      'create_milestone',
       'assign_tasks',
       'manage_users',
       'configure_notifications',
@@ -21,7 +20,6 @@ export const roles: Role[] = [
     permissions: [
       'create_app',
       'create_goal',
-      'create_milestone',
       'approve_tasks',
       'view_all_apps'
     ]
@@ -31,7 +29,6 @@ export const roles: Role[] = [
     name: 'Manager',
     permissions: [
       'create_goal',
-      'create_milestone',
       'assign_tasks',
       'approve_tasks',
       'view_all_apps'
@@ -55,7 +52,6 @@ export const employees: Employee[] = [
 ];
 export const apps: App[] = [];
 export const goals: Goal[] = [];
-export const milestones: Milestone[] = [];
 export const tasks: Task[] = [];
 export const notificationRules: NotificationRule[] = [];
 export const activities: Activity[] = [];

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Layers, Target, Flag, CheckSquare, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Layers, Target, CheckSquare, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { App } from '../types';
 
 export function AppsModule() {
   const { currentUser } = useAuth();
-  const { apps, goals, milestones, tasks, addApp, updateApp, deleteApp, getGoalsForApp } = useApp();
+  const { apps, goals, tasks, addApp, updateApp, deleteApp, getGoalsForApp, getTasksForGoal } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<App | null>(null);
   const [formData, setFormData] = useState({
@@ -42,7 +42,7 @@ export function AppsModule() {
   };
 
   const handleDelete = (appId: string) => {
-    if (confirm('Delete this app and all its goals, milestones, and tasks?')) {
+    if (confirm('Delete this app and all its goals and tasks?')) {
       deleteApp(appId);
     }
   };
@@ -141,12 +141,7 @@ export function AppsModule() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {apps.map((app) => {
           const appGoals = getGoalsForApp(app.id);
-          const appMilestones = appGoals.flatMap((g) =>
-            milestones.filter((m) => m.goalId === g.id)
-          );
-          const appTasks = appMilestones.flatMap((m) =>
-            tasks.filter((t) => t.milestoneId === m.id)
-          );
+          const appTasks = appGoals.flatMap((g) => getTasksForGoal(g.id));
 
           const completedTasks = appTasks.filter((t) => t.status === 'approved');
           const progress =
@@ -229,16 +224,11 @@ export function AppsModule() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
                   <Target className="w-5 h-5 text-[#00e5ff] mx-auto mb-1" />
                   <p className="text-xs text-[#6b6b80]">Goals</p>
                   <p className="text-lg font-bold text-[#f0f0f5]">{appGoals.length}</p>
-                </div>
-                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-                  <Flag className="w-5 h-5 text-[#8b5cf6] mx-auto mb-1" />
-                  <p className="text-xs text-[#6b6b80]">Milestones</p>
-                  <p className="text-lg font-bold text-[#f0f0f5]">{appMilestones.length}</p>
                 </div>
                 <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
                   <CheckSquare className="w-5 h-5 text-[#10b981] mx-auto mb-1" />

@@ -8,7 +8,7 @@ import { KanbanBoard } from './components/KanbanBoard';
 import { MyWork } from './components/MyWork';
 import { AdminPanel } from './components/AdminPanel';
 import { AppsModule } from './components/AppsModule';
-import { GoalsModule, MilestonesModule } from './components/GoalsMilestonesModule';
+import { GoalsModule } from './components/GoalsMilestonesModule';
 import { TasksModule } from './components/TasksModule';
 import { ActivitiesPage } from './components/ActivitiesPage';
 import { SeedPage } from './components/SeedPage';
@@ -40,7 +40,6 @@ function AppContent() {
         {currentPage === 'activities' && <ActivitiesPage />}
         {currentPage === 'apps' && <AppsModule />}
         {currentPage === 'goals' && <GoalsModule />}
-        {currentPage === 'milestones' && <MilestonesModule />}
         {currentPage === 'tasks' && <TasksModule />}
         {currentPage === 'admin' && <AdminPanel />}
       </main>

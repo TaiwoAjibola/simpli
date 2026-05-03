@@ -290,7 +290,6 @@ function RolesTab() {
   const allPermissions: Permission[] = [
     'create_app',
     'create_goal',
-    'create_milestone',
     'assign_tasks',
     'manage_users',
     'configure_notifications',
@@ -582,7 +581,6 @@ function NotificationsTab() {
                 required
               >
                 <option value="task_completed">Task Completed</option>
-                <option value="milestone_completed">Milestone Completed</option>
                 <option value="task_approved">Task Approved</option>
               </select>
             </div>
@@ -600,7 +598,7 @@ function NotificationsTab() {
                 required
               />
               <p className="text-xs text-[#6b6b80] mt-1">
-                Variables: {`{{taskName}}, {{employeeName}}, {{milestoneName}}, {{approverName}}`}
+                Variables: {`{{taskName}}, {{employeeName}}, {{approverName}}`}
               </p>
             </div>
 

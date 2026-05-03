@@ -25,7 +25,7 @@ export function KanbanBoard() {
 
 function KanbanContent() {
   const { currentUser, hasPermission } = useAuth();
-  const { tasks, updateTask, getTasksForEmployee, getEmployeeById, getMilestoneById } = useApp();
+  const { tasks, updateTask, getTasksForEmployee, getEmployeeById, getGoalById } = useApp();
 
   const canViewAll = hasPermission('view_all_apps');
   const displayTasks = canViewAll ? tasks : getTasksForEmployee(currentUser!.id);
@@ -59,7 +59,7 @@ function KanbanContent() {
               onDrop={handleDrop}
               onCardClick={handleCardClick}
               getEmployeeById={getEmployeeById}
-              getMilestoneById={getMilestoneById}
+              getGoalById={getGoalById}
             />
           );
         })}
@@ -81,10 +81,10 @@ type KanbanColumnProps = {
   onDrop: (taskId: string, newStatus: TaskStatus) => void;
   onCardClick: (task: Task) => void;
   getEmployeeById: (id: string) => any;
-  getMilestoneById: (id: string) => any;
+  getGoalById: (id: string) => any;
 };
 
-function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getMilestoneById }: KanbanColumnProps) {
+function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop({
     accept: 'TASK',
     drop: (item: { taskId: string }) => {
@@ -118,7 +118,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
             task={task}
             onClick={onCardClick}
             getEmployeeById={getEmployeeById}
-            getMilestoneById={getMilestoneById}
+            getGoalById={getGoalById}
           />
         ))}
         {tasks.length === 0 && (
@@ -135,10 +135,10 @@ type TaskCardProps = {
   task: Task;
   onClick: (task: Task) => void;
   getEmployeeById: (id: string) => any;
-  getMilestoneById: (id: string) => any;
+  getGoalById: (id: string) => any;
 };
 
-function TaskCard({ task, onClick, getEmployeeById, getMilestoneById }: TaskCardProps) {
+function TaskCard({ task, onClick, getEmployeeById, getGoalById }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { taskId: task.id },
@@ -153,7 +153,7 @@ function TaskCard({ task, onClick, getEmployeeById, getMilestoneById }: TaskCard
   };
 
   const assignee = getEmployeeById(task.assignedTo);
-  const milestone = getMilestoneById(task.milestoneId);
+  const goal = getGoalById(task.goalId);
 
   const priorityColors = {
     low: 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]',
@@ -194,10 +194,10 @@ function TaskCard({ task, onClick, getEmployeeById, getMilestoneById }: TaskCard
         )}
       </div>
 
-      {milestone && (
+      {goal && (
         <div className="mt-3 pt-3 border-t border-[rgba(0,229,255,0.1)]">
           <p className="text-xs text-[#6b6b80]">
-            {milestone.name}
+            {goal.name}
           </p>
         </div>
       )}

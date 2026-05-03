@@ -6,7 +6,6 @@ import {
   Kanban,
   Layers,
   Target,
-  Flag,
   CheckSquare,
   LogOut,
   Zap,
@@ -26,16 +25,30 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
-    { id: 'my-work', label: 'My Work', icon: Briefcase, show: true },
-    { id: 'kanban', label: 'Kanban Board', icon: Kanban, show: true },
-    { id: 'activities', label: 'Activities', icon: Activity, show: true },
-    { id: 'apps', label: 'Apps', icon: Layers, show: hasPermission('view_all_apps') },
-    { id: 'goals', label: 'Goals', icon: Target, show: hasPermission('view_all_apps') },
-    { id: 'milestones', label: 'Milestones', icon: Flag, show: hasPermission('view_all_apps') },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare, show: hasPermission('view_all_apps') },
-    { id: 'admin', label: 'Admin Panel', icon: Zap, show: hasPermission('manage_users') }
+  const navSections = [
+    {
+      label: 'Overview',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
+        { id: 'my-work', label: 'My Work', icon: Briefcase, show: true },
+        { id: 'kanban', label: 'Kanban Board', icon: Kanban, show: true },
+        { id: 'activities', label: 'Activities', icon: Activity, show: true }
+      ]
+    },
+    {
+      label: 'Management',
+      items: [
+        { id: 'apps', label: 'Apps', icon: Layers, show: hasPermission('view_all_apps') },
+        { id: 'goals', label: 'Goals', icon: Target, show: hasPermission('view_all_apps') },
+        { id: 'tasks', label: 'Tasks', icon: CheckSquare, show: hasPermission('view_all_apps') }
+      ]
+    },
+    {
+      label: 'Settings',
+      items: [
+        { id: 'admin', label: 'Admin Panel', icon: Zap, show: hasPermission('manage_users') }
+      ]
+    }
   ];
 
   return (
@@ -51,32 +64,44 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
       </div>
 
       <nav className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-1">
-          {navItems.filter(item => item.show).map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
+        {navSections.map((section) => {
+          const visibleItems = section.items.filter(item => item.show);
+          if (visibleItems.length === 0) return null;
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
-                  isActive
-                    ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] font-medium border-l-2 border-[#00e5ff]'
-                    : 'text-[#6b6b80] hover:text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.03)]'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-                {item.id === 'my-work' && unreadCount > 0 && (
-                  <span className="ml-auto bg-[#ff006e] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+          return (
+            <div key={section.label} className="mb-6">
+              <p className="text-xs font-semibold text-[#6b6b80] uppercase tracking-wider mb-2 px-4">
+                {section.label}
+              </p>
+              <div className="space-y-1">
+                {visibleItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentPage === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
+                        isActive
+                          ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] font-medium border-l-2 border-[#00e5ff]'
+                          : 'text-[#6b6b80] hover:text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.03)]'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                      {item.id === 'my-work' && unreadCount > 0 && (
+                        <span className="ml-auto bg-[#ff006e] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </nav>
 
       <div className="p-4 border-t border-[rgba(0,229,255,0.1)]">
