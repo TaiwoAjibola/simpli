@@ -12,7 +12,9 @@ import {
   Check,
   Filter,
   List,
-  LayoutGrid
+  LayoutGrid,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task, TaskStatus } from '../types';
@@ -20,6 +22,7 @@ import { TaskDetailModal } from './TaskDetailModal';
 
 export function TasksModule() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const { currentUser, hasPermission } = useAuth();
   const {
     tasks,
@@ -27,6 +30,7 @@ export function TasksModule() {
     employees,
     addTask,
     updateTask,
+    deleteTask,
     approveTask,
     getMilestoneById,
     getGoalById,
@@ -50,10 +54,14 @@ export function TasksModule() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addTask({
-      ...formData,
-      status: 'not_started'
-    });
+    if (editingTask) {
+      updateTask(editingTask.id, formData);
+    } else {
+      addTask({
+        ...formData,
+        status: 'not_started'
+      });
+    }
     setFormData({
       name: '',
       description: '',
@@ -62,6 +70,25 @@ export function TasksModule() {
       priority: 'medium'
     });
     setShowAddForm(false);
+    setEditingTask(null);
+  };
+
+  const handleEdit = (task: Task) => {
+    setFormData({
+      name: task.name,
+      description: task.description,
+      milestoneId: task.milestoneId,
+      assignedTo: [...task.assignedTo],
+      priority: task.priority
+    });
+    setEditingTask(task);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = (taskId: string) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      deleteTask(taskId);
+    }
   };
 
   const toggleAssignee = (employeeId: string) => {
@@ -102,7 +129,11 @@ export function TasksModule() {
             </button>
           </div>
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
+            onClick={() => {
+              setShowAddForm(!showAddForm);
+              setEditingTask(null);
+              setFormData({ name: '', description: '', milestoneId: '', assignedTo: [], priority: 'medium' });
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
             <Plus className="w-4 h-4" />
@@ -113,7 +144,9 @@ export function TasksModule() {
 
       {showAddForm && (
         <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="font-semibold text-[#f0f0f5] mb-4">Create New Task</h3>
+          <h3 className="font-semibold text-[#f0f0f5] mb-4">
+            {editingTask ? 'Edit Task' : 'Create New Task'}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Task Name</label>
@@ -216,12 +249,13 @@ export function TasksModule() {
                 type="submit"
                 className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
               >
-                Create Task
+                {editingTask ? 'Update' : 'Create'} Task
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowAddForm(false);
+                  setEditingTask(null);
                   setFormData({
                     name: '',
                     description: '',
@@ -263,6 +297,8 @@ export function TasksModule() {
               task={task}
               onStatusChange={(status) => updateTask(task.id, { status })}
               onApprove={() => handleApprove(task.id)}
+              onEdit={() => handleEdit(task)}
+              onDelete={() => handleDelete(task.id)}
               onClick={() => setSelectedTask(task)}
               canApprove={canApprove}
               getMilestoneById={getMilestoneById}
@@ -283,18 +319,38 @@ export function TasksModule() {
                   {statusTasks.map(task => (
                     <div
                       key={task.id}
-                      className="p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] cursor-pointer hover:border-[rgba(0,229,255,0.3)] transition"
+                      className="p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] cursor-pointer hover:border-[rgba(0,229,255,0.3)] transition group"
                       onClick={() => setSelectedTask(task)}
                     >
-                      <p className="text-sm font-medium text-[#f0f0f5]">{task.name}</p>
-                      <span className={`text-xs px-2 py-0.5 mt-1 inline-block ${
-                        task.priority === 'urgent' ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
-                        task.priority === 'high' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
-                        task.priority === 'medium' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' :
-                        'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
-                      }`}>
-                        {task.priority}
-                      </span>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#f0f0f5]">{task.name}</p>
+                          <span className={`text-xs px-2 py-0.5 mt-1 inline-block ${
+                            task.priority === 'urgent' ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
+                            task.priority === 'high' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
+                            task.priority === 'medium' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' :
+                            'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
+                          }`}>
+                            {task.priority}
+                          </span>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition ml-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
+                            className="p-1 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
+                            className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -324,6 +380,8 @@ type TaskCardProps = {
   task: Task;
   onStatusChange: (status: TaskStatus) => void;
   onApprove: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
   onClick: () => void;
   canApprove: boolean;
   getMilestoneById: (id: string) => any;
@@ -336,6 +394,8 @@ function TaskCard({
   task,
   onStatusChange,
   onApprove,
+  onEdit,
+  onDelete,
   onClick,
   canApprove,
   getMilestoneById,
@@ -384,6 +444,22 @@ function TaskCard({
             {task.priority === 'urgent' && (
               <Star className="w-5 h-5 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />
             )}
+            <div className="flex gap-1 flex-shrink-0">
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                className="p-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded transition"
+                title="Edit"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="mb-3">

@@ -1,27 +1,50 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Layers, Target, Flag, CheckSquare } from 'lucide-react';
+import { Plus, Layers, Target, Flag, CheckSquare, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { App } from '../types';
 
 export function AppsModule() {
   const { currentUser } = useAuth();
-  const { apps, goals, milestones, tasks, addApp, getGoalsForApp } = useApp();
-  const [showAddForm, setShowAddForm] = useState(false);
+  const { apps, goals, milestones, tasks, addApp, updateApp, deleteApp, getGoalsForApp } = useApp();
+  const [showForm, setShowForm] = useState(false);
+  const [editingApp, setEditingApp] = useState<App | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'active' as const
+    status: 'active' as 'active' | 'completed' | 'on_hold'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addApp({
-      ...formData,
-      createdBy: currentUser!.id
-    });
+    if (editingApp) {
+      updateApp(editingApp.id, formData);
+    } else {
+      addApp({
+        ...formData,
+        createdBy: currentUser!.id
+      });
+    }
     setFormData({ name: '', description: '', status: 'active' });
-    setShowAddForm(false);
+    setShowForm(false);
+    setEditingApp(null);
+  };
+
+  const handleEdit = (app: App) => {
+    setFormData({
+      name: app.name,
+      description: app.description,
+      status: app.status
+    });
+    setEditingApp(app);
+    setShowForm(true);
+  };
+
+  const handleDelete = (appId: string) => {
+    if (confirm('Delete this app and all its goals, milestones, and tasks?')) {
+      deleteApp(appId);
+    }
   };
 
   return (
@@ -32,7 +55,11 @@ export function AppsModule() {
           <p className="text-[#6b6b80]">{apps.length} total applications</p>
         </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingApp(null);
+            setFormData({ name: '', description: '', status: 'active' });
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
         >
           <Plus className="w-4 h-4" />
@@ -40,14 +67,14 @@ export function AppsModule() {
         </button>
       </div>
 
-      {showAddForm && (
+      {showForm && (
         <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="font-semibold text-[#f0f0f5] mb-4">Create New App</h3>
+          <h3 className="font-semibold text-[#f0f0f5] mb-4">
+            {editingApp ? 'Edit App' : 'Create New App'}
+          </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                App Name
-              </label>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">App Name</label>
               <input
                 type="text"
                 value={formData.name}
@@ -59,9 +86,7 @@ export function AppsModule() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                Description
-              </label>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -95,12 +120,13 @@ export function AppsModule() {
                 type="submit"
                 className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
               >
-                Create App
+                {editingApp ? 'Update' : 'Create'} App
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setShowAddForm(false);
+                  setShowForm(false);
+                  setEditingApp(null);
                   setFormData({ name: '', description: '', status: 'active' });
                 }}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
@@ -143,7 +169,7 @@ export function AppsModule() {
               className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6 hover:border-[rgba(0,229,255,0.3)] transition relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
-              
+
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
                   <div className="p-3 bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.2)]">
@@ -156,13 +182,29 @@ export function AppsModule() {
                     </p>
                   </div>
                 </div>
-                <span
-                  className={`px-3 py-1 text-xs font-medium ${
-                    statusColors[app.status]
-                  }`}
-                >
-                  {app.status.replace('_', ' ').toUpperCase()}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-3 py-1 text-xs font-medium ${
+                      statusColors[app.status]
+                    }`}
+                  >
+                    {app.status.replace('_', ' ').toUpperCase()}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(app)}
+                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(app.id)}
+                    className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <p className="text-sm text-[#6b6b80] mb-4">{app.description}</p>
@@ -170,25 +212,11 @@ export function AppsModule() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative">
                   <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#1e1e2a" strokeWidth="4" />
                     <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      fill="none"
-                      stroke="#1e1e2a"
-                      strokeWidth="4"
-                    />
-                    <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
-                      fill="none"
-                      stroke="#00e5ff"
-                      strokeWidth="4"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      transform="rotate(-90 32 32)"
+                      cx="32" cy="32" r="28" fill="none" stroke="#00e5ff" strokeWidth="4"
+                      strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                      strokeLinecap="round" transform="rotate(-90 32 32)"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -223,12 +251,12 @@ export function AppsModule() {
         })}
       </div>
 
-      {apps.length === 0 && !showAddForm && (
+      {apps.length === 0 && !showForm && (
         <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
           <Layers className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
           <p className="text-[#6b6b80] mb-4">No apps yet</p>
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
           >
             Create Your First App

@@ -39,10 +39,13 @@ type AppContextType = {
   comments: Comment[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
+  updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
   deleteApp: (appId: string) => Promise<void>;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<void>;
+  updateGoal: (goalId: string, updates: Partial<Goal>) => Promise<void>;
   deleteGoal: (goalId: string) => Promise<void>;
   addMilestone: (milestone: Omit<Milestone, 'id'>) => Promise<void>;
+  updateMilestone: (milestoneId: string, updates: Partial<Milestone>) => Promise<void>;
   deleteMilestone: (milestoneId: string) => Promise<void>;
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
@@ -218,8 +221,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
-    const docRef = await addDoc(collection(db, 'apps'), {
+    const appId = `app-${Date.now()}`;
+    await setDoc(doc(db, 'apps', appId), {
       ...app,
+      id: appId,
       createdAt: serverTimestamp()
     });
     const employee = employees.find(e => e.id === app.createdBy);
@@ -228,9 +233,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userId: app.createdBy,
       userName: employee?.name || 'Unknown',
       description: `created app "${app.name}"`,
-      relatedTo: { type: 'app', id: docRef.id, name: app.name }
+      relatedTo: { type: 'app', id: appId, name: app.name }
     });
   }, [employees, addActivity]);
+
+  const updateApp = useCallback(async (appId: string, updates: Partial<App>) => {
+    await updateDoc(doc(db, 'apps', appId), updates);
+  }, []);
 
   const deleteApp = useCallback(async (appId: string) => {
     const appGoals = goals.filter(g => g.appId === appId);
@@ -249,8 +258,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [goals, milestones, tasks]);
 
   const addGoal = useCallback(async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
-    const docRef = await addDoc(collection(db, 'goals'), {
+    const goalId = `goal-${Date.now()}`;
+    await setDoc(doc(db, 'goals', goalId), {
       ...goal,
+      id: goalId,
       createdAt: serverTimestamp()
     });
     await addActivity({
@@ -258,9 +269,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userId: 'system',
       userName: 'System',
       description: `created goal "${goal.name}"`,
-      relatedTo: { type: 'goal', id: docRef.id, name: goal.name }
+      relatedTo: { type: 'goal', id: goalId, name: goal.name }
     });
   }, [addActivity]);
+
+  const updateGoal = useCallback(async (goalId: string, updates: Partial<Goal>) => {
+    await updateDoc(doc(db, 'goals', goalId), updates);
+  }, []);
 
   const deleteGoal = useCallback(async (goalId: string) => {
     const goalMilestones = milestones.filter(m => m.goalId === goalId);
@@ -275,8 +290,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [milestones, tasks]);
 
   const addMilestone = useCallback(async (milestone: Omit<Milestone, 'id'>) => {
-    const docRef = await addDoc(collection(db, 'milestones'), {
+    const milestoneId = `milestone-${Date.now()}`;
+    await setDoc(doc(db, 'milestones', milestoneId), {
       ...milestone,
+      id: milestoneId,
       dueDate: milestone.dueDate
     });
     await addActivity({
@@ -284,9 +301,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userId: 'system',
       userName: 'System',
       description: `created milestone "${milestone.name}"`,
-      relatedTo: { type: 'milestone', id: docRef.id, name: milestone.name }
+      relatedTo: { type: 'milestone', id: milestoneId, name: milestone.name }
     });
   }, [addActivity]);
+
+  const updateMilestone = useCallback(async (milestoneId: string, updates: Partial<Milestone>) => {
+    await updateDoc(doc(db, 'milestones', milestoneId), updates);
+  }, []);
 
   const deleteMilestone = useCallback(async (milestoneId: string) => {
     const milestoneTasks = tasks.filter(t => t.milestoneId === milestoneId);
@@ -512,10 +533,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         comments,
         loading,
         addApp,
+        updateApp,
         deleteApp,
         addGoal,
+        updateGoal,
         deleteGoal,
         addMilestone,
+        updateMilestone,
         deleteMilestone,
         addTask,
         deleteTask,
