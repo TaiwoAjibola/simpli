@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import SimpliLogo from '../assets/Simpli.svg';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -47,9 +48,7 @@ export function LoginPage() {
         <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-8">
           <div className="flex items-center justify-center mb-8">
             <div className="relative">
-              <div className="w-16 h-16 bg-[#00e5ff] flex items-center justify-center">
-                <span className="text-[#0a0a0f] font-bold text-3xl">S</span>
-              </div>
+              <img src={SimpliLogo} alt="Simpli" className="w-20 h-20" style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(5493%) hue-rotate(165deg) brightness(101%) contrast(101%)' }} />
               <div className="absolute -inset-2 border border-[rgba(0,229,255,0.2)]"></div>
             </div>
           </div>

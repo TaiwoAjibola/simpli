@@ -13,6 +13,7 @@ import {
   Briefcase,
   Activity
 } from 'lucide-react';
+import SimpliLogo from '../assets/Simpli.svg';
 
 type NavigationProps = {
   currentPage: string;
@@ -41,11 +42,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     <div className="h-screen w-64 bg-[#0e0e16] border-r border-[rgba(0,229,255,0.1)] flex flex-col">
       <div className="p-6 border-b border-[rgba(0,229,255,0.1)]">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 bg-[#00e5ff] clip-hexagon flex items-center justify-center">
-              <span className="text-[#0a0a0f] font-bold text-lg">S</span>
-            </div>
-          </div>
+          <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(5493%) hue-rotate(165deg) brightness(101%) contrast(101%)' }} />
           <div>
             <h1 className="font-bold text-lg text-[#f0f0f5] tracking-wide">Simpli</h1>
             <p className="text-xs text-[#6b6b80] uppercase tracking-wider">{currentRole?.name}</p>
