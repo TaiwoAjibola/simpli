@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/LoginPage';
 import { Navigation } from './components/Navigation';
 import { Dashboard } from './components/Dashboard';
@@ -11,10 +11,20 @@ import { AppsModule } from './components/AppsModule';
 import { GoalsModule, MilestonesModule } from './components/GoalsMilestonesModule';
 import { TasksModule } from './components/TasksModule';
 import { ActivitiesPage } from './components/ActivitiesPage';
+import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
+  const { loading: appLoading } = useApp();
   const [currentPage, setCurrentPage] = useState('dashboard');
+
+  if (authLoading || appLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+        <div className="text-[#f0f0f5] text-lg">Loading Simpli...</div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <LoginPage />;
@@ -39,6 +49,19 @@ function AppContent() {
 }
 
 export default function App() {
+  const [showSeed, setShowSeed] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('seed') === 'true') {
+      setShowSeed(true);
+    }
+  }, []);
+
+  if (showSeed) {
+    return <SeedPage />;
+  }
+
   return (
     <AuthProvider>
       <AppProvider>

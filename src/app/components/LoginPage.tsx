@@ -7,22 +7,34 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  const { login, loading: authLoading } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
 
     if (!email || !password) {
       setError('Please enter both email and password');
+      setSubmitting(false);
       return;
     }
 
-    const success = login(email, password);
+    const success = await login(email, password);
     if (!success) {
       setError('Invalid email or password');
     }
+    setSubmitting(false);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+        <div className="text-[#f0f0f5]">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] relative overflow-hidden">
@@ -96,9 +108,10 @@ export function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#00e5ff] text-[#0a0a0f] py-3 font-medium hover:bg-[#00c4e0] transition shadow-lg shadow-[#00e5ff]/20"
+              disabled={submitting}
+              className="w-full bg-[#00e5ff] text-[#0a0a0f] py-3 font-medium hover:bg-[#00c4e0] transition shadow-lg shadow-[#00e5ff]/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {submitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         </div>

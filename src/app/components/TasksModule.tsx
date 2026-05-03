@@ -226,7 +226,7 @@ export function TasksModule() {
                     name: '',
                     description: '',
                     milestoneId: '',
-                    assignedTo: '',
+                    assignedTo: [],
                     priority: 'medium'
                   });
                 }}

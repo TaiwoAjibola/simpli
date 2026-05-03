@@ -279,8 +279,9 @@ function EmployeesTab() {
 }
 
 function RolesTab() {
-  const { roles, addRole } = useApp();
+  const { roles, addRole, updateRole, deleteRole, employees } = useApp();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     permissions: [] as Permission[]
@@ -300,9 +301,38 @@ function RolesTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addRole(formData);
+    if (editingId) {
+      updateRole(editingId, formData);
+      setEditingId(null);
+    } else {
+      addRole(formData);
+    }
     setFormData({ name: '', permissions: [] });
     setShowAddForm(false);
+  };
+
+  const handleEdit = (role: Role) => {
+    setFormData({
+      name: role.name,
+      permissions: [...role.permissions]
+    });
+    setEditingId(role.id);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = (roleId: string) => {
+    const roleEmployees = employees.filter(e => {
+      const role = roles.find(r => r.id === roleId);
+      return role && e.roleId === role.id;
+    });
+    if (roleEmployees.length > 0) {
+      if (!confirm(`This role is assigned to ${roleEmployees.length} employee(s). Deleting it will leave them without a role. Continue?`)) {
+        return;
+      }
+    } else if (!confirm('Are you sure you want to delete this role?')) {
+      return;
+    }
+    deleteRole(roleId);
   };
 
   const togglePermission = (permission: Permission) => {
@@ -319,7 +349,11 @@ function RolesTab() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-[#f0f0f5]">Roles & Permissions</h2>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setShowAddForm(!showAddForm);
+            setEditingId(null);
+            setFormData({ name: '', permissions: [] });
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
         >
           <Plus className="w-4 h-4" />
@@ -367,12 +401,13 @@ function RolesTab() {
               type="submit"
               className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
             >
-              Create Role
+              {editingId ? 'Update' : 'Create'} Role
             </button>
             <button
               type="button"
               onClick={() => {
                 setShowAddForm(false);
+                setEditingId(null);
                 setFormData({ name: '', permissions: [] });
               }}
               className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
@@ -384,24 +419,50 @@ function RolesTab() {
       )}
 
       <div className="space-y-4">
-        {roles.map((role) => (
-          <div key={role.id} className="p-5 border border-[rgba(0,229,255,0.1)]">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-[#f0f0f5]">{role.name}</h3>
-              <span className="text-sm text-[#6b6b80]">{role.permissions.length} permissions</span>
+        {roles.map((role) => {
+          const employeeCount = employees.filter(e => e.roleId === role.id).length;
+          return (
+            <div key={role.id} className="p-5 border border-[rgba(0,229,255,0.1)]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-[#f0f0f5]">{role.name}</h3>
+                  {employeeCount > 0 && (
+                    <span className="text-xs text-[#6b6b80] bg-[#1a1a2e] px-2 py-1 border border-[rgba(0,229,255,0.1)]">
+                      {employeeCount} employee{employeeCount > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-[#6b6b80] mr-2">{role.permissions.length} permissions</span>
+                  <button
+                    onClick={() => handleEdit(role)}
+                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(role.id)}
+                    className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {role.permissions.map((permission) => (
+                  <span
+                    key={permission}
+                    className="px-3 py-1 bg-[rgba(16,185,129,0.1)] text-[#10b981] text-xs font-medium border border-[rgba(16,185,129,0.2)]"
+                  >
+                    {permission.replace(/_/g, ' ')}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {role.permissions.map((permission) => (
-                <span
-                  key={permission}
-                  className="px-3 py-1 bg-[rgba(16,185,129,0.1)] text-[#10b981] text-xs font-medium border border-[rgba(16,185,129,0.2)]"
-                >
-                  {permission.replace(/_/g, ' ')}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

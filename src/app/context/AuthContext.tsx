@@ -1,12 +1,21 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  type User as FirebaseUser
+} from 'firebase/auth';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../firebase/config';
 import { Employee, Role } from '../types';
-import { employees, roles } from '../data/mockData';
 
 type AuthContextType = {
   currentUser: Employee | null;
   currentRole: Role | null;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+  firebaseUser: FirebaseUser | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
 };
 
@@ -14,39 +23,66 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<Employee | null>(null);
+  const [currentRole, setCurrentRole] = useState<Role | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const getCurrentRole = (user: Employee | null): Role | null => {
-    if (!user) return null;
-    return roles.find(r => r.id === user.roleId) || null;
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setFirebaseUser(user);
 
-  const login = (email: string, password: string): boolean => {
-    const user = employees.find(
-      emp => emp.email === email && emp.password === password
-    );
+      if (user) {
+        try {
+          const employeeDoc = await getDoc(doc(db, 'employees', user.uid));
+          if (employeeDoc.exists()) {
+            const employeeData = employeeDoc.data() as Employee;
+            setCurrentUser(employeeData);
 
-    if (user) {
-      setCurrentUser(user);
+            const roleDoc = await getDoc(doc(db, 'roles', employeeData.roleId));
+            if (roleDoc.exists()) {
+              setCurrentRole(roleDoc.data() as Role);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      } else {
+        setCurrentUser(null);
+        setCurrentRole(null);
+      }
+
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       return true;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setCurrentUser(null);
+  const logout = async () => {
+    await signOut(auth);
   };
 
   const hasPermission = (permission: string): boolean => {
-    const role = getCurrentRole(currentUser);
-    if (!role) return false;
-    return role.permissions.includes(permission as any);
+    if (!currentRole) return false;
+    return currentRole.permissions.includes(permission as any);
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        currentRole: getCurrentRole(currentUser),
+        currentRole,
+        firebaseUser,
+        loading,
         login,
         logout,
         hasPermission

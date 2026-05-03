@@ -1,4 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import {
   App,
   Goal,
@@ -12,16 +25,6 @@ import {
   TaskStatus,
   Comment
 } from '../types';
-import {
-  apps as initialApps,
-  goals as initialGoals,
-  milestones as initialMilestones,
-  tasks as initialTasks,
-  employees as initialEmployees,
-  roles as initialRoles,
-  notificationRules as initialNotificationRules,
-  activities as initialActivities
-} from '../data/mockData';
 
 type AppContextType = {
   apps: App[];
@@ -34,25 +37,28 @@ type AppContextType = {
   notifications: Notification[];
   activities: Activity[];
   comments: Comment[];
-  addApp: (app: Omit<App, 'id' | 'createdAt'>) => void;
-  deleteApp: (appId: string) => void;
-  addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => void;
-  deleteGoal: (goalId: string) => void;
-  addMilestone: (milestone: Omit<Milestone, 'id'>) => void;
-  deleteMilestone: (milestoneId: string) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  deleteTask: (taskId: string) => void;
-  updateTask: (taskId: string, updates: Partial<Task>) => void;
-  approveTask: (taskId: string, approverId: string) => void;
-  addEmployee: (employee: Omit<Employee, 'id'>) => void;
-  updateEmployee: (employeeId: string, updates: Partial<Employee>) => void;
-  deleteEmployee: (employeeId: string) => void;
-  addRole: (role: Omit<Role, 'id'>) => void;
-  addNotificationRule: (rule: Omit<NotificationRule, 'id'>) => void;
-  updateNotificationRule: (ruleId: string, updates: Partial<NotificationRule>) => void;
-  deleteNotificationRule: (ruleId: string) => void;
-  markNotificationRead: (notificationId: string) => void;
-  addComment: (taskId: string, userId: string, content: string) => void;
+  loading: boolean;
+  addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
+  deleteApp: (appId: string) => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => Promise<void>;
+  deleteGoal: (goalId: string) => Promise<void>;
+  addMilestone: (milestone: Omit<Milestone, 'id'>) => Promise<void>;
+  deleteMilestone: (milestoneId: string) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  approveTask: (taskId: string, approverId: string) => Promise<void>;
+  addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
+  updateEmployee: (employeeId: string, updates: Partial<Employee>) => Promise<void>;
+  deleteEmployee: (employeeId: string) => Promise<void>;
+  addRole: (role: Omit<Role, 'id'>) => Promise<void>;
+  updateRole: (roleId: string, updates: Partial<Role>) => Promise<void>;
+  deleteRole: (roleId: string) => Promise<void>;
+  addNotificationRule: (rule: Omit<NotificationRule, 'id'>) => Promise<void>;
+  updateNotificationRule: (ruleId: string, updates: Partial<NotificationRule>) => Promise<void>;
+  deleteNotificationRule: (ruleId: string) => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
+  addComment: (taskId: string, userId: string, content: string) => Promise<void>;
   getCommentsForTask: (taskId: string) => Comment[];
   getTasksForEmployee: (employeeId: string) => Task[];
   getGoalsForApp: (appId: string) => Goal[];
@@ -66,307 +72,405 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [apps, setApps] = useState<App[]>(initialApps);
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
-  const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
-  const [roles, setRoles] = useState<Role[]>(initialRoles);
-  const [notificationRules, setNotificationRules] = useState<NotificationRule[]>(initialNotificationRules);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [comments, setComments] = useState<Comment[]>([]);
-
-  const addActivity = (activity: Omit<Activity, 'id' | 'timestamp'>) => {
-    const newActivity: Activity = {
-      ...activity,
-      id: `act-${Date.now()}`,
-      timestamp: new Date()
-    };
-    setActivities(prev => [newActivity, ...prev]);
+function docToApp(doc: any): App {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.toDate() || new Date()
   };
+}
 
-  const createNotification = (
+function docToGoal(doc: any): Goal {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.toDate() || new Date()
+  };
+}
+
+function docToMilestone(doc: any): Milestone {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    dueDate: data.dueDate?.toDate() || new Date()
+  };
+}
+
+function docToTask(doc: any): Task {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.toDate() || new Date(),
+    completedAt: data.completedAt?.toDate(),
+    approvedAt: data.approvedAt?.toDate()
+  };
+}
+
+function docToEmployee(doc: any): Employee {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data
+  };
+}
+
+function docToRole(doc: any): Role {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data
+  };
+}
+
+function docToNotificationRule(doc: any): NotificationRule {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data
+  };
+}
+
+function docToActivity(doc: any): Activity {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    timestamp: data.timestamp?.toDate() || new Date()
+  };
+}
+
+function docToComment(doc: any): Comment {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    timestamp: data.timestamp?.toDate() || new Date()
+  };
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [apps, setApps] = useState<App[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribers: (() => void)[] = [];
+
+    const collections = [
+      { ref: collection(db, 'apps'), setter: setApps, transformer: docToApp },
+      { ref: collection(db, 'goals'), setter: setGoals, transformer: docToGoal },
+      { ref: collection(db, 'milestones'), setter: setMilestones, transformer: docToMilestone },
+      { ref: collection(db, 'tasks'), setter: setTasks, transformer: docToTask },
+      { ref: collection(db, 'employees'), setter: setEmployees, transformer: docToEmployee },
+      { ref: collection(db, 'roles'), setter: setRoles, transformer: docToRole },
+      { ref: collection(db, 'notificationRules'), setter: setNotificationRules, transformer: docToNotificationRule },
+      { ref: query(collection(db, 'activities'), orderBy('timestamp', 'desc')), setter: setActivities, transformer: docToActivity },
+      { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment }
+    ];
+
+    collections.forEach(({ ref, setter, transformer }) => {
+      const unsub = onSnapshot(ref, (snapshot) => {
+        setter(snapshot.docs.map(transformer));
+        setLoading(false);
+      }, (error) => {
+        console.error(`Error loading ${ref.id}:`, error);
+        setLoading(false);
+      });
+      unsubscribers.push(unsub);
+    });
+
+    return () => unsubscribers.forEach(unsub => unsub());
+  }, []);
+
+  const addActivity = useCallback(async (activity: Omit<Activity, 'id' | 'timestamp'>) => {
+    await addDoc(collection(db, 'activities'), {
+      ...activity,
+      timestamp: serverTimestamp()
+    });
+  }, []);
+
+  const createNotification = useCallback(async (
     type: Notification['type'],
     title: string,
     message: string,
     relatedTo?: Notification['relatedTo']
   ) => {
-    const notification: Notification = {
-      id: `notif-${Date.now()}`,
+    await addDoc(collection(db, 'notifications'), {
       type,
       title,
       message,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
       read: false,
       relatedTo
-    };
-    setNotifications(prev => [notification, ...prev]);
-  };
+    });
+  }, []);
 
-  const addApp = (app: Omit<App, 'id' | 'createdAt'>) => {
-    const newApp: App = {
+  const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
+    const docRef = await addDoc(collection(db, 'apps'), {
       ...app,
-      id: `app-${Date.now()}`,
-      createdAt: new Date()
-    };
-    setApps(prev => [...prev, newApp]);
-    addActivity({
+      createdAt: serverTimestamp()
+    });
+    const employee = employees.find(e => e.id === app.createdBy);
+    await addActivity({
       type: 'app_created',
       userId: app.createdBy,
-      userName: getEmployeeById(app.createdBy)?.name || 'Unknown',
-      description: `created app "${newApp.name}"`,
-      relatedTo: { type: 'app', id: newApp.id, name: newApp.name }
+      userName: employee?.name || 'Unknown',
+      description: `created app "${app.name}"`,
+      relatedTo: { type: 'app', id: docRef.id, name: app.name }
     });
-  };
+  }, [employees, addActivity]);
 
-  const deleteApp = (appId: string) => {
-    setApps(prev => prev.filter(a => a.id !== appId));
+  const deleteApp = useCallback(async (appId: string) => {
     const appGoals = goals.filter(g => g.appId === appId);
-    appGoals.forEach(g => {
-      const goalMilestones = milestones.filter(m => m.goalId === g.id);
-      goalMilestones.forEach(m => {
-        setTasks(prev => prev.filter(t => t.milestoneId !== m.id));
-      });
-      setMilestones(prev => prev.filter(m => m.goalId !== g.id));
-    });
-    setGoals(prev => prev.filter(g => g.appId !== appId));
-  };
+    for (const goal of appGoals) {
+      const goalMilestones = milestones.filter(m => m.goalId === goal.id);
+      for (const milestone of goalMilestones) {
+        const milestoneTasks = tasks.filter(t => t.milestoneId === milestone.id);
+        for (const task of milestoneTasks) {
+          await deleteDoc(doc(db, 'tasks', task.id));
+        }
+        await deleteDoc(doc(db, 'milestones', milestone.id));
+      }
+      await deleteDoc(doc(db, 'goals', goal.id));
+    }
+    await deleteDoc(doc(db, 'apps', appId));
+  }, [goals, milestones, tasks]);
 
-  const addGoal = (goal: Omit<Goal, 'id' | 'createdAt'>) => {
-    const newGoal: Goal = {
+  const addGoal = useCallback(async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
+    const docRef = await addDoc(collection(db, 'goals'), {
       ...goal,
-      id: `goal-${Date.now()}`,
-      createdAt: new Date()
-    };
-    setGoals(prev => [...prev, newGoal]);
-    addActivity({
+      createdAt: serverTimestamp()
+    });
+    await addActivity({
       type: 'goal_created',
       userId: 'system',
       userName: 'System',
-      description: `created goal "${newGoal.name}"`,
-      relatedTo: { type: 'goal', id: newGoal.id, name: newGoal.name }
+      description: `created goal "${goal.name}"`,
+      relatedTo: { type: 'goal', id: docRef.id, name: goal.name }
     });
-  };
+  }, [addActivity]);
 
-  const deleteGoal = (goalId: string) => {
-    setGoals(prev => prev.filter(g => g.id !== goalId));
+  const deleteGoal = useCallback(async (goalId: string) => {
     const goalMilestones = milestones.filter(m => m.goalId === goalId);
-    goalMilestones.forEach(m => {
-      setTasks(prev => prev.filter(t => t.milestoneId !== m.id));
-    });
-    setMilestones(prev => prev.filter(m => m.goalId !== goalId));
-  };
+    for (const milestone of goalMilestones) {
+      const milestoneTasks = tasks.filter(t => t.milestoneId === milestone.id);
+      for (const task of milestoneTasks) {
+        await deleteDoc(doc(db, 'tasks', task.id));
+      }
+      await deleteDoc(doc(db, 'milestones', milestone.id));
+    }
+    await deleteDoc(doc(db, 'goals', goalId));
+  }, [milestones, tasks]);
 
-  const addMilestone = (milestone: Omit<Milestone, 'id'>) => {
-    const newMilestone: Milestone = {
+  const addMilestone = useCallback(async (milestone: Omit<Milestone, 'id'>) => {
+    const docRef = await addDoc(collection(db, 'milestones'), {
       ...milestone,
-      id: `mile-${Date.now()}`
-    };
-    setMilestones(prev => [...prev, newMilestone]);
-    addActivity({
+      dueDate: milestone.dueDate
+    });
+    await addActivity({
       type: 'milestone_created',
       userId: 'system',
       userName: 'System',
-      description: `created milestone "${newMilestone.name}"`,
-      relatedTo: { type: 'milestone', id: newMilestone.id, name: newMilestone.name }
+      description: `created milestone "${milestone.name}"`,
+      relatedTo: { type: 'milestone', id: docRef.id, name: milestone.name }
     });
-  };
+  }, [addActivity]);
 
-  const deleteMilestone = (milestoneId: string) => {
-    setMilestones(prev => prev.filter(m => m.id !== milestoneId));
-    setTasks(prev => prev.filter(t => t.milestoneId !== milestoneId));
-  };
+  const deleteMilestone = useCallback(async (milestoneId: string) => {
+    const milestoneTasks = tasks.filter(t => t.milestoneId === milestoneId);
+    for (const task of milestoneTasks) {
+      await deleteDoc(doc(db, 'tasks', task.id));
+    }
+    await deleteDoc(doc(db, 'milestones', milestoneId));
+  }, [tasks]);
 
-  const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    const newTask: Task = {
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
+    const docRef = await addDoc(collection(db, 'tasks'), {
       ...task,
-      id: `task-${Date.now()}`,
-      createdAt: new Date()
-    };
-    setTasks(prev => [...prev, newTask]);
-    const assigneeNames = task.assignedTo.map(id => getEmployeeById(id)?.name || 'Unknown').join(', ');
-    addActivity({
+      createdAt: serverTimestamp()
+    });
+    const assigneeNames = task.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
+    await addActivity({
       type: 'task_created',
       userId: task.assignedTo[0] || 'system',
       userName: assigneeNames,
-      description: `was assigned task "${newTask.name}"`,
-      relatedTo: { type: 'task', id: newTask.id, name: newTask.name }
+      description: `was assigned task "${task.name}"`,
+      relatedTo: { type: 'task', id: docRef.id, name: task.name }
     });
-    createNotification(
+    await createNotification(
       'task_assigned',
       'New Task Assigned',
-      `You have been assigned: ${newTask.name}`,
-      { type: 'task', id: newTask.id }
+      `You have been assigned: ${task.name}`,
+      { type: 'task', id: docRef.id }
     );
-  };
+  }, [employees, addActivity, createNotification]);
 
-  const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-  };
+  const deleteTask = useCallback(async (taskId: string) => {
+    await deleteDoc(doc(db, 'tasks', taskId));
+  }, []);
 
-  const updateTask = (taskId: string, updates: Partial<Task>) => {
-    setTasks(prev =>
-      prev.map(task => {
-        if (task.id === taskId) {
-          const updatedTask = { ...task, ...updates };
+  const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
 
-          if (updates.status === 'completed' && task.status !== 'completed') {
-            updatedTask.completedAt = new Date();
-            const employee = getEmployeeById(task.assignedTo[0] || '');
-            addActivity({
-              type: 'task_completed',
-              userId: task.assignedTo[0] || 'system',
-              userName: employee?.name || 'Unknown',
-              description: `completed task "${task.name}"`,
-              relatedTo: { type: 'task', id: task.id, name: task.name }
-            });
-            createNotification(
-              'task_completed',
-              'Task Completed',
-              `${employee?.name} completed: ${task.name}`,
-              { type: 'task', id: task.id }
-            );
-          }
+    const updateData: any = { ...updates };
+    if (updates.status === 'completed' && task.status !== 'completed') {
+      updateData.completedAt = serverTimestamp();
+      const employee = employees.find(e => e.id === task.assignedTo[0]);
+      await addActivity({
+        type: 'task_completed',
+        userId: task.assignedTo[0] || 'system',
+        userName: employee?.name || 'Unknown',
+        description: `completed task "${task.name}"`,
+        relatedTo: { type: 'task', id: task.id, name: task.name }
+      });
+      await createNotification(
+        'task_completed',
+        'Task Completed',
+        `${employee?.name} completed: ${task.name}`,
+        { type: 'task', id: task.id }
+      );
+    }
 
-          return updatedTask;
-        }
-        return task;
-      })
+    await updateDoc(doc(db, 'tasks', taskId), updateData);
+  }, [tasks, employees, addActivity, createNotification]);
+
+  const approveTask = useCallback(async (taskId: string, approverId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const approver = employees.find(e => e.id === approverId);
+    await addActivity({
+      type: 'task_approved',
+      userId: approverId,
+      userName: approver?.name || 'Unknown',
+      description: `approved task "${task.name}"`,
+      relatedTo: { type: 'task', id: task.id, name: task.name }
+    });
+    await createNotification(
+      'task_approved',
+      'Task Approved',
+      `Your task "${task.name}" was approved by ${approver?.name}`,
+      { type: 'task', id: task.id }
     );
-  };
 
-  const approveTask = (taskId: string, approverId: string) => {
-    setTasks(prev =>
-      prev.map(task => {
-        if (task.id === taskId) {
-          const approver = getEmployeeById(approverId);
-          addActivity({
-            type: 'task_approved',
-            userId: approverId,
-            userName: approver?.name || 'Unknown',
-            description: `approved task "${task.name}"`,
-            relatedTo: { type: 'task', id: task.id, name: task.name }
-          });
-          createNotification(
-            'task_approved',
-            'Task Approved',
-            `Your task "${task.name}" was approved by ${approver?.name}`,
-            { type: 'task', id: task.id }
-          );
-          return {
-            ...task,
-            status: 'approved' as TaskStatus,
-            approvedAt: new Date(),
-            approvedBy: approverId
-          };
-        }
-        return task;
-      })
-    );
-  };
+    await updateDoc(doc(db, 'tasks', taskId), {
+      status: 'approved',
+      approvedAt: serverTimestamp(),
+      approvedBy: approverId
+    });
+  }, [tasks, employees, addActivity, createNotification]);
 
-  const addEmployee = (employee: Omit<Employee, 'id'>) => {
-    const newEmployee: Employee = {
+  const addEmployee = useCallback(async (employee: Omit<Employee, 'id'>) => {
+    const employeeId = `emp-${Date.now()}`;
+    await setDoc(doc(db, 'employees', employeeId), {
       ...employee,
-      id: `emp-${Date.now()}`
-    };
-    setEmployees(prev => [...prev, newEmployee]);
-  };
+      id: employeeId
+    });
+  }, []);
 
-  const updateEmployee = (employeeId: string, updates: Partial<Employee>) => {
-    setEmployees(prev =>
-      prev.map(emp => (emp.id === employeeId ? { ...emp, ...updates } : emp))
-    );
-  };
+  const updateEmployee = useCallback(async (employeeId: string, updates: Partial<Employee>) => {
+    await updateDoc(doc(db, 'employees', employeeId), updates);
+  }, []);
 
-  const deleteEmployee = (employeeId: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== employeeId));
-  };
+  const deleteEmployee = useCallback(async (employeeId: string) => {
+    await deleteDoc(doc(db, 'employees', employeeId));
+  }, []);
 
-  const addRole = (role: Omit<Role, 'id'>) => {
-    const newRole: Role = {
+  const addRole = useCallback(async (role: Omit<Role, 'id'>) => {
+    const roleId = `role-${Date.now()}`;
+    await setDoc(doc(db, 'roles', roleId), {
       ...role,
-      id: `role-${Date.now()}`
-    };
-    setRoles(prev => [...prev, newRole]);
-  };
+      id: roleId
+    });
+  }, []);
 
-  const addNotificationRule = (rule: Omit<NotificationRule, 'id'>) => {
-    const newRule: NotificationRule = {
+  const updateRole = useCallback(async (roleId: string, updates: Partial<Role>) => {
+    await updateDoc(doc(db, 'roles', roleId), updates);
+  }, []);
+
+  const deleteRole = useCallback(async (roleId: string) => {
+    await deleteDoc(doc(db, 'roles', roleId));
+  }, []);
+
+  const addNotificationRule = useCallback(async (rule: Omit<NotificationRule, 'id'>) => {
+    const ruleId = `notif-rule-${Date.now()}`;
+    await setDoc(doc(db, 'notificationRules', ruleId), {
       ...rule,
-      id: `notif-rule-${Date.now()}`
-    };
-    setNotificationRules(prev => [...prev, newRule]);
-  };
+      id: ruleId
+    });
+  }, []);
 
-  const updateNotificationRule = (ruleId: string, updates: Partial<NotificationRule>) => {
-    setNotificationRules(prev =>
-      prev.map(rule => (rule.id === ruleId ? { ...rule, ...updates } : rule))
-    );
-  };
+  const updateNotificationRule = useCallback(async (ruleId: string, updates: Partial<NotificationRule>) => {
+    await updateDoc(doc(db, 'notificationRules', ruleId), updates);
+  }, []);
 
-  const deleteNotificationRule = (ruleId: string) => {
-    setNotificationRules(prev => prev.filter(rule => rule.id !== ruleId));
-  };
+  const deleteNotificationRule = useCallback(async (ruleId: string) => {
+    await deleteDoc(doc(db, 'notificationRules', ruleId));
+  }, []);
 
-  const markNotificationRead = (notificationId: string) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-  };
+  const markNotificationRead = useCallback(async (notificationId: string) => {
+    await updateDoc(doc(db, 'notifications', notificationId), { read: true });
+  }, []);
 
-  const addComment = (taskId: string, userId: string, content: string) => {
-    const user = getEmployeeById(userId);
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
+  const addComment = useCallback(async (taskId: string, userId: string, content: string) => {
+    const user = employees.find(e => e.id === userId);
+    await addDoc(collection(db, 'comments'), {
       taskId,
       userId,
       userName: user?.name || 'Unknown',
       content,
-      timestamp: new Date()
-    };
-    setComments(prev => [newComment, ...prev]);
-  };
+      timestamp: serverTimestamp()
+    });
+  }, [employees]);
 
-  const getCommentsForTask = (taskId: string) => {
+  const getCommentsForTask = useCallback((taskId: string) => {
     return comments.filter(comment => comment.taskId === taskId);
-  };
+  }, [comments]);
 
-  const getTasksForEmployee = (employeeId: string) => {
+  const getTasksForEmployee = useCallback((employeeId: string) => {
     return tasks.filter(task => task.assignedTo.includes(employeeId));
-  };
+  }, [tasks]);
 
-  const getGoalsForApp = (appId: string) => {
+  const getGoalsForApp = useCallback((appId: string) => {
     return goals.filter(goal => goal.appId === appId);
-  };
+  }, [goals]);
 
-  const getMilestonesForGoal = (goalId: string) => {
+  const getMilestonesForGoal = useCallback((goalId: string) => {
     return milestones.filter(milestone => milestone.goalId === goalId);
-  };
+  }, [milestones]);
 
-  const getTasksForMilestone = (milestoneId: string) => {
+  const getTasksForMilestone = useCallback((milestoneId: string) => {
     return tasks.filter(task => task.milestoneId === milestoneId);
-  };
+  }, [tasks]);
 
-  const getAppById = (appId: string) => {
+  const getAppById = useCallback((appId: string) => {
     return apps.find(a => a.id === appId);
-  };
+  }, [apps]);
 
-  const getGoalById = (goalId: string) => {
+  const getGoalById = useCallback((goalId: string) => {
     return goals.find(g => g.id === goalId);
-  };
+  }, [goals]);
 
-  const getMilestoneById = (milestoneId: string) => {
+  const getMilestoneById = useCallback((milestoneId: string) => {
     return milestones.find(m => m.id === milestoneId);
-  };
+  }, [milestones]);
 
-  const getEmployeeById = (employeeId: string) => {
+  const getEmployeeById = useCallback((employeeId: string) => {
     return employees.find(e => e.id === employeeId);
-  };
+  }, [employees]);
 
   useEffect(() => {
     milestones.forEach(milestone => {
@@ -375,11 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         milestoneTasks.every(task => task.status === 'approved');
 
       if (allApproved && milestone.status !== 'completed') {
-        setMilestones(prev =>
-          prev.map(m =>
-            m.id === milestone.id ? { ...m, status: 'completed' as const } : m
-          )
-        );
+        updateDoc(doc(db, 'milestones', milestone.id), { status: 'completed' });
         addActivity({
           type: 'milestone_completed',
           userId: 'system',
@@ -395,7 +495,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
       }
     });
-  }, [tasks]);
+  }, [tasks, milestones, getTasksForMilestone, addActivity, createNotification]);
 
   return (
     <AppContext.Provider
@@ -410,6 +510,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notifications,
         activities,
         comments,
+        loading,
         addApp,
         deleteApp,
         addGoal,
@@ -424,6 +525,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateEmployee,
         deleteEmployee,
         addRole,
+        updateRole,
+        deleteRole,
         addNotificationRule,
         updateNotificationRule,
         deleteNotificationRule,
