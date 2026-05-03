@@ -44,7 +44,15 @@ export const roles: Role[] = [
   }
 ];
 
-export const employees: Employee[] = [];
+export const employees: Employee[] = [
+  {
+    id: 'emp-1',
+    name: 'Admin User',
+    email: 'admin@simpli.com',
+    password: 'admin123',
+    roleId: 'role-admin'
+  }
+];
 export const apps: App[] = [];
 export const goals: Goal[] = [];
 export const milestones: Milestone[] = [];
