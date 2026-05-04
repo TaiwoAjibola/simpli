@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Task, TaskStatus } from '../types';
+import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import {
   X,
   User,
@@ -15,7 +15,12 @@ import {
   Activity,
   Send,
   CheckCircle,
-  Star
+  Star,
+  Plus,
+  Trash2,
+  Edit2,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -34,11 +39,26 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     getGoalById,
     getAppById,
     addComment,
-    getCommentsForTask
+    getCommentsForTask,
+    getSubtasksForTask,
+    addSubtask,
+    updateSubtask,
+    deleteSubtask,
+    employees
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'activity'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity'>('details');
   const [commentText, setCommentText] = useState('');
+  const [showAddSubtask, setShowAddSubtask] = useState(false);
+  const [newSubtask, setNewSubtask] = useState({
+    name: '',
+    assignedTo: [] as string[],
+    priority: 'medium' as Subtask['priority'],
+    status: 'pending' as SubtaskStatus
+  });
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [expandedComments, setExpandedComments] = useState<string | null>(null);
+  const [subtaskCommentText, setSubtaskCommentText] = useState('');
 
   const task = tasks.find(t => t.id === initialTask.id) || initialTask;
 
@@ -48,6 +68,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
 
   const comments = getCommentsForTask(task.id);
+  const subtasks = getSubtasksForTask(task.id);
   const canApprove = hasPermission('approve_tasks');
 
   const handleStatusChange = (newStatus: TaskStatus) => {
@@ -61,8 +82,54 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (commentText.trim()) {
-      addComment(task.id, currentUser!.id, commentText);
+      addComment({ taskId: task.id, userId: currentUser!.id, content: commentText });
       setCommentText('');
+    }
+  };
+
+  const handleAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newSubtask.name.trim()) {
+      addSubtask({
+        ...newSubtask,
+        taskId: task.id
+      });
+      setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending' });
+      setShowAddSubtask(false);
+    }
+  };
+
+  const handleSubtaskStatusChange = (subtaskId: string, status: SubtaskStatus) => {
+    updateSubtask(subtaskId, { status });
+  };
+
+  const handleSubtaskPriorityChange = (subtaskId: string, priority: Subtask['priority']) => {
+    updateSubtask(subtaskId, { priority });
+  };
+
+  const handleSubtaskAssigneeChange = (subtaskId: string, assignedTo: string[]) => {
+    updateSubtask(subtaskId, { assignedTo });
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    if (confirm('Delete this subtask?')) {
+      deleteSubtask(subtaskId);
+    }
+  };
+
+  const toggleAssignee = (employeeId: string) => {
+    setNewSubtask(prev => ({
+      ...prev,
+      assignedTo: prev.assignedTo.includes(employeeId)
+        ? prev.assignedTo.filter(id => id !== employeeId)
+        : [...prev.assignedTo, employeeId]
+    }));
+  };
+
+  const handleAddSubtaskComment = (subtaskId: string) => {
+    if (subtaskCommentText.trim()) {
+      addComment({ subtaskId, userId: currentUser!.id, content: subtaskCommentText });
+      setSubtaskCommentText('');
     }
   };
 
@@ -81,9 +148,15 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     approved: 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'
   };
 
+  const subtaskStatusColors = {
+    pending: 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]',
+    in_progress: 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]',
+    completed: 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'
+  };
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] max-w-5xl w-full max-h-[90vh] flex flex-col">
         <div className="flex items-start justify-between p-6 border-b border-[rgba(0,229,255,0.1)]">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -111,6 +184,13 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               onClick={() => setActiveTab('details')}
               icon={FileText}
               label="Details"
+            />
+            <TabButton
+              active={activeTab === 'subtasks'}
+              onClick={() => setActiveTab('subtasks')}
+              icon={CheckCircle}
+              label="Subtasks"
+              count={subtasks.length}
             />
             <TabButton
               active={activeTab === 'comments'}
@@ -141,6 +221,34 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               canApprove={canApprove}
               priorityColors={priorityColors}
               statusColors={statusColors}
+            />
+          )}
+
+          {activeTab === 'subtasks' && (
+            <SubtasksTab
+              subtasks={subtasks}
+              employees={employees}
+              showAddSubtask={showAddSubtask}
+              setShowAddSubtask={setShowAddSubtask}
+              newSubtask={newSubtask}
+              setNewSubtask={setNewSubtask}
+              toggleAssignee={toggleAssignee}
+              handleAddSubtask={handleAddSubtask}
+              editingSubtaskId={editingSubtaskId}
+              setEditingSubtaskId={setEditingSubtaskId}
+              handleSubtaskStatusChange={handleSubtaskStatusChange}
+              handleSubtaskPriorityChange={handleSubtaskPriorityChange}
+              handleSubtaskAssigneeChange={handleSubtaskAssigneeChange}
+              handleDeleteSubtask={handleDeleteSubtask}
+              expandedComments={expandedComments}
+              setExpandedComments={setExpandedComments}
+              subtaskCommentText={subtaskCommentText}
+              setSubtaskCommentText={setSubtaskCommentText}
+              handleAddSubtaskComment={handleAddSubtaskComment}
+              getCommentsForSubtask={useApp().getCommentsForSubtask}
+              getEmployeeById={getEmployeeById}
+              subtaskStatusColors={subtaskStatusColors}
+              priorityColors={priorityColors}
             />
           )}
 
@@ -316,6 +424,271 @@ function DetailsTab({
             Approved by {approver.name} on{' '}
             {task.approvedAt && format(task.approvedAt, 'MMMM d, yyyy')}
           </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubtasksTab({
+  subtasks,
+  employees,
+  showAddSubtask,
+  setShowAddSubtask,
+  newSubtask,
+  setNewSubtask,
+  toggleAssignee,
+  handleAddSubtask,
+  editingSubtaskId,
+  setEditingSubtaskId,
+  handleSubtaskStatusChange,
+  handleSubtaskPriorityChange,
+  handleSubtaskAssigneeChange,
+  handleDeleteSubtask,
+  expandedComments,
+  setExpandedComments,
+  subtaskCommentText,
+  setSubtaskCommentText,
+  handleAddSubtaskComment,
+  getCommentsForSubtask,
+  getEmployeeById,
+  subtaskStatusColors,
+  priorityColors
+}: any) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-[#f0f0f5]">
+          Subtasks ({subtasks.length})
+        </h3>
+        <button
+          onClick={() => setShowAddSubtask(!showAddSubtask)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0] transition"
+        >
+          <Plus className="w-4 h-4" />
+          Add Subtask
+        </button>
+      </div>
+
+      {showAddSubtask && (
+        <form onSubmit={handleAddSubtask} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Subtask Name</label>
+            <input
+              type="text"
+              value={newSubtask.name}
+              onChange={(e) => setNewSubtask({ ...newSubtask, name: e.target.value })}
+              className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+              placeholder="Enter subtask name"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Priority</label>
+              <select
+                value={newSubtask.priority}
+                onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Assign To</label>
+              <div className="flex flex-wrap gap-1">
+                {employees.map((emp: any) => {
+                  const selected = newSubtask.assignedTo.includes(emp.id);
+                  return (
+                    <button
+                      key={emp.id}
+                      type="button"
+                      onClick={() => toggleAssignee(emp.id)}
+                      className={`px-2 py-1 text-xs border transition ${
+                        selected
+                          ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                          : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                      }`}
+                    >
+                      {emp.name.split(' ')[0]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]">
+              Add Subtask
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAddSubtask(false); setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending' }); }}
+              className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] text-sm border border-[rgba(0,229,255,0.1)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {subtasks.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[rgba(0,229,255,0.1)]">
+                <th className="text-left py-3 px-4 text-[#6b6b80] font-medium">Subtask</th>
+                <th className="text-left py-3 px-4 text-[#6b6b80] font-medium">Assigned To</th>
+                <th className="text-left py-3 px-4 text-[#6b6b80] font-medium">Status</th>
+                <th className="text-left py-3 px-4 text-[#6b6b80] font-medium">Priority</th>
+                <th className="text-left py-3 px-4 text-[#6b6b80] font-medium">Updated</th>
+                <th className="text-right py-3 px-4 text-[#6b6b80] font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subtasks.map((subtask: Subtask) => {
+                const assignees = subtask.assignedTo.map((id: string) => getEmployeeById(id)).filter(Boolean);
+                const subtaskComments = getCommentsForSubtask(subtask.id);
+                const isExpanded = expandedComments === subtask.id;
+
+                return (
+                  <React.Fragment key={subtask.id}>
+                    <tr className="border-b border-[rgba(0,229,255,0.05)] hover:bg-[rgba(255,255,255,0.02)]">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setExpandedComments(isExpanded ? null : subtask.id)}
+                            className="p-1 hover:bg-[rgba(255,255,255,0.05)] rounded"
+                          >
+                            {isExpanded ? <ChevronDown className="w-4 h-4 text-[#6b6b80]" /> : <ChevronRight className="w-4 h-4 text-[#6b6b80]" />}
+                          </button>
+                          <span className="text-[#f0f0f5] font-medium">{subtask.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex -space-x-2">
+                          {assignees.slice(0, 3).map((emp: any, idx: number) => (
+                            <div
+                              key={idx}
+                              className="w-6 h-6 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold border-2 border-[#12121a]"
+                              title={emp?.name}
+                            >
+                              {emp?.name.charAt(0)}
+                            </div>
+                          ))}
+                          {assignees.length > 3 && (
+                            <div className="w-6 h-6 bg-[#1a1a2e] rounded-full flex items-center justify-center text-[#6b6b80] text-xs font-bold border-2 border-[#12121a]">
+                              +{assignees.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <select
+                          value={subtask.status}
+                          onChange={(e) => handleSubtaskStatusChange(subtask.id, e.target.value as SubtaskStatus)}
+                          className={`text-xs px-2 py-1 border ${subtaskStatusColors[subtask.status]} bg-transparent`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4">
+                        <select
+                          value={subtask.priority}
+                          onChange={(e) => handleSubtaskPriorityChange(subtask.id, e.target.value as Subtask['priority'])}
+                          className={`text-xs px-2 py-1 border ${priorityColors[subtask.priority]} bg-transparent`}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4 text-[#6b6b80] text-xs">
+                        {format(subtask.updatedAt, 'MMM d, h:mm a')}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => handleDeleteSubtask(subtask.id)}
+                          className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={6} className="px-4 pb-4">
+                          <div className="ml-6 pl-4 border-l-2 border-[rgba(0,229,255,0.1)]">
+                            <h4 className="text-sm font-medium text-[#f0f0f5] mb-3">Comments ({subtaskComments.length})</h4>
+                            <div className="space-y-3 mb-3">
+                              {subtaskComments.map((comment: any) => (
+                                <div key={comment.id} className="flex gap-2 p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold flex-shrink-0">
+                                    {comment.userName.charAt(0)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <p className="font-semibold text-[#f0f0f5] text-sm">{comment.userName}</p>
+                                      <span className="text-xs text-[#6b6b80]">
+                                        {format(comment.timestamp, 'MMM d, h:mm a')}
+                                      </span>
+                                    </div>
+                                    <p className="text-[#f0f0f5] text-sm whitespace-pre-wrap">{comment.content}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={subtaskCommentText}
+                                onChange={(e) => setSubtaskCommentText(e.target.value)}
+                                placeholder="Add a comment..."
+                                className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddSubtaskComment(subtask.id);
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={() => handleAddSubtaskComment(subtask.id)}
+                                disabled={!subtaskCommentText.trim()}
+                                className="px-3 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+                              >
+                                <Send className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {subtasks.length === 0 && !showAddSubtask && (
+        <div className="text-center py-12 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+          <CheckCircle className="w-12 h-12 text-[#6b6b80] mx-auto mb-2" />
+          <p className="text-[#6b6b80] text-sm">No subtasks yet</p>
+          <button
+            onClick={() => setShowAddSubtask(true)}
+            className="mt-3 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+          >
+            Add First Subtask
+          </button>
         </div>
       )}
     </div>

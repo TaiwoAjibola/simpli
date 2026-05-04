@@ -51,9 +51,23 @@ export type Task = {
   status: TaskStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: Date;
+  dueDate?: Date;
   completedAt?: Date;
   approvedAt?: Date;
   approvedBy?: string;
+};
+
+export type SubtaskStatus = 'pending' | 'in_progress' | 'completed';
+
+export type Subtask = {
+  id: string;
+  taskId: string;
+  name: string;
+  assignedTo: string[];
+  status: SubtaskStatus;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type NotificationRule = {
@@ -97,9 +111,18 @@ export type Activity = {
 
 export type Comment = {
   id: string;
-  taskId: string;
+  taskId?: string;
+  subtaskId?: string;
   userId: string;
   userName: string;
   content: string;
   timestamp: Date;
 };
+
+export const NOTIFICATION_VARIABLES = {
+  task: ['{task_name}', '{task_description}', '{task_status}', '{task_priority}', '{task_due_date}'],
+  subtask: ['{subtask_name}', '{subtask_status}', '{subtask_priority}'],
+  user: ['{user_name}', '{assigned_user}', '{created_by}', '{approver_name}'],
+  app: ['{app_name}'],
+  goal: ['{goal_name}']
+} as const;

@@ -16,6 +16,7 @@ import {
   App,
   Goal,
   Task,
+  Subtask,
   Employee,
   Role,
   NotificationRule,
@@ -29,6 +30,7 @@ type AppContextType = {
   apps: App[];
   goals: Goal[];
   tasks: Task[];
+  subtasks: Subtask[];
   employees: Employee[];
   roles: Role[];
   notificationRules: NotificationRule[];
@@ -46,6 +48,9 @@ type AppContextType = {
   deleteTask: (taskId: string) => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
   approveTask: (taskId: string, approverId: string) => Promise<void>;
+  addSubtask: (subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateSubtask: (subtaskId: string, updates: Partial<Subtask>) => Promise<void>;
+  deleteSubtask: (subtaskId: string) => Promise<void>;
   addEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
   updateEmployee: (employeeId: string, updates: Partial<Employee>) => Promise<void>;
   deleteEmployee: (employeeId: string) => Promise<void>;
@@ -56,8 +61,10 @@ type AppContextType = {
   updateNotificationRule: (ruleId: string, updates: Partial<NotificationRule>) => Promise<void>;
   deleteNotificationRule: (ruleId: string) => Promise<void>;
   markNotificationRead: (notificationId: string) => Promise<void>;
-  addComment: (taskId: string, userId: string, content: string) => Promise<void>;
+  addComment: (params: { taskId?: string; subtaskId?: string; userId: string; content: string }) => Promise<void>;
   getCommentsForTask: (taskId: string) => Comment[];
+  getCommentsForSubtask: (subtaskId: string) => Comment[];
+  getSubtasksForTask: (taskId: string) => Subtask[];
   getTasksForEmployee: (employeeId: string) => Task[];
   getGoalsForApp: (appId: string) => Goal[];
   getTasksForGoal: (goalId: string) => Task[];
@@ -92,8 +99,19 @@ function docToTask(doc: any): Task {
     id: doc.id,
     ...data,
     createdAt: data.createdAt?.toDate() || new Date(),
+    dueDate: data.dueDate?.toDate(),
     completedAt: data.completedAt?.toDate(),
     approvedAt: data.approvedAt?.toDate()
+  };
+}
+
+function docToSubtask(doc: any): Subtask {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: data.createdAt?.toDate() || new Date(),
+    updatedAt: data.updatedAt?.toDate() || new Date()
   };
 }
 
@@ -143,6 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [apps, setApps] = useState<App[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
@@ -158,6 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'apps'), setter: setApps, transformer: docToApp },
       { ref: collection(db, 'goals'), setter: setGoals, transformer: docToGoal },
       { ref: collection(db, 'tasks'), setter: setTasks, transformer: docToTask },
+      { ref: collection(db, 'subtasks'), setter: setSubtasks, transformer: docToSubtask },
       { ref: collection(db, 'employees'), setter: setEmployees, transformer: docToEmployee },
       { ref: collection(db, 'roles'), setter: setRoles, transformer: docToRole },
       { ref: collection(db, 'notificationRules'), setter: setNotificationRules, transformer: docToNotificationRule },
@@ -228,12 +248,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     for (const goal of appGoals) {
       const goalTasks = tasks.filter(t => t.goalId === goal.id);
       for (const task of goalTasks) {
+        const taskSubtasks = subtasks.filter(s => s.taskId === task.id);
+        for (const subtask of taskSubtasks) {
+          await deleteDoc(doc(db, 'subtasks', subtask.id));
+        }
         await deleteDoc(doc(db, 'tasks', task.id));
       }
       await deleteDoc(doc(db, 'goals', goal.id));
     }
     await deleteDoc(doc(db, 'apps', appId));
-  }, [goals, tasks]);
+  }, [goals, tasks, subtasks]);
 
   const addGoal = useCallback(async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
     const goalId = `goal-${Date.now()}`;
@@ -258,10 +282,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteGoal = useCallback(async (goalId: string) => {
     const goalTasks = tasks.filter(t => t.goalId === goalId);
     for (const task of goalTasks) {
+      const taskSubtasks = subtasks.filter(s => s.taskId === task.id);
+      for (const subtask of taskSubtasks) {
+        await deleteDoc(doc(db, 'subtasks', subtask.id));
+      }
       await deleteDoc(doc(db, 'tasks', task.id));
     }
     await deleteDoc(doc(db, 'goals', goalId));
-  }, [tasks]);
+  }, [tasks, subtasks]);
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
     const taskId = `task-${Date.now()}`;
@@ -287,8 +315,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [employees, addActivity, createNotification]);
 
   const deleteTask = useCallback(async (taskId: string) => {
+    const taskSubtasks = subtasks.filter(s => s.taskId === taskId);
+    for (const subtask of taskSubtasks) {
+      await deleteDoc(doc(db, 'subtasks', subtask.id));
+    }
     await deleteDoc(doc(db, 'tasks', taskId));
-  }, []);
+  }, [subtasks]);
 
   const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
     const task = tasks.find(t => t.id === taskId);
@@ -342,6 +374,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [tasks, employees, addActivity, createNotification]);
 
+  const addSubtask = useCallback(async (subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const subtaskId = `subtask-${Date.now()}`;
+    await setDoc(doc(db, 'subtasks', subtaskId), {
+      ...subtask,
+      id: subtaskId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  }, []);
+
+  const updateSubtask = useCallback(async (subtaskId: string, updates: Partial<Subtask>) => {
+    await updateDoc(doc(db, 'subtasks', subtaskId), {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+  }, []);
+
+  const deleteSubtask = useCallback(async (subtaskId: string) => {
+    await deleteDoc(doc(db, 'subtasks', subtaskId));
+  }, []);
+
   const addEmployee = useCallback(async (employee: Omit<Employee, 'id'>) => {
     const employeeId = `emp-${Date.now()}`;
     await setDoc(doc(db, 'employees', employeeId), {
@@ -394,10 +447,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await updateDoc(doc(db, 'notifications', notificationId), { read: true });
   }, []);
 
-  const addComment = useCallback(async (taskId: string, userId: string, content: string) => {
+  const addComment = useCallback(async ({ taskId, subtaskId, userId, content }: { taskId?: string; subtaskId?: string; userId: string; content: string }) => {
     const user = employees.find(e => e.id === userId);
     await addDoc(collection(db, 'comments'), {
-      taskId,
+      taskId: taskId || null,
+      subtaskId: subtaskId || null,
       userId,
       userName: user?.name || 'Unknown',
       content,
@@ -408,6 +462,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getCommentsForTask = useCallback((taskId: string) => {
     return comments.filter(comment => comment.taskId === taskId);
   }, [comments]);
+
+  const getCommentsForSubtask = useCallback((subtaskId: string) => {
+    return comments.filter(comment => comment.subtaskId === subtaskId);
+  }, [comments]);
+
+  const getSubtasksForTask = useCallback((taskId: string) => {
+    return subtasks.filter(subtask => subtask.taskId === taskId);
+  }, [subtasks]);
 
   const getTasksForEmployee = useCallback((employeeId: string) => {
     return tasks.filter(task => task.assignedTo.includes(employeeId));
@@ -439,6 +501,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         apps,
         goals,
         tasks,
+        subtasks,
         employees,
         roles,
         notificationRules,
@@ -456,6 +519,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteTask,
         updateTask,
         approveTask,
+        addSubtask,
+        updateSubtask,
+        deleteSubtask,
         addEmployee,
         updateEmployee,
         deleteEmployee,
@@ -468,6 +534,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         markNotificationRead,
         addComment,
         getCommentsForTask,
+        getCommentsForSubtask,
+        getSubtasksForTask,
         getTasksForEmployee,
         getGoalsForApp,
         getTasksForGoal,

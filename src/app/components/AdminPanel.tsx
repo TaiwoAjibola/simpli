@@ -12,9 +12,11 @@ import {
   Check,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Copy,
+  Info
 } from 'lucide-react';
-import { Employee, Role, NotificationRule, Permission } from '../types';
+import { Employee, Role, NotificationRule, Permission, NOTIFICATION_VARIABLES } from '../types';
 
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'employees' | 'roles' | 'notifications'>('employees');
@@ -478,6 +480,14 @@ function NotificationsTab() {
     enabled: true,
     recipients: [] as { type: 'role' | 'user'; id: string }[]
   });
+  const [activeVariableCategory, setActiveVariableCategory] = useState<keyof typeof NOTIFICATION_VARIABLES>('task');
+
+  const insertVariable = (variable: string, field: 'subject' | 'message') => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field] + variable
+    }));
+  };
 
   const handleToggle = (ruleId: string, enabled: boolean) => {
     updateNotificationRule(ruleId, { enabled });
@@ -594,11 +604,11 @@ function NotificationsTab() {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                placeholder="e.g., Task Completed: {{taskName}}"
+                placeholder="e.g., Task Completed: {task_name}"
                 required
               />
               <p className="text-xs text-[#6b6b80] mt-1">
-                Variables: {`{{taskName}}, {{employeeName}}, {{approverName}}`}
+                Click variables below to insert them
               </p>
             </div>
 
@@ -614,6 +624,49 @@ function NotificationsTab() {
                 placeholder="Enter the email message body..."
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Variable Library</label>
+              <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4">
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                  {(Object.keys(NOTIFICATION_VARIABLES) as Array<keyof typeof NOTIFICATION_VARIABLES>).map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setActiveVariableCategory(category)}
+                      className={`px-3 py-1.5 text-sm font-medium whitespace-nowrap transition ${
+                        activeVariableCategory === category
+                          ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.3)]'
+                          : 'text-[#6b6b80] hover:text-[#f0f0f5] border border-transparent'
+                      }`}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="w-4 h-4 text-[#00e5ff]" />
+                    <p className="text-xs text-[#6b6b80]">Click a variable to insert it into the message field</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {NOTIFICATION_VARIABLES[activeVariableCategory].map((variable) => (
+                      <button
+                        key={variable}
+                        type="button"
+                        onClick={() => insertVariable(variable, 'message')}
+                        className="group flex items-center gap-2 px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] hover:border-[#00e5ff] transition text-sm font-mono text-[#00e5ff]"
+                        title={`Insert ${variable} into message`}
+                      >
+                        {variable}
+                        <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
