@@ -14,9 +14,12 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Info
+  Info,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import { Employee, Role, NotificationRule, Permission, NOTIFICATION_VARIABLES } from '../types';
+import { syncEmployeesToFirebaseAuth } from '../../utils/syncEmployees';
 
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'employees' | 'roles' | 'notifications'>('employees');
@@ -93,6 +96,16 @@ function EmployeesTab() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ success: number; failed: { id: string; email: string; error: string }[] } | null>(null);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    const result = await syncEmployeesToFirebaseAuth();
+    setSyncResult(result);
+    setSyncing(false);
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -135,15 +148,54 @@ function EmployeesTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#f0f0f5]">Team Members</h2>
-        <button
-          onClick={() => { setShowAddForm(!showAddForm); setShowPassword(false); }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
-        >
-          <Plus className="w-4 h-4" />
-          Add Employee
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-[#f0f0f5]">Team Members</h2>
+          <p className="text-sm text-[#6b6b80] mt-1">
+            {employees.filter(e => e.firebaseUid).length} of {employees.length} users have Firebase Auth accounts
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-2 px-4 py-2 bg-[#8b5cf6] text-[#0a0a0f] font-medium hover:bg-[#7c4fe0] transition disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            Sync Auth Accounts
+          </button>
+          <button
+            onClick={() => { setShowAddForm(!showAddForm); setShowPassword(false); }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+          >
+            <Plus className="w-4 h-4" />
+            Add Employee
+          </button>
+        </div>
       </div>
+
+      {syncResult && (
+        <div className={`mb-6 p-4 border ${
+          syncResult.failed.length > 0 ? 'bg-[rgba(245,158,11,0.05)] border-[rgba(245,158,11,0.2)]' : 'bg-[rgba(16,185,129,0.05)] border-[rgba(16,185,129,0.2)]'
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className={`w-5 h-5 ${syncResult.failed.length > 0 ? 'text-[#f59e0b]' : 'text-[#10b981]'}`} />
+            <h3 className="font-semibold text-[#f0f0f5]">Sync Complete</h3>
+          </div>
+          <p className="text-sm text-[#f0f0f5]">
+            ✓ {syncResult.success} account{syncResult.success !== 1 ? 's' : ''} created
+            {syncResult.failed.length > 0 && ` · ✗ ${syncResult.failed.length} failed`}
+          </p>
+          {syncResult.failed.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {syncResult.failed.map(f => (
+                <p key={f.id} className="text-xs text-[#f59e0b]">
+                  {f.email}: {f.error}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {showAddForm && (
         <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
@@ -246,6 +298,15 @@ function EmployeesTab() {
                 <span className="px-3 py-1 bg-[rgba(0,229,255,0.1)] text-[#00e5ff] text-sm font-medium border border-[rgba(0,229,255,0.2)]">
                   {role?.name}
                 </span>
+                {employee.firebaseUid ? (
+                  <span className="px-2 py-1 text-xs font-medium bg-[rgba(16,185,129,0.1)] text-[#10b981] border border-[rgba(16,185,129,0.2)] flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Auth Ready
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 text-xs font-medium bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border border-[rgba(245,158,11,0.2)]">
+                    No Auth Account
+                  </span>
+                )}
                 <button
                   onClick={() => handleEdit(employee)}
                   className="p-2 text-[#6b6b80] hover:bg-[rgba(255,255,255,0.02)] transition"
