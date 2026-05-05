@@ -14,10 +14,14 @@ import {
   List,
   LayoutGrid,
   Edit2,
-  Trash2
+  Trash2,
+  ChevronDown,
+  ChevronRight,
+  Layers,
+  Send
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Task, TaskStatus } from '../types';
+import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
 
 export function TasksModule() {
@@ -47,19 +51,34 @@ export function TasksModule() {
     assignedTo: [] as string[],
     priority: 'medium' as const
   });
+  const [showSubtasksSection, setShowSubtasksSection] = useState(false);
+  const [subtasks, setSubtasks] = useState<{ name: string; assignedTo: string[]; priority: Subtask['priority'] }[]>([]);
+  const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'] });
+  const [expandedSubtaskComments, setExpandedSubtaskComments] = useState<string | null>(null);
+  const [subtaskCommentText, setSubtaskCommentText] = useState('');
+  const { addSubtask, getSubtasksForTask, getCommentsForSubtask, addComment } = useApp();
 
   const filteredTasks =
     filterStatus === 'all' ? tasks : tasks.filter((t) => t.status === filterStatus);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTask) {
       updateTask(editingTask.id, formData);
     } else {
-      addTask({
+      const newTask = await addTask({
         ...formData,
         status: 'not_started'
       });
+      if (newTask && subtasks.length > 0) {
+        for (const st of subtasks) {
+          addSubtask({
+            ...st,
+            taskId: newTask.id,
+            status: 'pending'
+          });
+        }
+      }
     }
     setFormData({
       name: '',
@@ -68,6 +87,9 @@ export function TasksModule() {
       assignedTo: [],
       priority: 'medium'
     });
+    setSubtasks([]);
+    setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
+    setShowSubtasksSection(false);
     setShowAddForm(false);
     setEditingTask(null);
   };
@@ -97,6 +119,26 @@ export function TasksModule() {
         ? prev.assignedTo.filter(id => id !== employeeId)
         : [...prev.assignedTo, employeeId]
     }));
+  };
+
+  const toggleSubtaskAssignee = (employeeId: string) => {
+    setNewSubtask(prev => ({
+      ...prev,
+      assignedTo: prev.assignedTo.includes(employeeId)
+        ? prev.assignedTo.filter(id => id !== employeeId)
+        : [...prev.assignedTo, employeeId]
+    }));
+  };
+
+  const addSubtaskToList = () => {
+    if (newSubtask.name.trim()) {
+      setSubtasks(prev => [...prev, { ...newSubtask }]);
+      setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
+    }
+  };
+
+  const removeSubtaskFromList = (index: number) => {
+    setSubtasks(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleApprove = (taskId: string) => {
@@ -241,6 +283,119 @@ export function TasksModule() {
                 <option value="urgent">Urgent</option>
               </select>
             </div>
+
+            {!editingTask && (
+              <div className="pt-4 border-t border-[rgba(0,229,255,0.1)]">
+                <button
+                  type="button"
+                  onClick={() => setShowSubtasksSection(!showSubtasksSection)}
+                  className="flex items-center gap-2 text-sm font-medium text-[#00e5ff] hover:text-[#00c4e0] transition"
+                >
+                  {showSubtasksSection ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  <Layers className="w-4 h-4" />
+                  Add Subtasks
+                </button>
+
+                {showSubtasksSection && (
+                  <div className="mt-4 space-y-4">
+                    <div className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Subtask Name</label>
+                        <input
+                          type="text"
+                          value={newSubtask.name}
+                          onChange={(e) => setNewSubtask({ ...newSubtask, name: e.target.value })}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          placeholder="Enter subtask name"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Priority</label>
+                          <select
+                            value={newSubtask.priority}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as Subtask['priority'] })}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Assign To</label>
+                          <div className="flex flex-wrap gap-1">
+                            {employees.map((emp) => {
+                              const selected = newSubtask.assignedTo.includes(emp.id);
+                              return (
+                                <button
+                                  key={emp.id}
+                                  type="button"
+                                  onClick={() => toggleSubtaskAssignee(emp.id)}
+                                  className={`px-2 py-1 text-xs border transition ${
+                                    selected
+                                      ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                                      : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                                  }`}
+                                >
+                                  {emp.name.split(' ')[0]}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addSubtaskToList}
+                        disabled={!newSubtask.name.trim()}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add to List
+                      </button>
+                    </div>
+
+                    {subtasks.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-[#f0f0f5]">Subtasks to be created ({subtasks.length})</p>
+                        {subtasks.map((st, idx) => {
+                          const assigneeNames = st.assignedTo.map(id => getEmployeeById(id)?.name).filter(Boolean).join(', ');
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-[#f0f0f5]">{st.name}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-xs px-2 py-0.5 ${
+                                    st.priority === 'urgent' ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
+                                    st.priority === 'high' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
+                                    st.priority === 'medium' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' :
+                                    'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
+                                  }`}>
+                                    {st.priority}
+                                  </span>
+                                  {assigneeNames && (
+                                    <span className="text-xs text-[#6b6b80]">→ {assigneeNames}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeSubtaskFromList(idx)}
+                                className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition ml-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex gap-2">
               <button

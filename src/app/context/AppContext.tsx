@@ -312,6 +312,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       `You have been assigned: ${task.name}`,
       { type: 'task', id: taskId }
     );
+    return { id: taskId, ...task, createdAt: new Date() };
   }, [employees, addActivity, createNotification]);
 
   const deleteTask = useCallback(async (taskId: string) => {
