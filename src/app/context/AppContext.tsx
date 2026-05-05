@@ -13,6 +13,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import {
+  createFirebaseUser,
+  updateFirebaseUserPassword,
+  updateFirebaseUserEmail,
+  deleteFirebaseUser
+} from '../../firebase/auth-utils';
+import {
   App,
   Goal,
   Task,
@@ -478,19 +484,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addEmployee = useCallback(async (employee: Omit<Employee, 'id'>) => {
     const employeeId = `emp-${Date.now()}`;
+    const firebaseUid = await createFirebaseUser(employee.email, employee.password);
+    if (!firebaseUid) {
+      console.error('Failed to create Firebase Auth user for employee');
+      return;
+    }
     await setDoc(doc(db, 'employees', employeeId), {
       ...employee,
-      id: employeeId
+      id: employeeId,
+      firebaseUid
     });
   }, []);
 
   const updateEmployee = useCallback(async (employeeId: string, updates: Partial<Employee>) => {
+    const employee = employees.find(e => e.id === employeeId);
+    if (!employee) return;
+
+    if (updates.email && updates.email !== employee.email) {
+      const success = await updateFirebaseUserEmail(employee.firebaseUid || employeeId, updates.email);
+      if (!success) {
+        console.error('Failed to update Firebase Auth email');
+        return;
+      }
+    }
+
+    if (updates.password && updates.password !== employee.password) {
+      const success = await updateFirebaseUserPassword(employee.firebaseUid || employeeId, updates.password);
+      if (!success) {
+        console.error('Failed to update Firebase Auth password');
+        return;
+      }
+    }
+
     await updateDoc(doc(db, 'employees', employeeId), updates);
-  }, []);
+  }, [employees]);
 
   const deleteEmployee = useCallback(async (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    if (employee?.firebaseUid) {
+      await deleteFirebaseUser(employee.firebaseUid);
+    }
     await deleteDoc(doc(db, 'employees', employeeId));
-  }, []);
+  }, [employees]);
 
   const addRole = useCallback(async (role: Omit<Role, 'id'>) => {
     const roleId = `role-${Date.now()}`;

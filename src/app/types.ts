@@ -23,6 +23,7 @@ export type Employee = {
   password: string;
   roleId: string;
   avatar?: string;
+  firebaseUid?: string;
 };
 
 export type App = {
