@@ -474,7 +474,7 @@ function NotificationsTab() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    event: 'task_completed' as NotificationRule['event'],
+    event: 'task_ready_for_testing' as NotificationRule['event'],
     subject: '',
     message: '',
     enabled: true,
@@ -502,7 +502,7 @@ function NotificationsTab() {
       addNotificationRule(formData);
     }
     setFormData({
-      event: 'task_completed',
+      event: 'task_ready_for_testing',
       subject: '',
       message: '',
       enabled: true,
@@ -560,7 +560,7 @@ function NotificationsTab() {
             setShowForm(!showForm);
             setEditingId(null);
             setFormData({
-              event: 'task_completed',
+              event: 'task_ready_for_testing',
               subject: '',
               message: '',
               enabled: true,
@@ -590,8 +590,15 @@ function NotificationsTab() {
                 className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                 required
               >
-                <option value="task_completed">Task Completed</option>
+                <option value="task_started">Task Started (In Progress)</option>
+                <option value="task_ready_for_testing">Task Ready for Testing</option>
+                <option value="task_sent_for_approval">Task Sent for Approval</option>
                 <option value="task_approved">Task Approved</option>
+                <option value="task_rejected">Task Rejected (Sent Back)</option>
+                <option value="task_blocked">Task Blocked</option>
+                <option value="subtask_completed">Subtask Completed</option>
+                <option value="task_assigned">Task Assigned</option>
+                <option value="subtask_assigned">Subtask Assigned</option>
               </select>
             </div>
 
@@ -751,7 +758,7 @@ function NotificationsTab() {
                   setShowForm(false);
                   setEditingId(null);
                   setFormData({
-                    event: 'task_completed',
+                    event: 'task_ready_for_testing',
                     subject: '',
                     message: '',
                     enabled: true,

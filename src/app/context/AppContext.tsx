@@ -328,6 +328,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!task) return;
 
     const updateData: any = { ...updates };
+    if (updates.status === 'in_progress' && task.status === 'not_started') {
+      const employee = employees.find(e => e.id === task.assignedTo[0]);
+      await addActivity({
+        type: 'task_created',
+        userId: task.assignedTo[0] || 'system',
+        userName: employee?.name || 'Unknown',
+        description: `started working on "${task.name}"`,
+        relatedTo: { type: 'task', id: task.id, name: task.name }
+      });
+      await createNotification(
+        'task_started',
+        'Task Started',
+        `${employee?.name} started working on: ${task.name}`,
+        { type: 'task', id: task.id }
+      );
+    }
+
     if (updates.status === 'completed' && task.status !== 'completed') {
       updateData.completedAt = serverTimestamp();
       const employee = employees.find(e => e.id === task.assignedTo[0]);
@@ -335,13 +352,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
         type: 'task_completed',
         userId: task.assignedTo[0] || 'system',
         userName: employee?.name || 'Unknown',
-        description: `completed task "${task.name}"`,
+        description: `completed task "${task.name}" and sent for testing`,
         relatedTo: { type: 'task', id: task.id, name: task.name }
       });
       await createNotification(
-        'task_completed',
-        'Task Completed',
-        `${employee?.name} completed: ${task.name}`,
+        'task_ready_for_testing',
+        'Task Ready for Testing',
+        `${employee?.name} completed: ${task.name}. Ready for testing.`,
+        { type: 'task', id: task.id }
+      );
+    }
+
+    if (updates.status === 'approved' && task.status === 'completed') {
+      updateData.approvedAt = serverTimestamp();
+      const approver = employees.find(e => e.id === updates.approvedBy);
+      await addActivity({
+        type: 'task_approved',
+        userId: updates.approvedBy || 'system',
+        userName: approver?.name || 'Unknown',
+        description: `approved task "${task.name}"`,
+        relatedTo: { type: 'task', id: task.id, name: task.name }
+      });
+      await createNotification(
+        'task_approved',
+        'Task Approved',
+        `${approver?.name} approved: ${task.name}`,
+        { type: 'task', id: task.id }
+      );
+    }
+
+    if (updates.status === 'blocked') {
+      const employee = employees.find(e => e.id === task.assignedTo[0]);
+      await addActivity({
+        type: 'task_created',
+        userId: task.assignedTo[0] || 'system',
+        userName: employee?.name || 'Unknown',
+        description: `blocked task "${task.name}"`,
+        relatedTo: { type: 'task', id: task.id, name: task.name }
+      });
+      await createNotification(
+        'task_blocked',
+        'Task Blocked',
+        `Task "${task.name}" is now blocked.`,
+        { type: 'task', id: task.id }
+      );
+    }
+
+    if (updates.status === 'not_started' && task.status === 'completed') {
+      await createNotification(
+        'task_rejected',
+        'Task Sent Back',
+        `Task "${task.name}" was sent back for revision.`,
         { type: 'task', id: task.id }
       );
     }
@@ -383,14 +444,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-  }, []);
+    const assigneeNames = subtask.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
+    if (assigneeNames) {
+      await createNotification(
+        'subtask_assigned',
+        'Subtask Assigned',
+        `You have been assigned subtask: ${subtask.name}`,
+        { type: 'subtask', id: subtaskId }
+      );
+    }
+  }, [employees, createNotification]);
 
   const updateSubtask = useCallback(async (subtaskId: string, updates: Partial<Subtask>) => {
+    const subtask = subtasks.find(s => s.id === subtaskId);
+    if (subtask && updates.status === 'completed' && subtask.status !== 'completed') {
+      const employee = employees.find(e => e.id === subtask.assignedTo[0]);
+      await createNotification(
+        'subtask_completed',
+        'Subtask Completed',
+        `${employee?.name} completed subtask: ${subtask.name}`,
+        { type: 'subtask', id: subtaskId }
+      );
+    }
     await updateDoc(doc(db, 'subtasks', subtaskId), {
       ...updates,
       updatedAt: serverTimestamp()
     });
-  }, []);
+  }, [subtasks, employees, createNotification]);
 
   const deleteSubtask = useCallback(async (subtaskId: string) => {
     await deleteDoc(doc(db, 'subtasks', subtaskId));

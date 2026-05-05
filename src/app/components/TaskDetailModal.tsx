@@ -259,6 +259,8 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               setCommentText={setCommentText}
               onAddComment={handleAddComment}
               currentUser={currentUser!}
+              getSubtasksForTask={getSubtasksForTask}
+              task={task}
             />
           )}
 
@@ -626,11 +628,16 @@ function SubtasksTab({
                       <tr>
                         <td colSpan={6} className="px-4 pb-4">
                           <div className="ml-6 pl-4 border-l-2 border-[rgba(0,229,255,0.1)]">
-                            <h4 className="text-sm font-medium text-[#f0f0f5] mb-3">Comments ({subtaskComments.length})</h4>
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]">
+                                Subtask
+                              </span>
+                              <h4 className="text-sm font-medium text-[#f0f0f5]">Comments ({subtaskComments.length})</h4>
+                            </div>
                             <div className="space-y-3 mb-3">
                               {subtaskComments.map((comment: any) => (
-                                <div key={comment.id} className="flex gap-2 p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-                                  <div className="w-8 h-8 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold flex-shrink-0">
+                                <div key={comment.id} className="flex gap-2 p-3 bg-[#1a1a2e] border border-[rgba(139,92,246,0.1)]">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-[#8b5cf6] to-[#00e5ff] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold flex-shrink-0">
                                     {comment.userName.charAt(0)}
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -650,8 +657,8 @@ function SubtasksTab({
                                 type="text"
                                 value={subtaskCommentText}
                                 onChange={(e) => setSubtaskCommentText(e.target.value)}
-                                placeholder="Add a comment..."
-                                className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                                placeholder="Add a comment to this subtask..."
+                                className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(139,92,246,0.1)] text-[#f0f0f5] text-sm"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -662,7 +669,7 @@ function SubtasksTab({
                               <button
                                 onClick={() => handleAddSubtaskComment(subtask.id)}
                                 disabled={!subtaskCommentText.trim()}
-                                className="px-3 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+                                className="px-3 py-2 bg-[#8b5cf6] text-[#0a0a0f] text-sm font-medium hover:bg-[#7c4fe0] disabled:opacity-50"
                               >
                                 <Send className="w-4 h-4" />
                               </button>
@@ -695,7 +702,9 @@ function SubtasksTab({
   );
 }
 
-function CommentsTab({ comments, commentText, setCommentText, onAddComment, currentUser }: any) {
+function CommentsTab({ comments, commentText, setCommentText, onAddComment, currentUser, getSubtasksForTask, task }: any) {
+  const subtasks = getSubtasksForTask ? getSubtasksForTask(task.id) : [];
+
   return (
     <div className="space-y-6">
       <form onSubmit={onAddComment} className="space-y-3">
@@ -730,22 +739,42 @@ function CommentsTab({ comments, commentText, setCommentText, onAddComment, curr
           </div>
         ) : (
           <div className="space-y-4">
-            {comments.map((comment: any) => (
-              <div key={comment.id} className="flex gap-3 p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] flex items-center justify-center text-[#0a0a0f] font-bold flex-shrink-0">
-                  {comment.userName.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-[#f0f0f5]">{comment.userName}</p>
-                    <span className="text-xs text-[#6b6b80]">
-                      {format(comment.timestamp, 'MMM d, yyyy · h:mm a')}
-                    </span>
+            {comments.map((comment: any) => {
+              const isSubtaskComment = comment.subtaskId;
+              const relatedSubtask = isSubtaskComment ? subtasks.find((s: any) => s.id === comment.subtaskId) : null;
+
+              return (
+                <div key={comment.id} className={`flex gap-3 p-4 border ${
+                  isSubtaskComment
+                    ? 'bg-[#1a1a2e] border-[rgba(139,92,246,0.1)]'
+                    : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)]'
+                }`}>
+                  <div className={`w-10 h-10 bg-gradient-to-br flex items-center justify-center text-[#0a0a0f] font-bold flex-shrink-0 ${
+                    isSubtaskComment ? 'from-[#8b5cf6] to-[#00e5ff]' : 'from-[#00e5ff] to-[#8b5cf6]'
+                  }`}>
+                    {comment.userName.charAt(0)}
                   </div>
-                  <p className="text-[#f0f0f5] whitespace-pre-wrap">{comment.content}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-[#f0f0f5]">{comment.userName}</p>
+                      {isSubtaskComment ? (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]">
+                          Subtask: {relatedSubtask?.name || 'Unknown'}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)]">
+                          Task
+                        </span>
+                      )}
+                      <span className="text-xs text-[#6b6b80]">
+                        {format(comment.timestamp, 'MMM d, yyyy · h:mm a')}
+                      </span>
+                    </div>
+                    <p className="text-[#f0f0f5] whitespace-pre-wrap">{comment.content}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

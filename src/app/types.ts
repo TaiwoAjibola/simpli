@@ -72,7 +72,16 @@ export type Subtask = {
 
 export type NotificationRule = {
   id: string;
-  event: 'task_completed' | 'task_approved';
+  event:
+    | 'task_started'
+    | 'task_ready_for_testing'
+    | 'task_sent_for_approval'
+    | 'task_approved'
+    | 'task_rejected'
+    | 'task_blocked'
+    | 'subtask_completed'
+    | 'task_assigned'
+    | 'subtask_assigned';
   recipients: {
     type: 'role' | 'user';
     id: string;
@@ -84,13 +93,22 @@ export type NotificationRule = {
 
 export type Notification = {
   id: string;
-  type: 'task_completed' | 'task_approved' | 'task_assigned';
+  type:
+    | 'task_started'
+    | 'task_ready_for_testing'
+    | 'task_sent_for_approval'
+    | 'task_approved'
+    | 'task_rejected'
+    | 'task_blocked'
+    | 'subtask_completed'
+    | 'task_assigned'
+    | 'subtask_assigned';
   title: string;
   message: string;
   createdAt: Date;
   read: boolean;
   relatedTo?: {
-    type: 'task' | 'app';
+    type: 'task' | 'subtask' | 'app';
     id: string;
   };
 };
@@ -120,9 +138,9 @@ export type Comment = {
 };
 
 export const NOTIFICATION_VARIABLES = {
-  task: ['{task_name}', '{task_description}', '{task_status}', '{task_priority}', '{task_due_date}'],
+  task: ['{task_name}', '{task_description}', '{task_status}', '{task_priority}', '{task_due_date}', '{task_previous_status}', '{task_new_status}'],
   subtask: ['{subtask_name}', '{subtask_status}', '{subtask_priority}'],
-  user: ['{user_name}', '{assigned_user}', '{created_by}', '{approver_name}'],
+  user: ['{user_name}', '{assigned_user}', '{created_by}', '{approver_name}', '{tester_name}'],
   app: ['{app_name}'],
   goal: ['{goal_name}']
 } as const;

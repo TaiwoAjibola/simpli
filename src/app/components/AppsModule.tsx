@@ -163,7 +163,7 @@ export function AppsModule() {
               key={app.id}
               className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6 hover:border-[rgba(0,229,255,0.3)] transition relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 opacity-5" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
+              <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
 
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
