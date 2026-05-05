@@ -12,6 +12,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { sendEmail } from '../../utils/sendEmail';
 import {
   createFirebaseUser,
   updateFirebaseUserPassword,
@@ -226,7 +227,76 @@ export function AppProvider({ children }: { children: ReactNode }) {
       read: false,
       relatedTo
     });
-  }, []);
+
+    const matchingRules = notificationRules.filter(
+      rule => rule.event === type && rule.enabled
+    );
+
+    for (const rule of matchingRules) {
+      const recipientEmails: string[] = [];
+
+      for (const recipient of rule.recipients) {
+        if (recipient.type === 'user') {
+          const user = employees.find(e => e.id === recipient.id);
+          if (user?.email) recipientEmails.push(user.email);
+        } else if (recipient.type === 'role') {
+          const roleUsers = employees.filter(e => e.roleId === recipient.id);
+          roleUsers.forEach(u => { if (u.email) recipientEmails.push(u.email); });
+        }
+      }
+
+      const uniqueEmails = [...new Set(recipientEmails)];
+
+      if (uniqueEmails.length > 0) {
+        let variables: Record<string, string> = {};
+
+        if (relatedTo?.type === 'task') {
+          const task = tasks.find(t => t.id === relatedTo.id);
+          if (task) {
+            const goal = goals.find(g => g.id === task.goalId);
+            const app = goal ? apps.find(a => a.id === goal.appId) : null;
+            const assignee = task.assignedTo.length > 0 ? employees.find(e => e.id === task.assignedTo[0]) : null;
+
+            variables = {
+              task_name: task.name,
+              task_description: task.description,
+              task_status: task.status,
+              task_priority: task.priority,
+              task_due_date: task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A',
+              user_name: assignee?.name || '',
+              assigned_user: assignee?.name || '',
+              approver_name: '',
+              tester_name: '',
+              app_name: app?.name || '',
+              goal_name: goal?.name || ''
+            };
+          }
+        } else if (relatedTo?.type === 'subtask') {
+          const subtask = subtasks.find(s => s.id === relatedTo.id);
+          if (subtask) {
+            const assignee = subtask.assignedTo.length > 0 ? employees.find(e => e.id === subtask.assignedTo[0]) : null;
+            variables = {
+              subtask_name: subtask.name,
+              subtask_status: subtask.status,
+              subtask_priority: subtask.priority,
+              user_name: assignee?.name || '',
+              assigned_user: assignee?.name || ''
+            };
+          }
+        }
+
+        let emailSubject = rule.subject;
+        let emailMessage = rule.message;
+
+        for (const [key, value] of Object.entries(variables)) {
+          emailSubject = emailSubject.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+          emailMessage = emailMessage.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+        }
+
+        await sendEmail(uniqueEmails, emailSubject, emailMessage.replace(/\n/g, '<br>'));
+      }
+    }
+  }, [notificationRules, employees, tasks, goals, apps, subtasks]);
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
     const appId = `app-${Date.now()}`;
