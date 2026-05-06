@@ -18,7 +18,10 @@ import {
   ChevronDown,
   ChevronRight,
   Layers,
-  Send
+  Send,
+  Paperclip,
+  FileText,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
@@ -64,41 +67,90 @@ export function TasksModule() {
   const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'] });
   const [expandedSubtaskComments, setExpandedSubtaskComments] = useState<string | null>(null);
   const [subtaskCommentText, setSubtaskCommentText] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const filteredTasks =
     filterStatus === 'all' ? tasks : tasks.filter((t) => t.status === filterStatus);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingTask) {
-      updateTask(editingTask.id, formData);
-    } else {
-      const newTask = await addTask({
-        ...formData,
-        status: 'not_started'
-      });
-      if (newTask && subtasks.length > 0) {
-        for (const st of subtasks) {
-          addSubtask({
-            ...st,
-            taskId: newTask.id,
-            status: 'pending'
-          });
+    setUploading(true);
+    try {
+      if (editingTask) {
+        await updateTask(editingTask.id, formData);
+      } else {
+        const newTask = await addTask({
+          ...formData,
+          status: 'not_started'
+        });
+        if (newTask && subtasks.length > 0) {
+          for (const st of subtasks) {
+            addSubtask({
+              ...st,
+              taskId: newTask.id,
+              status: 'pending'
+            });
+          }
+        }
+        if (newTask && attachments.length > 0) {
+          const { storage } = await import('../../firebase/config');
+          const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+          const uploadedAttachments = [];
+
+          for (const file of attachments) {
+            const fileRef = ref(storage, `tasks/${newTask.id}/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            uploadedAttachments.push({
+              id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: file.name,
+              url: downloadURL,
+              size: file.size,
+              uploadedAt: new Date(),
+              uploadedBy: currentUser!.id
+            });
+          }
+
+          if (uploadedAttachments.length > 0) {
+            await updateTask(newTask.id, { attachments: uploadedAttachments });
+          }
         }
       }
+      setFormData({
+        name: '',
+        description: '',
+        goalId: '',
+        assignedTo: [],
+        priority: 'medium'
+      });
+      setSubtasks([]);
+      setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
+      setShowSubtasksSection(false);
+      setAttachments([]);
+      setShowAddForm(false);
+      setEditingTask(null);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    } finally {
+      setUploading(false);
     }
-    setFormData({
-      name: '',
-      description: '',
-      goalId: '',
-      assignedTo: [],
-      priority: 'medium'
-    });
-    setSubtasks([]);
-    setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
-    setShowSubtasksSection(false);
-    setShowAddForm(false);
-    setEditingTask(null);
   };
 
   const handleEdit = (task: Task) => {
@@ -404,12 +456,61 @@ export function TasksModule() {
               </div>
             )}
 
+            {!editingTask && (
+              <div className="pt-4 border-t border-[rgba(0,229,255,0.1)]">
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2 flex items-center gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Attachments
+                </label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 px-4 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm cursor-pointer hover:bg-[#1e1e2a] transition">
+                    <Paperclip className="w-4 h-4" />
+                    Choose Files
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.txt"
+                    />
+                  </label>
+                  {attachments.length > 0 && (
+                    <span className="text-xs text-[#6b6b80]">{attachments.length} file{attachments.length > 1 ? 's' : ''} selected</span>
+                  )}
+                </div>
+
+                {attachments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="w-4 h-4 text-[#00e5ff] flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm text-[#f0f0f5] truncate">{file.name}</p>
+                            <p className="text-xs text-[#6b6b80]">{formatFileSize(file.size)}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition flex-shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+                disabled={uploading}
+                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
               >
-                {editingTask ? 'Update' : 'Create'} Task
+                {uploading ? 'Uploading...' : (editingTask ? 'Update' : 'Create') + ' Task'}
               </button>
               <button
                 type="button"

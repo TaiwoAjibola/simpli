@@ -1,9 +1,18 @@
-export async function sendEmail(to: string | string[], subject: string, html: string): Promise<boolean> {
+export async function sendEmail(
+  recipients: { to: string[]; cc?: string[] },
+  subject: string,
+  html: string
+): Promise<boolean> {
   try {
     const response = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to, subject, html })
+      body: JSON.stringify({
+        to: recipients.to,
+        cc: recipients.cc,
+        subject,
+        html
+      })
     });
 
     const data = await response.json();

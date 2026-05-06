@@ -234,21 +234,84 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     for (const rule of matchingRules) {
-      const recipientEmails: string[] = [];
+      const primaryRecipients = rule.primaryRecipients || [];
+      const ccRecipients = rule.ccRecipients || [];
 
-      for (const recipient of rule.recipients) {
-        if (recipient.type === 'user') {
-          const user = employees.find(e => e.id === recipient.id);
-          if (user?.email) recipientEmails.push(user.email);
-        } else if (recipient.type === 'role') {
-          const roleUsers = employees.filter(e => e.roleId === recipient.id);
-          roleUsers.forEach(u => { if (u.email) recipientEmails.push(u.email); });
+      const toEmails: string[] = [];
+      const ccEmails: string[] = [];
+
+      if (relatedTo?.type === 'task') {
+        const task = tasks.find(t => t.id === relatedTo.id);
+        if (task) {
+          for (const recipient of primaryRecipients) {
+            if (recipient.type === 'assigned_user') {
+              task.assignedTo.forEach(uid => {
+                const user = employees.find(e => e.id === uid);
+                if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
+              });
+            } else if (recipient.type === 'approver' && task.approvedBy) {
+              const approver = employees.find(e => e.id === task.approvedBy);
+              if (approver?.email && !toEmails.includes(approver.email)) toEmails.push(approver.email);
+            } else if (recipient.type === 'creator') {
+              const creator = employees.find(e => e.id === task.assignedTo[0]);
+              if (creator?.email && !toEmails.includes(creator.email)) toEmails.push(creator.email);
+            } else if (recipient.type === 'role' && recipient.id) {
+              employees.filter(e => e.roleId === recipient.id).forEach(u => {
+                if (u.email && !toEmails.includes(u.email)) toEmails.push(u.email);
+              });
+            } else if (recipient.type === 'user' && recipient.id) {
+              const user = employees.find(e => e.id === recipient.id);
+              if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
+            }
+          }
+
+          for (const recipient of ccRecipients) {
+            if (recipient.type === 'role') {
+              employees.filter(e => e.roleId === recipient.id).forEach(u => {
+                if (u.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+              });
+            } else if (recipient.type === 'user') {
+              const user = employees.find(e => e.id === recipient.id);
+              if (user?.email && !ccEmails.includes(user.email)) ccEmails.push(user.email);
+            }
+          }
+        }
+      } else if (relatedTo?.type === 'subtask') {
+        const subtask = subtasks.find(s => s.id === relatedTo.id);
+        if (subtask) {
+          for (const recipient of primaryRecipients) {
+            if (recipient.type === 'assigned_user') {
+              subtask.assignedTo.forEach(uid => {
+                const user = employees.find(e => e.id === uid);
+                if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
+              });
+            } else if (recipient.type === 'role' && recipient.id) {
+              employees.filter(e => e.roleId === recipient.id).forEach(u => {
+                if (u.email && !toEmails.includes(u.email)) toEmails.push(u.email);
+              });
+            } else if (recipient.type === 'user' && recipient.id) {
+              const user = employees.find(e => e.id === recipient.id);
+              if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
+            }
+          }
+
+          for (const recipient of ccRecipients) {
+            if (recipient.type === 'role') {
+              employees.filter(e => e.roleId === recipient.id).forEach(u => {
+                if (u.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+              });
+            } else if (recipient.type === 'user') {
+              const user = employees.find(e => e.id === recipient.id);
+              if (user?.email && !ccEmails.includes(user.email)) ccEmails.push(user.email);
+            }
+          }
         }
       }
 
-      const uniqueEmails = [...new Set(recipientEmails)];
+      const allRecipients = [...toEmails, ...ccEmails];
+      const uniqueRecipients = [...new Set(allRecipients)];
 
-      if (uniqueEmails.length > 0) {
+      if (uniqueRecipients.length > 0) {
         let variables: Record<string, string> = {};
 
         if (relatedTo?.type === 'task') {
@@ -257,6 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const goal = goals.find(g => g.id === task.goalId);
             const app = goal ? apps.find(a => a.id === goal.appId) : null;
             const assignee = task.assignedTo.length > 0 ? employees.find(e => e.id === task.assignedTo[0]) : null;
+            const approver = task.approvedBy ? employees.find(e => e.id === task.approvedBy) : null;
 
             variables = {
               task_name: task.name,
@@ -264,9 +328,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
               task_status: task.status,
               task_priority: task.priority,
               task_due_date: task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A',
+              task_previous_status: '',
+              task_new_status: task.status,
               user_name: assignee?.name || '',
               assigned_user: assignee?.name || '',
-              approver_name: '',
+              approver_name: approver?.name || '',
               tester_name: '',
               app_name: app?.name || '',
               goal_name: goal?.name || ''
@@ -294,7 +360,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           emailMessage = emailMessage.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
         }
 
-        await sendEmail(uniqueEmails, emailSubject, emailMessage.replace(/\n/g, '<br>'));
+        await sendEmail({ to: toEmails, cc: ccEmails.length > 0 ? ccEmails : undefined }, emailSubject, emailMessage.replace(/\n/g, '<br>'));
       }
     }
   }, [notificationRules, employees, tasks, goals, apps, subtasks]);

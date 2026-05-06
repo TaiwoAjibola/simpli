@@ -56,6 +56,14 @@ export type Task = {
   completedAt?: Date;
   approvedAt?: Date;
   approvedBy?: string;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    uploadedAt: Date;
+    uploadedBy: string;
+  }[];
 };
 
 export type SubtaskStatus = 'pending' | 'in_progress' | 'completed';
@@ -83,7 +91,11 @@ export type NotificationRule = {
     | 'subtask_completed'
     | 'task_assigned'
     | 'subtask_assigned';
-  recipients: {
+  primaryRecipients: {
+    type: 'assigned_user' | 'approver' | 'creator' | 'role' | 'user';
+    id?: string;
+  }[];
+  ccRecipients: {
     type: 'role' | 'user';
     id: string;
   }[];

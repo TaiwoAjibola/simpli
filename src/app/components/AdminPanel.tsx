@@ -554,14 +554,24 @@ function NotificationsTab() {
     subject: '',
     message: '',
     enabled: true,
-    recipients: [] as { type: 'role' | 'user'; id: string }[]
+    primaryRecipients: [] as NotificationRule['primaryRecipients'],
+    ccRecipients: [] as NotificationRule['ccRecipients']
   });
   const [activeVariableCategory, setActiveVariableCategory] = useState<keyof typeof NOTIFICATION_VARIABLES>('task');
+  const [activeField, setActiveField] = useState<'subject' | 'message'>('message');
 
-  const insertVariable = (variable: string, field: 'subject' | 'message') => {
+  const primaryOptions: { type: NotificationRule['primaryRecipients'][number]['type']; label: string }[] = [
+    { type: 'assigned_user', label: 'Assigned User (Auto)' },
+    { type: 'approver', label: 'Approver (Auto)' },
+    { type: 'creator', label: 'Task Creator (Auto)' },
+    { type: 'role', label: 'Specific Role' },
+    { type: 'user', label: 'Specific User' }
+  ];
+
+  const insertVariable = (variable: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: prev[field] + variable
+      [activeField]: prev[activeField] + variable
     }));
   };
 
@@ -582,7 +592,8 @@ function NotificationsTab() {
       subject: '',
       message: '',
       enabled: true,
-      recipients: []
+      primaryRecipients: [],
+      ccRecipients: []
     });
     setShowForm(false);
   };
@@ -593,7 +604,8 @@ function NotificationsTab() {
       subject: rule.subject,
       message: rule.message,
       enabled: rule.enabled,
-      recipients: rule.recipients
+      primaryRecipients: rule.primaryRecipients || [],
+      ccRecipients: rule.ccRecipients || []
     });
     setEditingId(rule.id);
     setShowForm(true);
@@ -605,21 +617,49 @@ function NotificationsTab() {
     }
   };
 
-  const toggleRecipient = (type: 'role' | 'user', id: string) => {
+  const togglePrimaryRecipient = (type: NotificationRule['primaryRecipients'][number]['type'], id?: string) => {
     setFormData(prev => {
-      const exists = prev.recipients.some(r => r.type === type && r.id === id);
+      const exists = prev.primaryRecipients.some(r => r.type === type && r.id === id);
       if (exists) {
         return {
           ...prev,
-          recipients: prev.recipients.filter(r => !(r.type === type && r.id === id))
+          primaryRecipients: prev.primaryRecipients.filter(r => !(r.type === type && r.id === id))
         };
       } else {
         return {
           ...prev,
-          recipients: [...prev.recipients, { type, id }]
+          primaryRecipients: [...prev.primaryRecipients, { type, id }]
         };
       }
     });
+  };
+
+  const toggleCcRecipient = (type: 'role' | 'user', id: string) => {
+    setFormData(prev => {
+      const exists = prev.ccRecipients.some(r => r.type === type && r.id === id);
+      if (exists) {
+        return {
+          ...prev,
+          ccRecipients: prev.ccRecipients.filter(r => !(r.type === type && r.id === id))
+        };
+      } else {
+        return {
+          ...prev,
+          ccRecipients: [...prev.ccRecipients, { type, id }]
+        };
+      }
+    });
+  };
+
+  const getPrimaryLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      assigned_user: 'Assigned User',
+      approver: 'Approver',
+      creator: 'Task Creator',
+      role: 'Role',
+      user: 'User'
+    };
+    return labels[type] || type;
   };
 
   return (
@@ -640,7 +680,8 @@ function NotificationsTab() {
               subject: '',
               message: '',
               enabled: true,
-              recipients: []
+              primaryRecipients: [],
+              ccRecipients: []
             });
           }}
           className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
@@ -686,13 +727,11 @@ function NotificationsTab() {
                 type="text"
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                onFocus={() => setActiveField('subject')}
                 className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                 placeholder="e.g., Task Completed: {task_name}"
                 required
               />
-              <p className="text-xs text-[#6b6b80] mt-1">
-                Click variables below to insert them
-              </p>
             </div>
 
             <div>
@@ -702,6 +741,7 @@ function NotificationsTab() {
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onFocus={() => setActiveField('message')}
                 className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                 rows={4}
                 placeholder="Enter the email message body..."
@@ -732,16 +772,18 @@ function NotificationsTab() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 mb-2">
                     <Info className="w-4 h-4 text-[#00e5ff]" />
-                    <p className="text-xs text-[#6b6b80]">Click a variable to insert it into the message field</p>
+                    <p className="text-xs text-[#6b6b80]">
+                      Click to insert into <span className="text-[#00e5ff] font-medium">{activeField === 'subject' ? 'Subject' : 'Message'}</span>
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {NOTIFICATION_VARIABLES[activeVariableCategory].map((variable) => (
                       <button
                         key={variable}
                         type="button"
-                        onClick={() => insertVariable(variable, 'message')}
+                        onClick={() => insertVariable(variable)}
                         className="group flex items-center gap-2 px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] hover:border-[#00e5ff] transition text-sm font-mono text-[#00e5ff]"
-                        title={`Insert ${variable} into message`}
+                        title={`Insert ${variable}`}
                       >
                         {variable}
                         <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition" />
@@ -753,25 +795,99 @@ function NotificationsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Recipients</label>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Primary Recipients (To)</label>
+              <div className="p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] space-y-3">
+                <p className="text-xs text-[#6b6b80]">Auto-filled recipients based on task context. At least one required.</p>
+                <div className="flex flex-wrap gap-2">
+                  {primaryOptions.map((option) => {
+                    const isSelected = formData.primaryRecipients.some(r => r.type === option.type);
+                    return (
+                      <button
+                        key={option.type}
+                        type="button"
+                        onClick={() => togglePrimaryRecipient(option.type)}
+                        className={`px-3 py-1.5 text-sm border-2 transition ${
+                          isSelected
+                            ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                            : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-              <div className="space-y-3">
+                {formData.primaryRecipients.some(r => r.type === 'role') && (
+                  <div className="pt-2 border-t border-[rgba(0,229,255,0.1)]">
+                    <p className="text-xs font-medium text-[#6b6b80] mb-2">Select Role</p>
+                    <div className="flex flex-wrap gap-2">
+                      {roles.map((role) => {
+                        const isSelected = formData.primaryRecipients.some(r => r.type === 'role' && r.id === role.id);
+                        return (
+                          <button
+                            key={role.id}
+                            type="button"
+                            onClick={() => togglePrimaryRecipient('role', role.id)}
+                            className={`px-3 py-1.5 text-sm border-2 transition ${
+                              isSelected
+                                ? 'bg-[rgba(139,92,246,0.1)] border-[#8b5cf6] text-[#8b5cf6] font-medium'
+                                : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                            }`}
+                          >
+                            {role.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {formData.primaryRecipients.some(r => r.type === 'user') && (
+                  <div className="pt-2 border-t border-[rgba(0,229,255,0.1)]">
+                    <p className="text-xs font-medium text-[#6b6b80] mb-2">Select User</p>
+                    <div className="flex flex-wrap gap-2">
+                      {employees.map((employee) => {
+                        const isSelected = formData.primaryRecipients.some(r => r.type === 'user' && r.id === employee.id);
+                        return (
+                          <button
+                            key={employee.id}
+                            type="button"
+                            onClick={() => togglePrimaryRecipient('user', employee.id)}
+                            className={`px-3 py-1.5 text-sm border-2 transition ${
+                              isSelected
+                                ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                                : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                            }`}
+                          >
+                            {employee.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">CC Recipients</label>
+              <div className="p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] space-y-3">
+                <p className="text-xs text-[#6b6b80]">Optional. Add users or roles for visibility.</p>
                 <div>
                   <p className="text-xs font-medium text-[#6b6b80] mb-2">Roles</p>
                   <div className="flex flex-wrap gap-2">
                     {roles.map((role) => {
-                      const isSelected = formData.recipients.some(
-                        r => r.type === 'role' && r.id === role.id
-                      );
+                      const isSelected = formData.ccRecipients.some(r => r.type === 'role' && r.id === role.id);
                       return (
                         <button
                           key={role.id}
                           type="button"
-                          onClick={() => toggleRecipient('role', role.id)}
+                          onClick={() => toggleCcRecipient('role', role.id)}
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
                               ? 'bg-[rgba(139,92,246,0.1)] border-[#8b5cf6] text-[#8b5cf6] font-medium'
-                              : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
                           }`}
                         >
                           {role.name}
@@ -780,23 +896,20 @@ function NotificationsTab() {
                     })}
                   </div>
                 </div>
-
                 <div>
                   <p className="text-xs font-medium text-[#6b6b80] mb-2">Specific Users</p>
                   <div className="flex flex-wrap gap-2">
                     {employees.map((employee) => {
-                      const isSelected = formData.recipients.some(
-                        r => r.type === 'user' && r.id === employee.id
-                      );
+                      const isSelected = formData.ccRecipients.some(r => r.type === 'user' && r.id === employee.id);
                       return (
                         <button
                           key={employee.id}
                           type="button"
-                          onClick={() => toggleRecipient('user', employee.id)}
+                          onClick={() => toggleCcRecipient('user', employee.id)}
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
                               ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                              : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
                           }`}
                         >
                           {employee.name}
@@ -838,7 +951,8 @@ function NotificationsTab() {
                     subject: '',
                     message: '',
                     enabled: true,
-                    recipients: []
+                    primaryRecipients: [],
+                    ccRecipients: []
                   });
                 }}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
@@ -851,85 +965,109 @@ function NotificationsTab() {
       )}
 
       <div className="space-y-4">
-        {notificationRules.map((rule) => (
-          <div
-            key={rule.id}
-            className="p-5 border border-[rgba(0,229,255,0.1)] bg-[#12121a]"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-[#f0f0f5]">
-                    {rule.event.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </h3>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rule.enabled}
-                      onChange={(e) => handleToggle(rule.id, e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-[#1e1e2a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00e5ff]"></div>
-                  </label>
-                </div>
+        {notificationRules.map((rule) => {
+          const primaryRecipients = rule.primaryRecipients || [];
+          const ccRecipients = rule.ccRecipients || [];
 
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-medium text-[#6b6b80] mb-1">Subject:</p>
-                    <p className="text-sm text-[#f0f0f5]">{rule.subject}</p>
+          return (
+            <div
+              key={rule.id}
+              className="p-5 border border-[rgba(0,229,255,0.1)] bg-[#12121a]"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-semibold text-[#f0f0f5]">
+                      {rule.event.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={rule.enabled}
+                        onChange={(e) => handleToggle(rule.id, e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-[#1e1e2a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00e5ff]"></div>
+                    </label>
                   </div>
 
-                  <div>
-                    <p className="text-xs font-medium text-[#6b6b80] mb-1">Message:</p>
-                    <p className="text-sm text-[#f0f0f5] whitespace-pre-line">{rule.message}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-[#6b6b80] mb-2">Recipients:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {rule.recipients.map((recipient, idx) => {
-                        const label =
-                          recipient.type === 'role'
-                            ? roles.find((r) => r.id === recipient.id)?.name
-                            : employees.find((e) => e.id === recipient.id)?.name;
-
-                        return (
-                          <span
-                            key={idx}
-                            className={`px-3 py-1 text-xs font-medium ${
-                              recipient.type === 'role'
-                                ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]'
-                                : 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)]'
-                            }`}
-                          >
-                            {label}
-                          </span>
-                        );
-                      })}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-[#6b6b80] mb-1">Subject:</p>
+                      <p className="text-sm text-[#f0f0f5]">{rule.subject}</p>
                     </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-[#6b6b80] mb-1">Message:</p>
+                      <p className="text-sm text-[#f0f0f5] whitespace-pre-line">{rule.message}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-[#6b6b80] mb-2">To (Primary):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {primaryRecipients.map((recipient, idx) => {
+                          let label = getPrimaryLabel(recipient.type);
+                          if (recipient.type === 'role' && recipient.id) {
+                            label = roles.find(r => r.id === recipient.id)?.name || label;
+                          } else if (recipient.type === 'user' && recipient.id) {
+                            label = employees.find(e => e.id === recipient.id)?.name || label;
+                          }
+                          return (
+                            <span
+                              key={idx}
+                              className="px-3 py-1 text-xs font-medium bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)]"
+                            >
+                              {label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {ccRecipients.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-[#6b6b80] mb-2">CC:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {ccRecipients.map((recipient, idx) => {
+                            const label =
+                              recipient.type === 'role'
+                                ? roles.find(r => r.id === recipient.id)?.name
+                                : employees.find(e => e.id === recipient.id)?.name;
+                            return (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 text-xs font-medium bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]"
+                              >
+                                {label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="flex gap-2 ml-4">
-                <button
-                  onClick={() => handleEdit(rule)}
-                  className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
-                  title="Edit"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(rule.id)}
-                  className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={() => handleEdit(rule)}
+                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                    title="Edit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(rule.id)}
+                    className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {notificationRules.length === 0 && !showForm && (
           <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
