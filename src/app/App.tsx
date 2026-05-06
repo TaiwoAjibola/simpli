@@ -12,6 +12,8 @@ import { GoalsModule } from './components/GoalsMilestonesModule';
 import { TasksModule } from './components/TasksModule';
 import { ActivitiesPage } from './components/ActivitiesPage';
 import { AnalyticsPage } from './components/AnalyticsPage';
+import { TimelinePage } from './components/TimelinePage';
+import { ArchivePage } from './components/ArchivePage';
 import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
@@ -39,6 +41,8 @@ function AppContent() {
         {currentPage === 'my-work' && <MyWork />}
         {currentPage === 'kanban' && <KanbanBoard />}
         {currentPage === 'analytics' && <AnalyticsPage />}
+        {currentPage === 'timeline' && <TimelinePage />}
+        {currentPage === 'archive' && <ArchivePage />}
         {currentPage === 'activities' && <ActivitiesPage />}
         {currentPage === 'apps' && <AppsModule />}
         {currentPage === 'goals' && <GoalsModule />}

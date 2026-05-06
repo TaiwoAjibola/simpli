@@ -54,7 +54,9 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     name: '',
     assignedTo: [] as string[],
     priority: 'medium' as Subtask['priority'],
-    status: 'pending' as SubtaskStatus
+    status: 'pending' as SubtaskStatus,
+    startDate: '',
+    endDate: ''
   });
   const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
   const [expandedComments, setExpandedComments] = useState<string | null>(null);
@@ -92,9 +94,11 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     if (newSubtask.name.trim()) {
       addSubtask({
         ...newSubtask,
-        taskId: task.id
+        taskId: task.id,
+        startDate: newSubtask.startDate ? new Date(newSubtask.startDate) : undefined,
+        endDate: newSubtask.endDate ? new Date(newSubtask.endDate) : undefined
       });
-      setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending' });
+      setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending', startDate: '', endDate: '' });
       setShowAddSubtask(false);
     }
   };
@@ -522,13 +526,33 @@ function SubtasksTab({
               </div>
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Start Date</label>
+              <input
+                type="date"
+                value={newSubtask.startDate}
+                onChange={(e) => setNewSubtask({ ...newSubtask, startDate: e.target.value })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-1">End Date</label>
+              <input
+                type="date"
+                value={newSubtask.endDate}
+                onChange={(e) => setNewSubtask({ ...newSubtask, endDate: e.target.value })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+              />
+            </div>
+          </div>
           <div className="flex gap-2">
             <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]">
               Add Subtask
             </button>
             <button
               type="button"
-              onClick={() => { setShowAddSubtask(false); setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending' }); }}
+              onClick={() => { setShowAddSubtask(false); setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending', startDate: '', endDate: '' }); }}
               className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] text-sm border border-[rgba(0,229,255,0.1)]"
             >
               Cancel

@@ -11,7 +11,9 @@ import {
   Zap,
   Briefcase,
   Activity,
-  BarChart3
+  BarChart3,
+  Calendar,
+  Archive
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 
@@ -34,6 +36,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'my-work', label: 'My Work', icon: Briefcase, show: true },
         { id: 'kanban', label: 'Kanban Board', icon: Kanban, show: true },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, show: hasPermission('view_all_apps') },
+        { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
+        { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
         { id: 'activities', label: 'Activities', icon: Activity, show: true }
       ]
     },

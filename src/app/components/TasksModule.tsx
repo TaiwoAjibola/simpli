@@ -65,8 +65,8 @@ export function TasksModule() {
     endDate: ''
   });
   const [showSubtasksSection, setShowSubtasksSection] = useState(false);
-  const [subtasks, setSubtasks] = useState<{ name: string; assignedTo: string[]; priority: Subtask['priority'] }[]>([]);
-  const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'] });
+  const [subtasks, setSubtasks] = useState<{ name: string; assignedTo: string[]; priority: Subtask['priority']; startDate: string; endDate: string }[]>([]);
+  const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'], startDate: '', endDate: '' });
   const [expandedSubtaskComments, setExpandedSubtaskComments] = useState<string | null>(null);
   const [subtaskCommentText, setSubtaskCommentText] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -113,7 +113,9 @@ export function TasksModule() {
             addSubtask({
               ...st,
               taskId: newTask.id,
-              status: 'pending'
+              status: 'pending',
+              startDate: st.startDate ? new Date(st.startDate) : undefined,
+              endDate: st.endDate ? new Date(st.endDate) : undefined
             });
           }
         }
@@ -204,7 +206,7 @@ export function TasksModule() {
   const addSubtaskToList = () => {
     if (newSubtask.name.trim()) {
       setSubtasks(prev => [...prev, { ...newSubtask }]);
-      setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
+      setNewSubtask({ name: '', assignedTo: [], priority: 'medium', startDate: '', endDate: '' });
     }
   };
 
@@ -438,6 +440,26 @@ export function TasksModule() {
                           </div>
                         </div>
                       </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-[#f0f0f5] mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            value={newSubtask.startDate}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, startDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#f0f0f5] mb-1">End Date</label>
+                          <input
+                            type="date"
+                            value={newSubtask.endDate}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, endDate: e.target.value })}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          />
+                        </div>
+                      </div>
                       <button
                         type="button"
                         onClick={addSubtaskToList}
@@ -469,6 +491,9 @@ export function TasksModule() {
                                   </span>
                                   {assigneeNames && (
                                     <span className="text-xs text-[#6b6b80]">→ {assigneeNames}</span>
+                                  )}
+                                  {st.startDate && (
+                                    <span className="text-xs text-[#6b6b80]">{st.startDate}{st.endDate ? ` - ${st.endDate}` : ''}</span>
                                   )}
                                 </div>
                               </div>
