@@ -568,6 +568,9 @@ function NotificationsTab() {
     { type: 'user', label: 'Specific User' }
   ];
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const insertVariable = (variable: string) => {
     setFormData(prev => ({
       ...prev,
@@ -579,23 +582,31 @@ function NotificationsTab() {
     updateNotificationRule(ruleId, { enabled });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateNotificationRule(editingId, formData);
-      setEditingId(null);
-    } else {
-      addNotificationRule(formData);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      if (editingId) {
+        await updateNotificationRule(editingId, formData);
+        setEditingId(null);
+      } else {
+        await addNotificationRule(formData);
+      }
+      setFormData({
+        event: 'task_ready_for_testing',
+        subject: '',
+        message: '',
+        enabled: true,
+        primaryRecipients: [],
+        ccRecipients: []
+      });
+      setShowForm(false);
+    } catch (error: any) {
+      setSubmitError(error?.message || 'Failed to save notification rule');
+    } finally {
+      setSubmitting(false);
     }
-    setFormData({
-      event: 'task_ready_for_testing',
-      subject: '',
-      message: '',
-      enabled: true,
-      primaryRecipients: [],
-      ccRecipients: []
-    });
-    setShowForm(false);
   };
 
   const handleEdit = (rule: NotificationRule) => {
@@ -604,7 +615,7 @@ function NotificationsTab() {
       subject: rule.subject,
       message: rule.message,
       enabled: rule.enabled,
-      primaryRecipients: rule.primaryRecipients || [],
+      primaryRecipients: rule.primaryRecipients || rule.recipients?.map(r => ({ type: r.type as any, id: r.id })) || [],
       ccRecipients: rule.ccRecipients || []
     });
     setEditingId(rule.id);
@@ -934,18 +945,24 @@ function NotificationsTab() {
               </label>
             </div>
 
+            {submitError && (
+              <p className="text-sm text-[#ff3b5c]">{submitError}</p>
+            )}
+
             <div className="flex gap-2 pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+                disabled={submitting}
+                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
               >
-                {editingId ? 'Update' : 'Create'} Rule
+                {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create') + ' Rule'}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowForm(false);
                   setEditingId(null);
+                  setSubmitError(null);
                   setFormData({
                     event: 'task_ready_for_testing',
                     subject: '',
