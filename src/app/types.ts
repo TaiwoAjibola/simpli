@@ -41,6 +41,8 @@ export type Goal = {
   name: string;
   description: string;
   createdAt: Date;
+  startDate?: Date;
+  endDate?: Date;
 };
 
 export type Task = {
@@ -52,7 +54,9 @@ export type Task = {
   status: TaskStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: Date;
+  startDate?: Date;
   dueDate?: Date;
+  endDate?: Date;
   completedAt?: Date;
   approvedAt?: Date;
   approvedBy?: string;
@@ -77,6 +81,8 @@ export type Subtask = {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: Date;
   updatedAt: Date;
+  startDate?: Date;
+  endDate?: Date;
 };
 
 export type NotificationRule = {

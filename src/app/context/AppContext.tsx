@@ -97,7 +97,9 @@ function docToGoal(doc: any): Goal {
   return {
     id: doc.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date()
+    createdAt: data.createdAt?.toDate() || new Date(),
+    startDate: data.startDate?.toDate(),
+    endDate: data.endDate?.toDate()
   };
 }
 
@@ -107,7 +109,9 @@ function docToTask(doc: any): Task {
     id: doc.id,
     ...data,
     createdAt: data.createdAt?.toDate() || new Date(),
+    startDate: data.startDate?.toDate(),
     dueDate: data.dueDate?.toDate(),
+    endDate: data.endDate?.toDate(),
     completedAt: data.completedAt?.toDate(),
     approvedAt: data.approvedAt?.toDate()
   };
@@ -119,7 +123,9 @@ function docToSubtask(doc: any): Subtask {
     id: doc.id,
     ...data,
     createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date()
+    updatedAt: data.updatedAt?.toDate() || new Date(),
+    startDate: data.startDate?.toDate(),
+    endDate: data.endDate?.toDate()
   };
 }
 

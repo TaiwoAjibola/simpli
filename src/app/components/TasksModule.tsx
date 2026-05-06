@@ -60,7 +60,9 @@ export function TasksModule() {
     description: '',
     goalId: '',
     assignedTo: [] as string[],
-    priority: 'medium' as const
+    priority: 'medium' as const,
+    startDate: '',
+    endDate: ''
   });
   const [showSubtasksSection, setShowSubtasksSection] = useState(false);
   const [subtasks, setSubtasks] = useState<{ name: string; assignedTo: string[]; priority: Subtask['priority'] }[]>([]);
@@ -94,10 +96,16 @@ export function TasksModule() {
     setUploading(true);
     try {
       if (editingTask) {
-        await updateTask(editingTask.id, formData);
+        await updateTask(editingTask.id, {
+          ...formData,
+          startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+          endDate: formData.endDate ? new Date(formData.endDate) : undefined
+        });
       } else {
         const newTask = await addTask({
           ...formData,
+          startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+          endDate: formData.endDate ? new Date(formData.endDate) : undefined,
           status: 'not_started'
         });
         if (newTask && subtasks.length > 0) {
@@ -138,7 +146,9 @@ export function TasksModule() {
         description: '',
         goalId: '',
         assignedTo: [],
-        priority: 'medium'
+        priority: 'medium',
+        startDate: '',
+        endDate: ''
       });
       setSubtasks([]);
       setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
@@ -159,7 +169,9 @@ export function TasksModule() {
       description: task.description,
       goalId: task.goalId,
       assignedTo: [...task.assignedTo],
-      priority: task.priority
+      priority: task.priority,
+      startDate: task.startDate ? format(task.startDate, 'yyyy-MM-dd') : '',
+      endDate: task.endDate ? format(task.endDate, 'yyyy-MM-dd') : ''
     });
     setEditingTask(task);
     setShowAddForm(true);
@@ -341,6 +353,27 @@ export function TasksModule() {
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                />
+              </div>
             </div>
 
             {!editingTask && (

@@ -11,6 +11,7 @@ import { AppsModule } from './components/AppsModule';
 import { GoalsModule } from './components/GoalsMilestonesModule';
 import { TasksModule } from './components/TasksModule';
 import { ActivitiesPage } from './components/ActivitiesPage';
+import { AnalyticsPage } from './components/AnalyticsPage';
 import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
@@ -37,6 +38,7 @@ function AppContent() {
         {currentPage === 'dashboard' && <Dashboard onNavigate={setCurrentPage} />}
         {currentPage === 'my-work' && <MyWork />}
         {currentPage === 'kanban' && <KanbanBoard />}
+        {currentPage === 'analytics' && <AnalyticsPage />}
         {currentPage === 'activities' && <ActivitiesPage />}
         {currentPage === 'apps' && <AppsModule />}
         {currentPage === 'goals' && <GoalsModule />}

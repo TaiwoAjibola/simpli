@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Target, CheckSquare, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Target, CheckSquare, Edit2, Trash2, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 import { Goal } from '../types';
 
 export function GoalsModule() {
@@ -22,7 +23,9 @@ export function GoalsModule() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    appId: ''
+    appId: '',
+    startDate: '',
+    endDate: ''
   });
 
   const canCreateGoal = hasPermission('create_goal');
@@ -32,11 +35,19 @@ export function GoalsModule() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingGoal) {
-      updateGoal(editingGoal.id, formData);
+      updateGoal(editingGoal.id, {
+        ...formData,
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined
+      });
     } else {
-      addGoal(formData);
+      addGoal({
+        ...formData,
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined
+      });
     }
-    setFormData({ name: '', description: '', appId: '' });
+    setFormData({ name: '', description: '', appId: '', startDate: '', endDate: '' });
     setShowForm(false);
     setEditingGoal(null);
   };
@@ -45,7 +56,9 @@ export function GoalsModule() {
     setFormData({
       name: goal.name,
       description: goal.description,
-      appId: goal.appId
+      appId: goal.appId,
+      startDate: goal.startDate ? format(goal.startDate, 'yyyy-MM-dd') : '',
+      endDate: goal.endDate ? format(goal.endDate, 'yyyy-MM-dd') : ''
     });
     setEditingGoal(goal);
     setShowForm(true);
@@ -122,6 +135,33 @@ export function GoalsModule() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                />
+              </div>
             </div>
 
             <div className="flex gap-2">
