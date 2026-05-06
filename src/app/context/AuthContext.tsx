@@ -33,7 +33,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (user) {
         try {
-          const employeeDoc = await getDoc(doc(db, 'employees', user.uid));
+          let employeeDoc = await getDoc(doc(db, 'employees', user.uid));
+
+          if (!employeeDoc.exists()) {
+            const employeeQuery = query(collection(db, 'employees'), where('firebaseUid', '==', user.uid));
+            const employeeSnapshot = await getDocs(employeeQuery);
+            if (!employeeSnapshot.empty) {
+              employeeDoc = employeeSnapshot.docs[0];
+            }
+          }
+
           if (employeeDoc.exists()) {
             const employeeData = employeeDoc.data() as Employee;
             setCurrentUser(employeeData);
@@ -42,6 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (roleDoc.exists()) {
               setCurrentRole(roleDoc.data() as Role);
             }
+          } else {
+            console.warn('No employee document found for Firebase UID:', user.uid);
           }
         } catch (error) {
           console.error('Error loading user data:', error);
