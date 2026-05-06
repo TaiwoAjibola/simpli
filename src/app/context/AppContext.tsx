@@ -702,24 +702,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addNotificationRule = useCallback(async (rule: Omit<NotificationRule, 'id'>) => {
     const ruleId = `notif-rule-${Date.now()}`;
-    const cleanData: any = { id: ruleId };
-    for (const [key, value] of Object.entries(rule)) {
-      if (value !== undefined && value !== null) {
-        cleanData[key] = value;
-      }
-    }
-    delete cleanData.recipients;
+    const cleanData: any = {
+      id: ruleId,
+      event: rule.event || '',
+      subject: rule.subject || '',
+      message: rule.message || '',
+      enabled: rule.enabled !== undefined ? rule.enabled : true,
+      primaryRecipients: Array.isArray(rule.primaryRecipients) ? rule.primaryRecipients : [],
+      ccRecipients: Array.isArray(rule.ccRecipients) ? rule.ccRecipients : []
+    };
     await setDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
   const updateNotificationRule = useCallback(async (ruleId: string, updates: Partial<NotificationRule>) => {
     const cleanData: any = {};
-    for (const [key, value] of Object.entries(updates)) {
-      if (value !== undefined && value !== null) {
-        cleanData[key] = value;
-      }
-    }
-    delete cleanData.recipients;
+    if (updates.event !== undefined) cleanData.event = updates.event;
+    if (updates.subject !== undefined) cleanData.subject = updates.subject;
+    if (updates.message !== undefined) cleanData.message = updates.message;
+    if (updates.enabled !== undefined) cleanData.enabled = updates.enabled;
+    if (updates.primaryRecipients !== undefined) cleanData.primaryRecipients = updates.primaryRecipients;
+    if (updates.ccRecipients !== undefined) cleanData.ccRecipients = updates.ccRecipients;
     await updateDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
