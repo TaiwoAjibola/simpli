@@ -2,34 +2,6 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-function getFirebaseAdminApp() {
-  if (getApps().length > 0) {
-    return getApps()[0];
-  }
-
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase Admin credentials. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in Vercel env vars.');
-  }
-
-  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-    privateKey = JSON.parse(privateKey);
-  }
-
-  privateKey = privateKey.replace(/\\n/g, '\n');
-
-  return initializeApp({
-    credential: cert({
-      projectId,
-      clientEmail,
-      privateKey
-    })
-  });
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -46,8 +18,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action, uid, email, password } = req.body;
 
   try {
-    const app = getFirebaseAdminApp();
-    const auth = getAuth(app);
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    if (!projectId || !clientEmail || !privateKey) {
+      const missing = [];
+      if (!projectId) missing.push('FIREBASE_PROJECT_ID');
+      if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
+      if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
+      return res.status(500).json({
+        error: 'Missing environment variables',
+        missing,
+        hint: 'Set these in Vercel → Settings → Environment Variables'
+      });
+    }
+
+    if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+      privateKey = JSON.parse(privateKey);
+    }
+
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey })
+      });
+    }
+
+    const auth = getAuth();
 
     switch (action) {
       case 'create': {
@@ -71,12 +70,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (error: any) {
     console.error('Firebase Admin API error:', error);
-    const message = error?.message || 'Internal server error';
-    const code = error?.code || '';
     res.status(500).json({
-      error: message,
-      code,
-      hint: code === 'auth/email-already-exists' ? 'Email already in use' : ''
+      error: error?.message || 'Internal server error',
+      code: error?.code || '',
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     });
   }
 }
