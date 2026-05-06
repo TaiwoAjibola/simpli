@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { Plus, Target, CheckSquare, Edit2, Trash2 } from 'lucide-react';
 import { Goal } from '../types';
 
 export function GoalsModule() {
+  const { hasPermission } = useAuth();
   const {
     goals,
     apps,
@@ -22,6 +24,10 @@ export function GoalsModule() {
     description: '',
     appId: ''
   });
+
+  const canCreateGoal = hasPermission('create_goal');
+  const canEditGoal = hasPermission('create_goal');
+  const canDeleteGoal = hasPermission('create_goal');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,17 +64,19 @@ export function GoalsModule() {
           <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Goals</h1>
           <p className="text-[#6b6b80]">{goals.length} total goals</p>
         </div>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingGoal(null);
-            setFormData({ name: '', description: '', appId: '' });
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
-        >
-          <Plus className="w-4 h-4" />
-          New Goal
-        </button>
+        {canCreateGoal && (
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingGoal(null);
+              setFormData({ name: '', description: '', appId: '' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+          >
+            <Plus className="w-4 h-4" />
+            New Goal
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -158,12 +166,16 @@ export function GoalsModule() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => handleEdit(goal)} className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition" title="Edit">
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDelete(goal.id)} className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition" title="Delete">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canEditGoal && (
+                    <button onClick={() => handleEdit(goal)} className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition" title="Edit">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {canDeleteGoal && (
+                    <button onClick={() => handleDelete(goal.id)} className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 

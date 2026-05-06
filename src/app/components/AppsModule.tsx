@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { App } from '../types';
 
 export function AppsModule() {
-  const { currentUser } = useAuth();
+  const { currentUser, hasPermission } = useAuth();
   const { apps, goals, tasks, addApp, updateApp, deleteApp, getGoalsForApp, getTasksForGoal } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<App | null>(null);
@@ -15,6 +15,10 @@ export function AppsModule() {
     description: '',
     status: 'active' as 'active' | 'completed' | 'on_hold'
   });
+
+  const canCreateApp = hasPermission('create_app');
+  const canEditApp = hasPermission('create_app');
+  const canDeleteApp = hasPermission('create_app');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,17 +58,19 @@ export function AppsModule() {
           <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Apps</h1>
           <p className="text-[#6b6b80]">{apps.length} total applications</p>
         </div>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingApp(null);
-            setFormData({ name: '', description: '', status: 'active' });
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
-        >
-          <Plus className="w-4 h-4" />
-          New App
-        </button>
+        {canCreateApp && (
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingApp(null);
+              setFormData({ name: '', description: '', status: 'active' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+          >
+            <Plus className="w-4 h-4" />
+            New App
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -185,20 +191,24 @@ export function AppsModule() {
                   >
                     {app.status.replace('_', ' ').toUpperCase()}
                   </span>
-                  <button
-                    onClick={() => handleEdit(app)}
-                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
-                    title="Edit"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(app.id)}
-                    className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canEditApp && (
+                    <button
+                      onClick={() => handleEdit(app)}
+                      className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {canDeleteApp && (
+                    <button
+                      onClick={() => handleDelete(app.id)}
+                      className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 

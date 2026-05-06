@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../../firebase/config';
 import { Employee, Role } from '../types';
 
@@ -27,7 +27,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadRole = useCallback((roleId: string) => {
+    const roleRef = doc(db, 'roles', roleId);
+    const unsub = onSnapshot(roleRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setCurrentRole(docSnap.data() as Role);
+      } else {
+        setCurrentRole(null);
+      }
+    }, (error) => {
+      console.error('Error listening to role:', error);
+    });
+    return unsub;
+  }, []);
+
   useEffect(() => {
+    let roleUnsub: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
 
@@ -47,9 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const employeeData = employeeDoc.data() as Employee;
             setCurrentUser(employeeData);
 
-            const roleDoc = await getDoc(doc(db, 'roles', employeeData.roleId));
-            if (roleDoc.exists()) {
-              setCurrentRole(roleDoc.data() as Role);
+            if (employeeData.roleId) {
+              if (roleUnsub) roleUnsub();
+              roleUnsub = loadRole(employeeData.roleId);
             }
           } else {
             console.warn('No employee document found for Firebase UID:', user.uid);
@@ -60,13 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setCurrentUser(null);
         setCurrentRole(null);
+        if (roleUnsub) roleUnsub();
       }
 
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribe();
+      if (roleUnsub) roleUnsub();
+    };
+  }, [loadRole]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {

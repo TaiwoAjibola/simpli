@@ -38,8 +38,16 @@ export function TasksModule() {
     approveTask,
     getGoalById,
     getAppById,
-    getEmployeeById
+    getEmployeeById,
+    addSubtask,
+    getSubtasksForTask,
+    getCommentsForSubtask,
+    addComment
   } = useApp();
+
+  const canAssignTasks = hasPermission('assign_tasks');
+  const canViewAllApps = hasPermission('view_all_apps');
+  const canApprove = hasPermission('approve_tasks');
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
@@ -56,7 +64,6 @@ export function TasksModule() {
   const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'] });
   const [expandedSubtaskComments, setExpandedSubtaskComments] = useState<string | null>(null);
   const [subtaskCommentText, setSubtaskCommentText] = useState('');
-  const { addSubtask, getSubtasksForTask, getCommentsForSubtask, addComment } = useApp();
 
   const filteredTasks =
     filterStatus === 'all' ? tasks : tasks.filter((t) => t.status === filterStatus);
@@ -145,8 +152,6 @@ export function TasksModule() {
     approveTask(taskId, currentUser!.id);
   };
 
-  const canApprove = hasPermission('approve_tasks');
-
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
@@ -169,17 +174,19 @@ export function TasksModule() {
               <LayoutGrid className="w-4 h-4" /> Kanban
             </button>
           </div>
-          <button
-            onClick={() => {
-              setShowAddForm(!showAddForm);
-              setEditingTask(null);
-              setFormData({ name: '', description: '', goalId: '', assignedTo: [], priority: 'medium' });
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
-          >
-            <Plus className="w-4 h-4" />
-            New Task
-          </button>
+          {canAssignTasks && (
+            <button
+              onClick={() => {
+                setShowAddForm(!showAddForm);
+                setEditingTask(null);
+                setFormData({ name: '', description: '', goalId: '', assignedTo: [], priority: 'medium' });
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+            >
+              <Plus className="w-4 h-4" />
+              New Task
+            </button>
+          )}
         </div>
       </div>
 
@@ -454,6 +461,8 @@ export function TasksModule() {
                 onDelete={() => handleDelete(task.id)}
                 onClick={() => setSelectedTask(task)}
                 canApprove={canApprove}
+                canEdit={canAssignTasks}
+                canDelete={canAssignTasks}
                 getGoalById={getGoalById}
                 getAppById={getAppById}
                 getEmployeeById={getEmployeeById}
@@ -487,20 +496,24 @@ export function TasksModule() {
                           </span>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition ml-2">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
-                            className="p-1 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
-                            className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {canAssignTasks && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
+                              className="p-1 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          )}
+                          {canAssignTasks && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
+                              className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -536,6 +549,8 @@ type TaskCardProps = {
   onDelete: () => void;
   onClick: () => void;
   canApprove: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   getEmployeeById: (id: string) => any;
@@ -549,6 +564,8 @@ function TaskCard({
   onDelete,
   onClick,
   canApprove,
+  canEdit,
+  canDelete,
   getGoalById,
   getAppById,
   getEmployeeById
@@ -594,20 +611,24 @@ function TaskCard({
               <Star className="w-5 h-5 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />
             )}
             <div className="flex gap-1 flex-shrink-0">
-              <button
-                onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                className="p-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded transition"
-                title="Edit"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition"
-                title="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {canEdit && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                  className="p-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded transition"
+                  title="Edit"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                  className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded transition"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
