@@ -11,7 +11,7 @@ export async function createFirebaseUser(email: string, password: string): Promi
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Firebase Admin API error:', data);
+      console.error('Firebase Admin API error (create):', data);
       return null;
     }
 
@@ -30,7 +30,14 @@ export async function updateFirebaseUserPassword(uid: string, newPassword: strin
       body: JSON.stringify({ action: 'updatePassword', uid, password: newPassword })
     });
 
-    return response.ok;
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Firebase Admin API error (updatePassword):', data);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error updating Firebase user password:', error);
     return false;
@@ -45,7 +52,14 @@ export async function updateFirebaseUserEmail(uid: string, newEmail: string): Pr
       body: JSON.stringify({ action: 'updateEmail', uid, email: newEmail })
     });
 
-    return response.ok;
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Firebase Admin API error (updateEmail):', data);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error updating Firebase user email:', error);
     return false;
@@ -60,7 +74,14 @@ export async function deleteFirebaseUser(uid: string): Promise<boolean> {
       body: JSON.stringify({ action: 'delete', uid })
     });
 
-    return response.ok;
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Firebase Admin API error (delete):', data);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error deleting Firebase user:', error);
     return false;

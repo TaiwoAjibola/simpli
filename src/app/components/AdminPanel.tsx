@@ -113,18 +113,28 @@ function EmployeesTab() {
     password: '',
     roleId: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateEmployee(editingId, formData);
-      setEditingId(null);
-    } else {
-      addEmployee(formData);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      if (editingId) {
+        await updateEmployee(editingId, formData);
+        setEditingId(null);
+      } else {
+        await addEmployee(formData);
+      }
+      setFormData({ name: '', email: '', password: '', roleId: '' });
+      setShowAddForm(false);
+      setShowPassword(false);
+    } catch (error: any) {
+      setSubmitError(error?.message || 'Failed to save employee');
+    } finally {
+      setSubmitting(false);
     }
-    setFormData({ name: '', email: '', password: '', roleId: '' });
-    setShowAddForm(false);
-    setShowPassword(false);
   };
 
   const handleEdit = (employee: Employee) => {
@@ -256,12 +266,16 @@ function EmployeesTab() {
               </select>
             </div>
           </div>
+          {submitError && (
+            <p className="text-sm text-[#ff3b5c]">{submitError}</p>
+          )}
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+              disabled={submitting}
+              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
             >
-              {editingId ? 'Update' : 'Create'} Employee
+              {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create') + ' Employee'}
             </button>
             <button
               type="button"
@@ -269,6 +283,7 @@ function EmployeesTab() {
                 setShowAddForm(false);
                 setEditingId(null);
                 setShowPassword(false);
+                setSubmitError(null);
                 setFormData({ name: '', email: '', password: '', roleId: '' });
               }}
               className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"

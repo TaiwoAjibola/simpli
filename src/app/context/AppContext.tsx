@@ -573,16 +573,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (updates.email && updates.email !== employee.email) {
       const success = await updateFirebaseUserEmail(employee.firebaseUid || employeeId, updates.email);
       if (!success) {
-        console.error('Failed to update Firebase Auth email');
-        return;
+        throw new Error('Failed to update email in Firebase Auth');
       }
     }
 
     if (updates.password && updates.password !== employee.password) {
       const success = await updateFirebaseUserPassword(employee.firebaseUid || employeeId, updates.password);
       if (!success) {
-        console.error('Failed to update Firebase Auth password');
-        return;
+        throw new Error('Failed to update password in Firebase Auth');
       }
     }
 
