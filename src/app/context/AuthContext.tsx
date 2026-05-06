@@ -14,7 +14,7 @@ type AuthContextType = {
   currentRole: Role | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
 };
@@ -57,13 +57,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      return true;
+      return { success: true };
     } catch (error: any) {
       console.error('Login error:', error);
-      return false;
+      const code = error?.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        return { success: false, error: 'Invalid email or password' };
+      }
+      if (code === 'auth/too-many-requests') {
+        return { success: false, error: 'Too many failed attempts. Try again later.' };
+      }
+      return { success: false, error: 'Login failed. Please try again.' };
     }
   };
 
