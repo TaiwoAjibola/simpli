@@ -1,5 +1,3 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -23,22 +21,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
     if (!projectId || !clientEmail || !privateKey) {
-      const missing = [];
-      if (!projectId) missing.push('FIREBASE_PROJECT_ID');
-      if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
-      if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
-      return res.status(500).json({
-        error: 'Missing environment variables',
-        missing,
-        hint: 'Set these in Vercel → Settings → Environment Variables'
-      });
+      return res.status(500).json({ error: 'Missing env vars' });
     }
+
+    let keyPreview = privateKey.substring(0, 30);
+    let hasBegin = privateKey.includes('-----BEGIN PRIVATE KEY-----');
+    let hasEnd = privateKey.includes('-----END PRIVATE KEY-----');
 
     if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
       privateKey = JSON.parse(privateKey);
+      keyPreview = privateKey.substring(0, 30);
+      hasBegin = privateKey.includes('-----BEGIN PRIVATE KEY-----');
+      hasEnd = privateKey.includes('-----END PRIVATE KEY-----');
     }
 
     privateKey = privateKey.replace(/\\n/g, '\n');
+
+    const { initializeApp, cert, getApps } = await import('firebase-admin/app');
+    const { getAuth } = await import('firebase-admin/auth');
 
     if (!getApps().length) {
       initializeApp({
@@ -65,15 +65,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await auth.updateUser(uid, { email });
         return res.status(200).json({ success: true });
       }
+      case 'test': {
+        return res.status(200).json({
+          keyPreview,
+          hasBegin,
+          hasEnd,
+          keyLength: privateKey.length,
+          newlines: (privateKey.match(/\n/g) || []).length,
+          literalNewlines: (privateKey.match(/\\n/g) || []).length
+        });
+      }
       default:
         return res.status(400).json({ error: 'Unknown action' });
     }
   } catch (error: any) {
-    console.error('Firebase Admin API error:', error);
     res.status(500).json({
       error: error?.message || 'Internal server error',
       code: error?.code || '',
-      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      errorInfo: error?.errorInfo || null
     });
   }
 }
