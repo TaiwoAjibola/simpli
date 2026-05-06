@@ -12,12 +12,35 @@ export async function createFirebaseUser(email: string, password: string): Promi
 
     if (!response.ok) {
       console.error('Firebase Admin API error (create):', data);
+      if (data.code === 'auth/email-already-exists') {
+        const existing = await findUserByEmail(email);
+        if (existing) return existing.uid;
+      }
       return null;
     }
 
     return data.uid;
   } catch (error) {
     console.error('Error creating Firebase user:', error);
+    return null;
+  }
+}
+
+export async function findUserByEmail(email: string): Promise<{ uid: string } | null> {
+  try {
+    const response = await fetch('/api/firebase-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'findByEmail', email })
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.uid) {
+      return { uid: data.uid };
+    }
+    return null;
+  } catch (error) {
     return null;
   }
 }

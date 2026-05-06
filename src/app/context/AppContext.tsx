@@ -19,6 +19,7 @@ import {
   updateFirebaseUserEmail,
   deleteFirebaseUser
 } from '../../firebase/auth-utils';
+import { findUserByEmail } from '../../firebase/auth-utils';
 import {
   App,
   Goal,
@@ -570,15 +571,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const employee = employees.find(e => e.id === employeeId);
     if (!employee) return;
 
+    let uid = employee.firebaseUid;
+
+    if (!uid) {
+      const found = await findUserByEmail(employee.email);
+      if (found) {
+        uid = found.uid;
+        await updateDoc(doc(db, 'employees', employeeId), { firebaseUid: uid });
+      }
+    }
+
+    if (!uid) {
+      const createdUid = await createFirebaseUser(employee.email, employee.password);
+      if (createdUid) {
+        uid = createdUid;
+        await updateDoc(doc(db, 'employees', employeeId), { firebaseUid: uid });
+      }
+    }
+
+    if (!uid) {
+      throw new Error('Could not find or create Firebase Auth user for this employee');
+    }
+
     if (updates.email && updates.email !== employee.email) {
-      const success = await updateFirebaseUserEmail(employee.firebaseUid || employeeId, updates.email);
+      const success = await updateFirebaseUserEmail(uid, updates.email);
       if (!success) {
         throw new Error('Failed to update email in Firebase Auth');
       }
     }
 
     if (updates.password && updates.password !== employee.password) {
-      const success = await updateFirebaseUserPassword(employee.firebaseUid || employeeId, updates.password);
+      const success = await updateFirebaseUserPassword(uid, updates.password);
       if (!success) {
         throw new Error('Failed to update password in Firebase Auth');
       }

@@ -53,6 +53,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const userRecord = await auth.createUser({ email, password });
         return res.status(200).json({ uid: userRecord.uid });
       }
+      case 'findByEmail': {
+        const userRecord = await auth.getUserByEmail(email);
+        return res.status(200).json({ uid: userRecord.uid });
+      }
+      case 'delete': {
+        await auth.deleteUser(uid);
+        return res.status(200).json({ success: true });
+      }
+      case 'updatePassword': {
+        await auth.updateUser(uid, { password });
+        return res.status(200).json({ success: true });
+      }
+      case 'updateEmail': {
+        await auth.updateUser(uid, { email });
+        return res.status(200).json({ success: true });
+      }
+      default:
+        return res.status(400).json({ error: 'Unknown action' });
+    }
       case 'delete': {
         await auth.deleteUser(uid);
         return res.status(200).json({ success: true });
