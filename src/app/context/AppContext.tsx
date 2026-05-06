@@ -702,14 +702,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addNotificationRule = useCallback(async (rule: Omit<NotificationRule, 'id'>) => {
     const ruleId = `notif-rule-${Date.now()}`;
-    await setDoc(doc(db, 'notificationRules', ruleId), {
-      ...rule,
-      id: ruleId
-    });
+    const cleanData: any = { id: ruleId };
+    for (const [key, value] of Object.entries(rule)) {
+      if (value !== undefined) {
+        cleanData[key] = value;
+      }
+    }
+    await setDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
   const updateNotificationRule = useCallback(async (ruleId: string, updates: Partial<NotificationRule>) => {
-    await updateDoc(doc(db, 'notificationRules', ruleId), updates);
+    const cleanData: any = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        cleanData[key] = value;
+      }
+    }
+    await updateDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
   const deleteNotificationRule = useCallback(async (ruleId: string) => {
