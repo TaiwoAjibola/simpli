@@ -54,8 +54,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({ uid: userRecord.uid });
       }
       case 'findByEmail': {
-        const userRecord = await auth.getUserByEmail(email);
-        return res.status(200).json({ uid: userRecord.uid });
+        try {
+          const userRecord = await auth.getUserByEmail(email);
+          return res.status(200).json({ uid: userRecord.uid });
+        } catch (error: any) {
+          if (error.code === 'auth/user-not-found') {
+            return res.status(404).json({ uid: null, error: 'User not found' });
+          }
+          throw error;
+        }
       }
       case 'delete': {
         await auth.deleteUser(uid);

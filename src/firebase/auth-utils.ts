@@ -34,6 +34,10 @@ export async function findUserByEmail(email: string): Promise<{ uid: string } | 
       body: JSON.stringify({ action: 'findByEmail', email })
     });
 
+    if (response.status === 404) {
+      return null;
+    }
+
     const data = await response.json();
 
     if (response.ok && data.uid) {
