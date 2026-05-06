@@ -610,12 +610,17 @@ function NotificationsTab() {
   };
 
   const handleEdit = (rule: NotificationRule) => {
+    const safePrimary = rule.primaryRecipients || (rule as any).recipients?.map((r: any) => ({
+      type: r.type === 'role' || r.type === 'user' ? 'role' : 'assigned_user',
+      id: r.id
+    })).filter((r: any) => r.id) || [];
+
     setFormData({
-      event: rule.event,
-      subject: rule.subject,
-      message: rule.message,
-      enabled: rule.enabled,
-      primaryRecipients: rule.primaryRecipients || rule.recipients?.map(r => ({ type: r.type as any, id: r.id })) || [],
+      event: rule.event || 'task_ready_for_testing',
+      subject: rule.subject || '',
+      message: rule.message || '',
+      enabled: rule.enabled !== undefined ? rule.enabled : true,
+      primaryRecipients: safePrimary,
       ccRecipients: rule.ccRecipients || []
     });
     setEditingId(rule.id);

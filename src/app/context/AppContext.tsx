@@ -700,9 +700,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'roles', roleId));
   }, []);
 
+  function sanitizeForFirestore(obj: any): any {
+    if (obj === null || obj === undefined) return null;
+    if (typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) {
+      return obj.map(item => sanitizeForFirestore(item));
+    }
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined && value !== null) {
+        result[key] = sanitizeForFirestore(value);
+      }
+    }
+    return result;
+  }
+
   const addNotificationRule = useCallback(async (rule: Omit<NotificationRule, 'id'>) => {
     const ruleId = `notif-rule-${Date.now()}`;
-    const cleanData: any = {
+    const cleanData: any = sanitizeForFirestore({
       id: ruleId,
       event: rule.event || '',
       subject: rule.subject || '',
@@ -710,18 +725,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       enabled: rule.enabled !== undefined ? rule.enabled : true,
       primaryRecipients: Array.isArray(rule.primaryRecipients) ? rule.primaryRecipients : [],
       ccRecipients: Array.isArray(rule.ccRecipients) ? rule.ccRecipients : []
-    };
+    });
     await setDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
   const updateNotificationRule = useCallback(async (ruleId: string, updates: Partial<NotificationRule>) => {
-    const cleanData: any = {};
-    if (updates.event !== undefined) cleanData.event = updates.event;
-    if (updates.subject !== undefined) cleanData.subject = updates.subject;
-    if (updates.message !== undefined) cleanData.message = updates.message;
-    if (updates.enabled !== undefined) cleanData.enabled = updates.enabled;
-    if (updates.primaryRecipients !== undefined) cleanData.primaryRecipients = updates.primaryRecipients;
-    if (updates.ccRecipients !== undefined) cleanData.ccRecipients = updates.ccRecipients;
+    const cleanData = sanitizeForFirestore({
+      event: updates.event,
+      subject: updates.subject,
+      message: updates.message,
+      enabled: updates.enabled,
+      primaryRecipients: updates.primaryRecipients,
+      ccRecipients: updates.ccRecipients
+    });
     await updateDoc(doc(db, 'notificationRules', ruleId), cleanData);
   }, []);
 
