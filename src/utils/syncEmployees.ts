@@ -26,7 +26,7 @@ export async function syncEmployeesToFirebaseAuth(): Promise<{ success: number; 
         await updateDoc(doc(db, 'employees', empDoc.id), { firebaseUid });
         results.success++;
       } else {
-        results.failed.push({ id: empDoc.id, email: employee.email, error: 'REST API returned null' });
+        results.failed.push({ id: empDoc.id, email: employee.email, error: 'API returned null uid' });
       }
     } catch (error: any) {
       results.failed.push({ id: empDoc.id, email: employee.email, error: error.message });

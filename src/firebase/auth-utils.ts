@@ -2,23 +2,20 @@ import { auth } from './config';
 
 export async function createFirebaseUser(email: string, password: string): Promise<string | null> {
   try {
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${auth.app.options.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, returnSecureToken: false })
-      }
-    );
+    const response = await fetch('/api/firebase-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', email, password })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Firebase Auth REST API error:', data);
+      console.error('Firebase Admin API error:', data);
       return null;
     }
 
-    return data.localId;
+    return data.uid;
   } catch (error) {
     console.error('Error creating Firebase user:', error);
     return null;
@@ -27,14 +24,11 @@ export async function createFirebaseUser(email: string, password: string): Promi
 
 export async function updateFirebaseUserPassword(uid: string, newPassword: string): Promise<boolean> {
   try {
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${auth.app.options.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ localId: uid, password: newPassword, returnSecureToken: false })
-      }
-    );
+    const response = await fetch('/api/firebase-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'updatePassword', uid, password: newPassword })
+    });
 
     return response.ok;
   } catch (error) {
@@ -45,14 +39,11 @@ export async function updateFirebaseUserPassword(uid: string, newPassword: strin
 
 export async function updateFirebaseUserEmail(uid: string, newEmail: string): Promise<boolean> {
   try {
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${auth.app.options.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ localId: uid, email: newEmail, returnSecureToken: false })
-      }
-    );
+    const response = await fetch('/api/firebase-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'updateEmail', uid, email: newEmail })
+    });
 
     return response.ok;
   } catch (error) {
@@ -63,14 +54,11 @@ export async function updateFirebaseUserEmail(uid: string, newEmail: string): Pr
 
 export async function deleteFirebaseUser(uid: string): Promise<boolean> {
   try {
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${auth.app.options.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ localId: uid })
-      }
-    );
+    const response = await fetch('/api/firebase-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', uid })
+    });
 
     return response.ok;
   } catch (error) {
