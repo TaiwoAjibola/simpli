@@ -79,33 +79,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       default:
         return res.status(400).json({ error: 'Unknown action' });
     }
-      case 'delete': {
-        await auth.deleteUser(uid);
-        return res.status(200).json({ success: true });
-      }
-      case 'updatePassword': {
-        await auth.updateUser(uid, { password });
-        return res.status(200).json({ success: true });
-      }
-      case 'updateEmail': {
-        await auth.updateUser(uid, { email });
-        return res.status(200).json({ success: true });
-      }
-      case 'test': {
-        return res.status(200).json({
-          keyPreview,
-          hasBegin,
-          hasEnd,
-          keyLength: privateKey.length,
-          newlines: (privateKey.match(/\n/g) || []).length,
-          literalNewlines: (privateKey.match(/\\n/g) || []).length
-        });
-      }
-      default:
-        return res.status(400).json({ error: 'Unknown action' });
-    }
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       error: error?.message || 'Internal server error',
       code: error?.code || '',
       errorInfo: error?.errorInfo || null
