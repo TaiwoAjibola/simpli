@@ -122,7 +122,7 @@ export function DefectDashboard() {
               <option key={app.id} value={app.id}>{app.name}</option>
             ))}
           </select>
-          {hasPermission('view_all_apps') && (
+          {hasPermission('report_defects') && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"

@@ -864,10 +864,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     await setDoc(doc(db, 'defects', defectId), {
       ...newDefect,
-      dateReported: serverTimestamp(),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      activityLogs: newDefect.activityLogs.map(log => ({ ...log, timestamp: serverTimestamp() }))
+      dateReported: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
 
     await addActivity({
@@ -885,14 +884,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const defect = defects.find(d => d.id === defectId);
     if (!defect) return;
 
-    const updateData: any = { ...updates, updatedAt: serverTimestamp() };
+    const updateData: any = { ...updates, updatedAt: new Date() };
 
     if (updates.status === 'resolved' && defect.status !== 'resolved') {
       updateData.resolutionStatus = updates.resolutionStatus || 'fixed';
     }
 
     if (updates.status === 'closed' && defect.status !== 'closed') {
-      updateData.closedAt = serverTimestamp();
+      updateData.closedAt = new Date();
     }
 
     if (updates.status === 'reopened' && defect.status === 'closed') {
@@ -902,9 +901,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     if (updates.fixVerified && !defect.fixVerified) {
-      updateData.verificationDate = serverTimestamp();
+      updateData.verificationDate = new Date();
       updateData.status = 'closed';
-      updateData.closedAt = serverTimestamp();
+      updateData.closedAt = new Date();
     }
 
     if (userId && userName) {
@@ -917,7 +916,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           action,
           userId,
           userName,
-          timestamp: serverTimestamp(),
+          timestamp: new Date(),
           details: updates.status ? `Status: ${defect.status} → ${updates.status}` : undefined
         }
       ];
@@ -943,7 +942,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           action: 'comment',
           userId,
           userName,
-          timestamp: serverTimestamp(),
+          timestamp: new Date(),
           details: content
         }
       ],

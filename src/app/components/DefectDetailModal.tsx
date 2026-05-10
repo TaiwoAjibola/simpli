@@ -28,7 +28,7 @@ type DefectDetailModalProps = {
 
 export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const { employees, apps, updateDefect, addDefectComment } = useApp();
-  const { currentUser } = useAuth();
+  const { currentUser, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'reproduction' | 'attachments' | 'activity'>('overview');
   const [commentText, setCommentText] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -129,7 +129,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
             )}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {defect.status === 'pending_qa' && (
+            {defect.status === 'pending_qa' && hasPermission('verify_defects') && (
               <button
                 onClick={handleVerifyFix}
                 className="flex items-center gap-1 px-3 py-1.5 bg-[#10b981] text-white text-sm hover:bg-[#059669]"
@@ -138,7 +138,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                 Verify Fix
               </button>
             )}
-            {defect.status === 'closed' && (
+            {defect.status === 'closed' && hasPermission('manage_defects') && (
               <button
                 onClick={handleReopen}
                 className="flex items-center gap-1 px-3 py-1.5 bg-[#dc2626] text-white text-sm hover:bg-[#b91c1c]"
@@ -248,7 +248,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      disabled={defect.status === status}
+                      disabled={defect.status === status || !hasPermission('manage_defects')}
                       className={`px-3 py-1.5 text-sm ${statusColors[status]} text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
                     >
                       {status.replace('_', ' ')}
