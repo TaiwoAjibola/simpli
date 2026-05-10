@@ -31,7 +31,8 @@ import {
   Notification,
   Activity,
   TaskStatus,
-  Comment
+  Comment,
+  Defect
 } from '../types';
 
 type AppContextType = {
@@ -45,6 +46,7 @@ type AppContextType = {
   notifications: Notification[];
   activities: Activity[];
   comments: Comment[];
+  defects: Defect[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -79,6 +81,12 @@ type AppContextType = {
   getAppById: (appId: string) => App | undefined;
   getGoalById: (goalId: string) => Goal | undefined;
   getEmployeeById: (employeeId: string) => Employee | undefined;
+  addDefect: (defect: Omit<Defect, 'id' | 'defectCode' | 'createdAt' | 'updatedAt' | 'activityLogs' | 'reopenedCount' | 'fixVerified'>) => Promise<Defect | undefined>;
+  updateDefect: (defectId: string, updates: Partial<Defect>, userId?: string, userName?: string) => Promise<void>;
+  deleteDefect: (defectId: string) => Promise<void>;
+  addDefectComment: (defectId: string, userId: string, userName: string, content: string) => Promise<void>;
+  getDefectsForApp: (appId: string) => Defect[];
+  getDefectById: (defectId: string) => Defect | undefined;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -171,6 +179,27 @@ function docToComment(doc: any): Comment {
   };
 }
 
+function docToDefect(doc: any): Defect {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    dateReported: data.dateReported?.toDate() || new Date(),
+    dueDate: data.dueDate?.toDate(),
+    verificationDate: data.verificationDate?.toDate(),
+    createdAt: data.createdAt?.toDate() || new Date(),
+    updatedAt: data.updatedAt?.toDate() || new Date(),
+    closedAt: data.closedAt?.toDate(),
+    activityLogs: (data.activityLogs || []).map((log: any) => ({
+      ...log,
+      timestamp: log.timestamp?.toDate() || new Date()
+    })),
+    attachments: data.attachments || [],
+    reopenedCount: data.reopenedCount || 0,
+    fixVerified: data.fixVerified || false
+  };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [apps, setApps] = useState<App[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -182,6 +211,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [defects, setDefects] = useState<Defect[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -196,7 +226,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'roles'), setter: setRoles, transformer: docToRole },
       { ref: collection(db, 'notificationRules'), setter: setNotificationRules, transformer: docToNotificationRule },
       { ref: query(collection(db, 'activities'), orderBy('timestamp', 'desc')), setter: setActivities, transformer: docToActivity },
-      { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment }
+      { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment },
+      { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -803,6 +834,131 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return employees.find(e => e.id === employeeId);
   }, [employees]);
 
+  const generateDefectCode = useCallback(() => {
+    const count = defects.length + 1;
+    return `BUG-${String(count).padStart(4, '0')}`;
+  }, [defects.length]);
+
+  const addDefect = useCallback(async (defectData: Omit<Defect, 'id' | 'defectCode' | 'createdAt' | 'updatedAt' | 'activityLogs' | 'reopenedCount' | 'fixVerified'>) => {
+    const defectId = `defect-${Date.now()}`;
+    const defectCode = generateDefectCode();
+    const reporter = employees.find(e => e.id === defectData.reportedBy);
+
+    const newDefect: Defect = {
+      ...defectData,
+      id: defectId,
+      defectCode,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      activityLogs: [{
+        id: `log-${Date.now()}`,
+        action: 'created',
+        userId: defectData.reportedBy,
+        userName: reporter?.name || 'Unknown',
+        timestamp: new Date(),
+        details: 'Defect created'
+      }],
+      reopenedCount: 0,
+      fixVerified: false
+    };
+
+    await setDoc(doc(db, 'defects', defectId), {
+      ...newDefect,
+      dateReported: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      activityLogs: newDefect.activityLogs.map(log => ({ ...log, timestamp: serverTimestamp() }))
+    });
+
+    await addActivity({
+      type: 'task_created',
+      userId: defectData.reportedBy,
+      userName: reporter?.name || 'Unknown',
+      description: `reported defect "${defectData.title}" (${defectCode})`,
+      relatedTo: { type: 'task', id: defectId, name: defectData.title }
+    });
+
+    return newDefect;
+  }, [employees, generateDefectCode, addActivity]);
+
+  const updateDefect = useCallback(async (defectId: string, updates: Partial<Defect>, userId?: string, userName?: string) => {
+    const defect = defects.find(d => d.id === defectId);
+    if (!defect) return;
+
+    const updateData: any = { ...updates, updatedAt: serverTimestamp() };
+
+    if (updates.status === 'resolved' && defect.status !== 'resolved') {
+      updateData.resolutionStatus = updates.resolutionStatus || 'fixed';
+    }
+
+    if (updates.status === 'closed' && defect.status !== 'closed') {
+      updateData.closedAt = serverTimestamp();
+    }
+
+    if (updates.status === 'reopened' && defect.status === 'closed') {
+      updateData.reopenedCount = (defect.reopenedCount || 0) + 1;
+      updateData.status = 'in_progress';
+      updateData.fixVerified = false;
+    }
+
+    if (updates.fixVerified && !defect.fixVerified) {
+      updateData.verificationDate = serverTimestamp();
+      updateData.status = 'closed';
+      updateData.closedAt = serverTimestamp();
+    }
+
+    if (userId && userName) {
+      const currentLogs = defect.activityLogs || [];
+      const action = updates.status ? `status changed to ${updates.status}` : 'updated';
+      updateData.activityLogs = [
+        ...currentLogs,
+        {
+          id: `log-${Date.now()}`,
+          action,
+          userId,
+          userName,
+          timestamp: serverTimestamp(),
+          details: updates.status ? `Status: ${defect.status} → ${updates.status}` : undefined
+        }
+      ];
+    }
+
+    await updateDoc(doc(db, 'defects', defectId), updateData);
+  }, [defects]);
+
+  const deleteDefect = useCallback(async (defectId: string) => {
+    await deleteDoc(doc(db, 'defects', defectId));
+  }, []);
+
+  const addDefectComment = useCallback(async (defectId: string, userId: string, userName: string, content: string) => {
+    const defect = defects.find(d => d.id === defectId);
+    if (!defect) return;
+
+    const currentLogs = defect.activityLogs || [];
+    await updateDoc(doc(db, 'defects', defectId), {
+      activityLogs: [
+        ...currentLogs,
+        {
+          id: `log-${Date.now()}`,
+          action: 'comment',
+          userId,
+          userName,
+          timestamp: serverTimestamp(),
+          details: content
+        }
+      ],
+      updatedAt: serverTimestamp()
+    });
+  }, [defects]);
+
+  const getDefectsForApp = useCallback((appId: string) => {
+    return defects.filter(d => d.applicationId === appId);
+  }, [defects]);
+
+  const getDefectById = useCallback((defectId: string) => {
+    return defects.find(d => d.id === defectId);
+  }, [defects]);
+
   return (
     <AppContext.Provider
       value={{
@@ -816,6 +972,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notifications,
         activities,
         comments,
+        defects,
         loading,
         addApp,
         updateApp,
@@ -849,7 +1006,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         getTasksForGoal,
         getAppById,
         getGoalById,
-        getEmployeeById
+        getEmployeeById,
+        addDefect,
+        updateDefect,
+        deleteDefect,
+        addDefectComment,
+        getDefectsForApp,
+        getDefectById
       }}
     >
       {children}

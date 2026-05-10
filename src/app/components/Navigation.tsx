@@ -13,7 +13,8 @@ import {
   Activity,
   BarChart3,
   Calendar,
-  Archive
+  Archive,
+  Bug
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 
@@ -38,6 +39,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'analytics', label: 'Analytics', icon: BarChart3, show: hasPermission('view_all_apps') },
         { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
         { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
+        { id: 'defects', label: 'Defects', icon: Bug, show: hasPermission('view_all_apps') },
         { id: 'activities', label: 'Activities', icon: Activity, show: true }
       ]
     },

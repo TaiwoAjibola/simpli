@@ -14,6 +14,7 @@ import { ActivitiesPage } from './components/ActivitiesPage';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { TimelinePage } from './components/TimelinePage';
 import { ArchivePage } from './components/ArchivePage';
+import { DefectDashboard } from './components/DefectDashboard';
 import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
@@ -43,6 +44,7 @@ function AppContent() {
         {currentPage === 'analytics' && <AnalyticsPage />}
         {currentPage === 'timeline' && <TimelinePage />}
         {currentPage === 'archive' && <ArchivePage />}
+        {currentPage === 'defects' && <DefectDashboard />}
         {currentPage === 'activities' && <ActivitiesPage />}
         {currentPage === 'apps' && <AppsModule />}
         {currentPage === 'goals' && <GoalsModule />}

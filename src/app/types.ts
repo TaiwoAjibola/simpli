@@ -163,3 +163,64 @@ export const NOTIFICATION_VARIABLES = {
   app: ['{app_name}'],
   goal: ['{goal_name}']
 } as const;
+
+export type DefectStatus = 'open' | 'in_progress' | 'pending_qa' | 'resolved' | 'closed' | 'reopened';
+export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor';
+export type DefectPriority = 'high' | 'medium' | 'low';
+export type DefectIssueType = 'bug' | 'ui_issue' | 'performance' | 'security' | 'crash' | 'enhancement';
+export type DefectReproducibility = 'always' | 'sometimes' | 'rare';
+export type DefectFrequency = '100' | 'intermittent' | 'one_time';
+export type DefectResolution = 'fixed' | 'cannot_reproduce' | 'duplicate' | 'wont_fix' | 'deferred';
+export type DefectRootCause = 'backend' | 'frontend' | 'database' | 'infrastructure' | 'ui_ux' | 'api' | 'security' | 'other';
+
+export type Defect = {
+  id: string;
+  defectCode: string;
+  title: string;
+  description: string;
+  applicationId: string;
+  module: string;
+  environment: 'dev' | 'staging' | 'production' | 'uat';
+  reportedBy: string;
+  assignedTo: string;
+  dateReported: Date;
+  dueDate?: Date;
+  issueType: DefectIssueType;
+  severity: DefectSeverity;
+  priority: DefectPriority;
+  reproducibility: DefectReproducibility;
+  frequency: DefectFrequency;
+  status: DefectStatus;
+  resolutionStatus?: DefectResolution;
+  fixVerified: boolean;
+  verificationDate?: Date;
+  reopenedCount: number;
+  stepsToReproduce: string;
+  expectedResult: string;
+  actualResult: string;
+  qaComments: string;
+  developerNotes: string;
+  testedBy?: string;
+  testCycle?: string;
+  rootCause?: DefectRootCause;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+    uploadedAt: Date;
+    uploadedBy: string;
+  }[];
+  activityLogs: {
+    id: string;
+    action: string;
+    userId: string;
+    userName: string;
+    timestamp: Date;
+    details?: string;
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
+  closedAt?: Date;
+};
