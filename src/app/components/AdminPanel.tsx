@@ -373,7 +373,10 @@ function RolesTab() {
     'configure_notifications',
     'approve_tasks',
     'view_all_apps',
-    'view_assigned_only'
+    'view_assigned_only',
+    'report_defects',
+    'manage_defects',
+    'verify_defects'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -63,7 +63,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     <div className="h-screen w-64 bg-[#0e0e16] border-r border-[rgba(0,229,255,0.1)] flex flex-col">
       <div className="p-6 border-b border-[rgba(0,229,255,0.1)]">
         <div className="flex items-center gap-3">
-          <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(5493%) hue-rotate(165deg) brightness(101%) contrast(101%)' }} />
+          <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
           <div>
             <h1 className="font-bold text-lg text-[#f0f0f5] tracking-wide">Simpli</h1>
             <p className="text-xs text-[#6b6b80] uppercase tracking-wider">{currentRole?.name}</p>
