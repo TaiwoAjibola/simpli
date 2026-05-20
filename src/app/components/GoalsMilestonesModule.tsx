@@ -10,6 +10,7 @@ export function GoalsModule() {
   const {
     goals,
     apps,
+    phases,
     tasks,
     addGoal,
     updateGoal,
@@ -20,10 +21,13 @@ export function GoalsModule() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [filterAppId, setFilterAppId] = useState<string>('all');
+  const [filterPhaseId, setFilterPhaseId] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     appId: '',
+    phaseId: '',
     startDate: '',
     endDate: ''
   });
@@ -37,17 +41,19 @@ export function GoalsModule() {
     if (editingGoal) {
       updateGoal(editingGoal.id, {
         ...formData,
+        phaseId: formData.phaseId || undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
     } else {
       addGoal({
         ...formData,
+        phaseId: formData.phaseId || undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
     }
-    setFormData({ name: '', description: '', appId: '', startDate: '', endDate: '' });
+    setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' });
     setShowForm(false);
     setEditingGoal(null);
   };
@@ -57,12 +63,24 @@ export function GoalsModule() {
       name: goal.name,
       description: goal.description,
       appId: goal.appId,
+      phaseId: goal.phaseId || '',
       startDate: goal.startDate ? format(goal.startDate, 'yyyy-MM-dd') : '',
       endDate: goal.endDate ? format(goal.endDate, 'yyyy-MM-dd') : ''
     });
     setEditingGoal(goal);
     setShowForm(true);
   };
+
+  const filteredGoals = goals.filter(g => {
+    if (filterAppId !== 'all' && g.appId !== filterAppId) return false;
+    if (filterPhaseId !== 'all') {
+      if (filterPhaseId === 'no-phase') return !g.phaseId;
+      return g.phaseId !== filterPhaseId;
+    }
+    return true;
+  });
+
+  const filteredPhases = filterAppId !== 'all' ? phases.filter(p => p.appId === filterAppId) : phases;
 
   const handleDelete = (goalId: string) => {
     if (confirm('Delete this goal and all its tasks?')) {
@@ -75,14 +93,14 @@ export function GoalsModule() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Goals</h1>
-          <p className="text-[#6b6b80]">{goals.length} total goals</p>
+          <p className="text-[#6b6b80]">{filteredGoals.length} of {goals.length} goals</p>
         </div>
         {canCreateGoal && (
           <button
             onClick={() => {
               setShowForm(!showForm);
               setEditingGoal(null);
-              setFormData({ name: '', description: '', appId: '' });
+              setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
@@ -90,6 +108,30 @@ export function GoalsModule() {
             New Goal
           </button>
         )}
+      </div>
+
+      <div className="flex items-center gap-3 mb-4">
+        <select
+          value={filterAppId}
+          onChange={(e) => { setFilterAppId(e.target.value); setFilterPhaseId('all'); }}
+          className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+        >
+          <option value="all">All Apps</option>
+          {apps.map(app => (
+            <option key={app.id} value={app.id}>{app.name}</option>
+          ))}
+        </select>
+        <select
+          value={filterPhaseId}
+          onChange={(e) => setFilterPhaseId(e.target.value)}
+          className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+        >
+          <option value="all">All Phases</option>
+          <option value="no-phase">No Phase</option>
+          {filteredPhases.map(phase => (
+            <option key={phase.id} value={phase.id}>{phase.name}</option>
+          ))}
+        </select>
       </div>
 
       {showForm && (
@@ -124,7 +166,7 @@ export function GoalsModule() {
               <label className="block text-sm font-medium text-[#f0f0f5] mb-2">App</label>
               <select
                 value={formData.appId}
-                onChange={(e) => setFormData({ ...formData, appId: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, appId: e.target.value, phaseId: '' }); }}
                 className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                 required
               >
@@ -136,6 +178,22 @@ export function GoalsModule() {
                 ))}
               </select>
             </div>
+
+            {formData.appId && phases.filter(p => p.appId === formData.appId).length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase (optional)</label>
+                <select
+                  value={formData.phaseId}
+                  onChange={(e) => setFormData({ ...formData, phaseId: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                >
+                  <option value="">No phase</option>
+                  {phases.filter(p => p.appId === formData.appId).map(phase => (
+                    <option key={phase.id} value={phase.id}>{phase.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -181,8 +239,9 @@ export function GoalsModule() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {goals.map((goal) => {
+        {filteredGoals.map((goal) => {
           const app = getAppById(goal.appId);
+          const phase = goal.phaseId ? phases.find(p => p.id === goal.phaseId) : null;
           const goalTasks = getTasksForGoal(goal.id);
           const completedTasks = goalTasks.filter((t) => t.status === 'approved');
           const progress = goalTasks.length > 0 ? Math.round((completedTasks.length / goalTasks.length) * 100) : 0;
@@ -202,7 +261,7 @@ export function GoalsModule() {
                   </div>
                   <div>
                     <h3 className="font-bold text-[#f0f0f5] text-lg">{goal.name}</h3>
-                    <p className="text-sm text-[#6b6b80] mt-1">{app?.name}</p>
+                    <p className="text-sm text-[#6b6b80] mt-1">{app?.name}{phase && ` • ${phase.name}`}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

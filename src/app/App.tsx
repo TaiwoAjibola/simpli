@@ -15,12 +15,19 @@ import { AnalyticsPage } from './components/AnalyticsPage';
 import { TimelinePage } from './components/TimelinePage';
 import { ArchivePage } from './components/ArchivePage';
 import { DefectDashboard } from './components/DefectDashboard';
+import { AppDetailsPage } from './components/AppDetailsPage';
 import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
   const { loading: appLoading } = useApp();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [selectedAppId, setSelectedAppId] = useState<string>('');
+
+  const handleNavigate = (page: string, appId?: string) => {
+    setCurrentPage(page);
+    if (appId) setSelectedAppId(appId);
+  };
 
   if (authLoading || appLoading) {
     return (
@@ -36,9 +43,9 @@ function AppContent() {
 
   return (
     <div className="h-screen flex bg-[#0a0a0f]">
-      <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
-        {currentPage === 'dashboard' && <Dashboard onNavigate={setCurrentPage} />}
+        {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
         {currentPage === 'my-work' && <MyWork />}
         {currentPage === 'kanban' && <KanbanBoard />}
         {currentPage === 'analytics' && <AnalyticsPage />}
@@ -46,7 +53,8 @@ function AppContent() {
         {currentPage === 'archive' && <ArchivePage />}
         {currentPage === 'defects' && <DefectDashboard />}
         {currentPage === 'activities' && <ActivitiesPage />}
-        {currentPage === 'apps' && <AppsModule />}
+        {currentPage === 'apps' && <AppsModule onNavigate={handleNavigate} />}
+        {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
         {currentPage === 'goals' && <GoalsModule />}
         {currentPage === 'tasks' && <TasksModule />}
         {currentPage === 'admin' && <AdminPanel />}

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Layers, Target, CheckSquare, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { App } from '../types';
 
-export function AppsModule() {
+type AppsModuleProps = {
+  onNavigate: (page: string, appId?: string) => void;
+};
+
+export function AppsModule({ onNavigate }: AppsModuleProps) {
   const { currentUser, hasPermission } = useAuth();
   const { apps, goals, tasks, addApp, updateApp, deleteApp, getGoalsForApp, getTasksForGoal } = useApp();
   const [showForm, setShowForm] = useState(false);
@@ -172,7 +176,10 @@ export function AppsModule() {
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
 
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-3">
+                <button
+                  onClick={() => onNavigate('app-details', app.id)}
+                  className="flex items-start gap-3 text-left hover:opacity-80 transition flex-1"
+                >
                   <div className="p-3 bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.2)]">
                     <Layers className="w-6 h-6 text-[#00e5ff]" />
                   </div>
@@ -182,7 +189,8 @@ export function AppsModule() {
                       Created {format(app.createdAt, 'MMM d, yyyy')}
                     </p>
                   </div>
-                </div>
+                  <ArrowRight className="w-4 h-4 text-[#6b6b80] mt-1" />
+                </button>
                 <div className="flex items-center gap-2">
                   <span
                     className={`px-3 py-1 text-xs font-medium ${

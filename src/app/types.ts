@@ -38,9 +38,22 @@ export type App = {
   status: 'active' | 'completed' | 'on_hold';
 };
 
+export type Phase = {
+  id: string;
+  appId: string;
+  name: string;
+  description: string;
+  status: 'planned' | 'in_progress' | 'completed' | 'on_hold';
+  startDate?: Date;
+  endDate?: Date;
+  createdAt: Date;
+  createdBy: string;
+};
+
 export type Goal = {
   id: string;
   appId: string;
+  phaseId?: string;
   name: string;
   description: string;
   createdAt: Date;

@@ -32,7 +32,8 @@ import {
   Activity,
   TaskStatus,
   Comment,
-  Defect
+  Defect,
+  Phase
 } from '../types';
 
 type AppContextType = {
@@ -47,6 +48,7 @@ type AppContextType = {
   activities: Activity[];
   comments: Comment[];
   defects: Defect[];
+  phases: Phase[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -87,6 +89,11 @@ type AppContextType = {
   addDefectComment: (defectId: string, userId: string, userName: string, content: string) => Promise<void>;
   getDefectsForApp: (appId: string) => Defect[];
   getDefectById: (defectId: string) => Defect | undefined;
+  addPhase: (phase: Omit<Phase, 'id' | 'createdAt'>) => Promise<void>;
+  updatePhase: (phaseId: string, updates: Partial<Phase>) => Promise<void>;
+  deletePhase: (phaseId: string) => Promise<void>;
+  getPhasesForApp: (appId: string) => Phase[];
+  getPhaseById: (phaseId: string) => Phase | undefined;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -200,6 +207,17 @@ function docToDefect(doc: any): Defect {
   };
 }
 
+function docToPhase(doc: any): Phase {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    startDate: data.startDate?.toDate(),
+    endDate: data.endDate?.toDate(),
+    createdAt: data.createdAt?.toDate() || new Date()
+  };
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [apps, setApps] = useState<App[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -212,6 +230,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [defects, setDefects] = useState<Defect[]>([]);
+  const [phases, setPhases] = useState<Phase[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -227,7 +246,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'notificationRules'), setter: setNotificationRules, transformer: docToNotificationRule },
       { ref: query(collection(db, 'activities'), orderBy('timestamp', 'desc')), setter: setActivities, transformer: docToActivity },
       { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment },
-      { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect }
+      { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect },
+      { ref: collection(db, 'phases'), setter: setPhases, transformer: docToPhase }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -958,6 +978,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return defects.find(d => d.id === defectId);
   }, [defects]);
 
+  const addPhase = useCallback(async (phaseData: Omit<Phase, 'id' | 'createdAt'>) => {
+    const phaseId = `phase-${Date.now()}`;
+    await setDoc(doc(db, 'phases', phaseId), {
+      ...phaseData,
+      id: phaseId,
+      createdAt: new Date()
+    });
+  }, []);
+
+  const updatePhase = useCallback(async (phaseId: string, updates: Partial<Phase>) => {
+    await updateDoc(doc(db, 'phases', phaseId), updates);
+  }, []);
+
+  const deletePhase = useCallback(async (phaseId: string) => {
+    const phaseGoals = goals.filter(g => g.phaseId === phaseId);
+    for (const goal of phaseGoals) {
+      const goalTasks = tasks.filter(t => t.goalId === goal.id);
+      for (const task of goalTasks) {
+        const taskSubtasks = subtasks.filter(s => s.taskId === task.id);
+        for (const subtask of taskSubtasks) {
+          await deleteDoc(doc(db, 'subtasks', subtask.id));
+        }
+        await deleteDoc(doc(db, 'tasks', task.id));
+      }
+      await deleteDoc(doc(db, 'goals', goal.id));
+    }
+    await deleteDoc(doc(db, 'phases', phaseId));
+  }, [goals, tasks, subtasks]);
+
+  const getPhasesForApp = useCallback((appId: string) => {
+    return phases.filter(p => p.appId === appId);
+  }, [phases]);
+
+  const getPhaseById = useCallback((phaseId: string) => {
+    return phases.find(p => p.id === phaseId);
+  }, [phases]);
+
   return (
     <AppContext.Provider
       value={{
@@ -972,6 +1029,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activities,
         comments,
         defects,
+        phases,
         loading,
         addApp,
         updateApp,
@@ -1011,7 +1069,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteDefect,
         addDefectComment,
         getDefectsForApp,
-        getDefectById
+        getDefectById,
+        addPhase,
+        updatePhase,
+        deletePhase,
+        getPhasesForApp,
+        getPhaseById
       }}
     >
       {children}
