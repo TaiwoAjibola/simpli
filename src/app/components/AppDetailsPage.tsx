@@ -261,14 +261,14 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
           return (
             <div key={phase.id} className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-              <div className="flex items-center gap-4 p-4">
-                <button onClick={() => togglePhase(phase.id)} className="p-1">
+              <button onClick={() => togglePhase(phase.id)} className="w-full flex items-center gap-4 p-4 text-left hover:bg-[rgba(255,255,255,0.02)]">
+                <div className="flex-shrink-0">
                   {isExpanded ? (
                     <ChevronDown className="w-5 h-5 text-[#6b6b80]" />
                   ) : (
                     <ChevronRight className="w-5 h-5 text-[#6b6b80]" />
                   )}
-                </button>
+                </div>
 
                 <div className={`p-2 ${statusColors[phase.status]} bg-opacity-10`}>
                   <StatusIcon className={`w-5 h-5 ${statusColors[phase.status].replace('bg-', 'text-')}`} />
@@ -291,16 +291,16 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                       {formatDate(phase.startDate)} → {formatDate(phase.endDate)}
                     </span>
                   </div>
-                  {phase.details && (
-                    <p className="text-sm text-[#6b6b80] mt-1 line-clamp-2">{phase.details}</p>
+                  {phase.details && !isExpanded && (
+                    <p className="text-sm text-[#6b6b80] mt-1 line-clamp-1">{phase.details}</p>
                   )}
-                  {phase.notes && (
-                    <p className="text-xs text-[#8b5cf6] mt-1 italic">Note: {phase.notes}</p>
+                  {phase.notes && !isExpanded && (
+                    <p className="text-xs text-[#8b5cf6] mt-0.5 italic truncate">Note: {phase.notes}</p>
                   )}
                 </div>
 
                 {hasPermission('create_app') && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleEdit(phase)}
                       className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
@@ -315,74 +315,92 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                     </button>
                   </div>
                 )}
-              </div>
+              </button>
 
               {isExpanded && (
-                <div className="border-t border-[rgba(0,229,255,0.1)] p-4 bg-[#0e0e16]">
-                  {phaseGoals.length === 0 ? (
-                    <p className="text-sm text-[#6b6b80] text-center py-4">No goals in this phase</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {phaseGoals.map(goal => {
-                        const goalTasks = tasks.filter(t => t.goalId === goal.id);
-                        const completedTasks = goalTasks.filter(t => t.status === 'approved' || t.status === 'completed').length;
+                <div className="border-t border-[rgba(0,229,255,0.1)]">
+                  <div className="p-4 space-y-4">
+                    {phase.details && (
+                      <div>
+                        <h4 className="text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</h4>
+                        <p className="text-sm text-[#6b6b80] whitespace-pre-wrap leading-relaxed">{phase.details}</p>
+                      </div>
+                    )}
+                    {phase.notes && (
+                      <div className="p-3 bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.1)]">
+                        <h4 className="text-xs font-medium text-[#8b5cf6] mb-1">Notes</h4>
+                        <p className="text-sm text-[#8b5cf6] whitespace-pre-wrap italic">{phase.notes}</p>
+                      </div>
+                    )}
 
-                        return (
-                          <div key={goal.id} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <Target className="w-5 h-5 text-[#8b5cf6]" />
-                                <div>
-                                  <h4 className="font-medium text-[#f0f0f5]">{goal.name}</h4>
-                                  <p className="text-sm text-[#6b6b80]">{goal.description}</p>
+                    <div className="border-t border-[rgba(0,229,255,0.1)] pt-4">
+                      <h4 className="text-sm font-medium text-[#f0f0f5] mb-3">Goals ({phaseGoals.length})</h4>
+                      {phaseGoals.length === 0 ? (
+                        <p className="text-sm text-[#6b6b80] text-center py-4">No goals in this phase</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {phaseGoals.map(goal => {
+                            const goalTasks = tasks.filter(t => t.goalId === goal.id);
+                            const completedTasks = goalTasks.filter(t => t.status === 'approved' || t.status === 'completed').length;
+
+                            return (
+                              <div key={goal.id} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <Target className="w-5 h-5 text-[#8b5cf6]" />
+                                    <div>
+                                      <h4 className="font-medium text-[#f0f0f5]">{goal.name}</h4>
+                                      <p className="text-sm text-[#6b6b80]">{goal.description}</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm text-[#6b6b80]">
+                                      {completedTasks}/{goalTasks.length} tasks
+                                    </p>
+                                    {goalTasks.length > 0 && (
+                                      <div className="w-24 h-1.5 bg-[#12121a] rounded-full mt-1">
+                                        <div
+                                          className="h-full bg-[#10b981] rounded-full"
+                                          style={{ width: `${(completedTasks / goalTasks.length) * 100}%` }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm text-[#6b6b80]">
-                                  {completedTasks}/{goalTasks.length} tasks
-                                </p>
+
                                 {goalTasks.length > 0 && (
-                                  <div className="w-24 h-1.5 bg-[#12121a] rounded-full mt-1">
-                                    <div
-                                      className="h-full bg-[#10b981] rounded-full"
-                                      style={{ width: `${(completedTasks / goalTasks.length) * 100}%` }}
-                                    />
+                                  <div className="mt-3 pt-3 border-t border-[rgba(0,229,255,0.05)]">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {goalTasks.slice(0, 6).map(task => (
+                                        <div key={task.id} className="flex items-center gap-2 text-sm">
+                                          <CheckSquare className={`w-3 h-3 ${
+                                            task.status === 'approved' ? 'text-[#10b981]' :
+                                            task.status === 'completed' ? 'text-[#8b5cf6]' :
+                                            task.status === 'in_progress' ? 'text-[#00e5ff]' :
+                                            task.status === 'blocked' ? 'text-[#ff3b5c]' :
+                                            'text-[#6b6b80]'
+                                          }`} />
+                                          <span className="text-[#f0f0f5] truncate">{task.name}</span>
+                                          {task.assignedTo.length > 0 && (
+                                            <span className="text-xs text-[#6b6b80] ml-auto">
+                                              → {getEmployeeById(task.assignedTo[0])?.name?.split(' ')[0] || ''}
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {goalTasks.length > 6 && (
+                                      <p className="text-xs text-[#6b6b80] mt-2">+{goalTasks.length - 6} more tasks</p>
+                                    )}
                                   </div>
                                 )}
                               </div>
-                            </div>
-
-                            {goalTasks.length > 0 && (
-                              <div className="mt-3 pt-3 border-t border-[rgba(0,229,255,0.05)]">
-                                <div className="grid grid-cols-2 gap-2">
-                                  {goalTasks.slice(0, 6).map(task => (
-                                    <div key={task.id} className="flex items-center gap-2 text-sm">
-                                      <CheckSquare className={`w-3 h-3 ${
-                                        task.status === 'approved' ? 'text-[#10b981]' :
-                                        task.status === 'completed' ? 'text-[#8b5cf6]' :
-                                        task.status === 'in_progress' ? 'text-[#00e5ff]' :
-                                        task.status === 'blocked' ? 'text-[#ff3b5c]' :
-                                        'text-[#6b6b80]'
-                                      }`} />
-                                      <span className="text-[#f0f0f5] truncate">{task.name}</span>
-                                      {task.assignedTo.length > 0 && (
-                                        <span className="text-xs text-[#6b6b80] ml-auto">
-                                          → {getEmployeeById(task.assignedTo[0])?.name?.split(' ')[0] || ''}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                                {goalTasks.length > 6 && (
-                                  <p className="text-xs text-[#6b6b80] mt-2">+{goalTasks.length - 6} more tasks</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
