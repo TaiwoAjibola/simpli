@@ -31,7 +31,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    details: '',
+    notes: '',
     status: 'planned' as Phase['status'],
     startDate: '',
     endDate: ''
@@ -61,7 +62,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       });
     }
 
-    setFormData({ name: '', description: '', status: 'planned', startDate: '', endDate: '' });
+    setFormData({ name: '', details: '', notes: '', status: 'planned', startDate: '', endDate: '' });
     setShowAddPhase(false);
   };
 
@@ -69,7 +70,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     setEditingPhase(phase);
     setFormData({
       name: phase.name,
-      description: phase.description,
+      details: phase.details,
+      notes: phase.notes,
       status: phase.status,
       startDate: phase.startDate ? phase.startDate.toISOString().split('T')[0] : '',
       endDate: phase.endDate ? phase.endDate.toISOString().split('T')[0] : ''
@@ -152,7 +154,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             onClick={() => {
               setShowAddPhase(!showAddPhase);
               setEditingPhase(null);
-              setFormData({ name: '', description: '', status: 'planned', startDate: '', endDate: '' });
+              setFormData({ name: '', details: '', notes: '', status: 'planned', startDate: '', endDate: '' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
           >
@@ -211,12 +213,21 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</label>
               <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-20 resize-none"
-                placeholder="Describe the scope and objectives of this phase..."
+                value={formData.details}
+                onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-24 resize-none"
+                placeholder="Describe the scope, objectives, and key deliverables of this phase..."
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-16 resize-none"
+                placeholder="Additional notes, reminders, or observations..."
               />
             </div>
           </div>
@@ -280,8 +291,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                       {formatDate(phase.startDate)} → {formatDate(phase.endDate)}
                     </span>
                   </div>
-                  {phase.description && (
-                    <p className="text-sm text-[#6b6b80] mt-1 truncate">{phase.description}</p>
+                  {phase.details && (
+                    <p className="text-sm text-[#6b6b80] mt-1 line-clamp-2">{phase.details}</p>
+                  )}
+                  {phase.notes && (
+                    <p className="text-xs text-[#8b5cf6] mt-1 italic">Note: {phase.notes}</p>
                   )}
                 </div>
 

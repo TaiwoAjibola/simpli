@@ -42,7 +42,8 @@ export type Phase = {
   id: string;
   appId: string;
   name: string;
-  description: string;
+  details: string;
+  notes: string;
   status: 'planned' | 'in_progress' | 'completed' | 'on_hold';
   startDate?: Date;
   endDate?: Date;
