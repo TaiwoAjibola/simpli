@@ -440,6 +440,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: serverTimestamp()
     });
     const employee = employees.find(e => e.id === app.createdBy);
+    setApps(prev => [{ ...app, id: appId, createdAt: new Date() }, ...prev]);
     await addActivity({
       type: 'app_created',
       userId: app.createdBy,
@@ -476,6 +477,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: goalId,
       createdAt: serverTimestamp()
     }));
+    setGoals(prev => [{ ...goal, id: goalId, createdAt: new Date() } as Goal, ...prev]);
     await addActivity({
       type: 'goal_created',
       userId: 'system',
@@ -508,6 +510,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: taskId,
       createdAt: serverTimestamp()
     });
+    setTasks(prev => [{ ...task, id: taskId, createdAt: new Date() } as Task, ...prev]);
     const assigneeNames = task.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
     await addActivity({
       type: 'task_created',
@@ -654,6 +657,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    setSubtasks(prev => [{ ...subtask, id: subtaskId, createdAt: new Date(), updatedAt: new Date() } as Subtask, ...prev]);
     const assigneeNames = subtask.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
     if (assigneeNames) {
       await createNotification(
