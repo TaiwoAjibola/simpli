@@ -9,7 +9,8 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { sendEmail } from '../../utils/sendEmail';
@@ -98,12 +99,21 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+function safeDate(value: any): Date | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (value.toDate && typeof value.toDate === 'function') return value.toDate();
+  if (typeof value === 'string' || typeof value === 'number') return new Date(value);
+  if (value.seconds) return new Date(value.seconds * 1000);
+  return undefined;
+}
+
 function docToApp(doc: any): App {
   const data = doc.data();
   return {
     id: doc.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date()
+    createdAt: safeDate(data.createdAt) || new Date()
   };
 }
 
@@ -112,9 +122,9 @@ function docToGoal(doc: any): Goal {
   return {
     id: doc.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date(),
-    startDate: data.startDate?.toDate(),
-    endDate: data.endDate?.toDate()
+    createdAt: safeDate(data.createdAt) || new Date(),
+    startDate: safeDate(data.startDate),
+    endDate: safeDate(data.endDate)
   };
 }
 
@@ -123,12 +133,12 @@ function docToTask(doc: any): Task {
   return {
     id: doc.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date(),
-    startDate: data.startDate?.toDate(),
-    dueDate: data.dueDate?.toDate(),
-    endDate: data.endDate?.toDate(),
-    completedAt: data.completedAt?.toDate(),
-    approvedAt: data.approvedAt?.toDate()
+    createdAt: safeDate(data.createdAt) || new Date(),
+    startDate: safeDate(data.startDate),
+    dueDate: safeDate(data.dueDate),
+    endDate: safeDate(data.endDate),
+    completedAt: safeDate(data.completedAt),
+    approvedAt: safeDate(data.approvedAt)
   };
 }
 
@@ -137,10 +147,10 @@ function docToSubtask(doc: any): Subtask {
   return {
     id: doc.id,
     ...data,
-    createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date(),
-    startDate: data.startDate?.toDate(),
-    endDate: data.endDate?.toDate()
+    createdAt: safeDate(data.createdAt) || new Date(),
+    updatedAt: safeDate(data.updatedAt) || new Date(),
+    startDate: safeDate(data.startDate),
+    endDate: safeDate(data.endDate)
   };
 }
 
@@ -173,7 +183,7 @@ function docToActivity(doc: any): Activity {
   return {
     id: doc.id,
     ...data,
-    timestamp: data.timestamp?.toDate() || new Date()
+    timestamp: safeDate(data.timestamp) || new Date()
   };
 }
 
@@ -182,7 +192,7 @@ function docToComment(doc: any): Comment {
   return {
     id: doc.id,
     ...data,
-    timestamp: data.timestamp?.toDate() || new Date()
+    timestamp: safeDate(data.timestamp) || new Date()
   };
 }
 
@@ -191,15 +201,15 @@ function docToDefect(doc: any): Defect {
   return {
     id: doc.id,
     ...data,
-    dateReported: data.dateReported?.toDate() || new Date(),
-    dueDate: data.dueDate?.toDate(),
-    verificationDate: data.verificationDate?.toDate(),
-    createdAt: data.createdAt?.toDate() || new Date(),
-    updatedAt: data.updatedAt?.toDate() || new Date(),
-    closedAt: data.closedAt?.toDate(),
+    dateReported: safeDate(data.dateReported) || new Date(),
+    dueDate: safeDate(data.dueDate),
+    verificationDate: safeDate(data.verificationDate),
+    createdAt: safeDate(data.createdAt) || new Date(),
+    updatedAt: safeDate(data.updatedAt) || new Date(),
+    closedAt: safeDate(data.closedAt),
     activityLogs: (data.activityLogs || []).map((log: any) => ({
       ...log,
-      timestamp: log.timestamp?.toDate() || new Date()
+      timestamp: safeDate(log.timestamp) || new Date()
     })),
     attachments: data.attachments || [],
     reopenedCount: data.reopenedCount || 0,
@@ -212,9 +222,9 @@ function docToPhase(doc: any): Phase {
   return {
     id: doc.id,
     ...data,
-    startDate: data.startDate?.toDate(),
-    endDate: data.endDate?.toDate(),
-    createdAt: data.createdAt?.toDate() || new Date()
+    startDate: safeDate(data.startDate),
+    endDate: safeDate(data.endDate),
+    createdAt: safeDate(data.createdAt) || new Date()
   };
 }
 
@@ -759,10 +769,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   function sanitizeForFirestore(obj: any): any {
     if (obj === null || obj === undefined) return null;
+    if (obj instanceof Date) return Timestamp.fromDate(obj);
     if (typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) {
       return obj.map(item => sanitizeForFirestore(item));
     }
+    if (obj instanceof Timestamp) return obj;
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined && value !== null) {
