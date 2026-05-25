@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import {
@@ -14,7 +14,9 @@ import {
   BarChart3,
   Calendar,
   Archive,
-  Bug
+  Bug,
+  Menu,
+  X
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 
@@ -26,6 +28,7 @@ type NavigationProps = {
 export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const { currentUser, currentRole, logout, hasPermission } = useAuth();
   const { notifications } = useApp();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -59,8 +62,27 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     }
   ];
 
+  const handleNavClick = (page: string) => {
+    onNavigate(page);
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="h-screen w-64 bg-[#0e0e16] border-r border-[rgba(0,229,255,0.1)] flex flex-col">
+    <>
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)]"
+      >
+        {sidebarOpen ? <X className="w-5 h-5 text-[#f0f0f5]" /> : <Menu className="w-5 h-5 text-[#f0f0f5]" />}
+      </button>
+
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <div className={`h-screen w-64 bg-[#0e0e16] border-r border-[rgba(0,229,255,0.1)] flex flex-col fixed lg:static z-40 transition-transform duration-300 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
       <div className="p-6 border-b border-[rgba(0,229,255,0.1)]">
         <div className="flex items-center gap-3">
           <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
@@ -89,7 +111,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => onNavigate(item.id)}
+                      onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
                         isActive
                           ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] font-medium border-l-2 border-[#00e5ff]'
@@ -130,6 +152,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
           <span>Logout</span>
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

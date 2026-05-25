@@ -16,6 +16,7 @@ import { TimelinePage } from './components/TimelinePage';
 import { ArchivePage } from './components/ArchivePage';
 import { DefectDashboard } from './components/DefectDashboard';
 import { AppDetailsPage } from './components/AppDetailsPage';
+import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
 
 function AppContent() {
@@ -80,7 +81,9 @@ export default function App() {
   return (
     <AuthProvider>
       <AppProvider>
-        <AppContent />
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
       </AppProvider>
     </AuthProvider>
   );

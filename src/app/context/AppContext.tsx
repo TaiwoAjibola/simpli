@@ -461,11 +461,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addGoal = useCallback(async (goal: Omit<Goal, 'id' | 'createdAt'>) => {
     const goalId = `goal-${Date.now()}`;
-    await setDoc(doc(db, 'goals', goalId), {
+    await setDoc(doc(db, 'goals', goalId), sanitizeForFirestore({
       ...goal,
       id: goalId,
       createdAt: serverTimestamp()
-    });
+    }));
     await addActivity({
       type: 'goal_created',
       userId: 'system',
@@ -476,7 +476,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [addActivity]);
 
   const updateGoal = useCallback(async (goalId: string, updates: Partial<Goal>) => {
-    await updateDoc(doc(db, 'goals', goalId), updates);
+    await updateDoc(doc(db, 'goals', goalId), sanitizeForFirestore(updates));
   }, []);
 
   const deleteGoal = useCallback(async (goalId: string) => {

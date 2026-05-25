@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { X, Upload, Paperclip } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { X, Upload, Paperclip, Loader } from 'lucide-react';
 import { DefectIssueType, DefectSeverity, DefectPriority, DefectReproducibility, DefectFrequency } from '../types';
 
 type DefectCreateModalProps = {
@@ -12,6 +13,7 @@ type DefectCreateModalProps = {
 export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
   const { addDefect, apps, employees } = useApp();
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,34 +36,57 @@ export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
   });
   const [attachments, setAttachments] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
     setSubmitting(true);
+    setUploadProgress(0);
 
     try {
       let attachmentUrls: any[] = [];
       if (attachments.length > 0) {
+        setUploadStatus(`Uploading ${attachments.length} file(s)...`);
         const { storage } = await import('../../firebase/config');
-        const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+        const { ref, uploadBytesResumable, getDownloadURL } = await import('firebase/storage');
 
-        for (const file of attachments) {
+        for (let i = 0; i < attachments.length; i++) {
+          const file = attachments[i];
+          setUploadStatus(`Uploading ${file.name} (${i + 1}/${attachments.length})...`);
           const fileRef = ref(storage, `defects/${Date.now()}_${file.name}`);
-          const snapshot = await uploadBytes(fileRef, file);
-          const downloadURL = await getDownloadURL(snapshot.ref);
-          attachmentUrls.push({
-            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            name: file.name,
-            url: downloadURL,
-            size: file.size,
-            type: file.type,
-            uploadedAt: new Date(),
-            uploadedBy: currentUser.id
+          const uploadTask = uploadBytesResumable(fileRef, file);
+
+          await new Promise<void>((resolve, reject) => {
+            uploadTask.on(
+              'state_changed',
+              (snapshot) => {
+                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                setUploadProgress(Math.round(((i + pct / 100) / attachments.length) * 100));
+              },
+              (error) => {
+                reject(error);
+              },
+              async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                attachmentUrls.push({
+                  id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: file.name,
+                  url: downloadURL,
+                  size: file.size,
+                  type: file.type,
+                  uploadedAt: new Date(),
+                  uploadedBy: currentUser.id
+                });
+                resolve();
+              }
+            );
           });
         }
       }
 
+      setUploadStatus('Creating defect...');
       await addDefect({
         ...formData,
         reportedBy: currentUser.id,
@@ -70,11 +95,15 @@ export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
         attachments: attachmentUrls
       });
 
+      showToast({ type: 'success', title: 'Defect Created', message: `${formData.defectCode || formData.title} has been reported.` });
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating defect:', error);
+      showToast({ type: 'error', title: 'Failed to Create Defect', message: error?.message || 'An unexpected error occurred.' });
     } finally {
       setSubmitting(false);
+      setUploadProgress(0);
+      setUploadStatus('');
     }
   };
 
@@ -336,11 +365,24 @@ export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
             <button
               type="submit"
               disabled={submitting || !formData.title}
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Creating...' : 'Create Defect'}
+              {submitting ? (
+                <><Loader className="w-4 h-4 animate-spin" /> {uploadStatus || 'Creating...'}</>
+              ) : 'Create Defect'}
             </button>
           </div>
+          {submitting && uploadProgress > 0 && (
+            <div className="mt-2">
+              <div className="h-1.5 bg-[#1a1a2e] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#00e5ff] rounded-full transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-[#6b6b80] mt-1">{uploadProgress}% complete</p>
+            </div>
+          )}
         </form>
       </div>
     </div>
