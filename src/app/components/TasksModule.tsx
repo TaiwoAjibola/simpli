@@ -308,9 +308,12 @@ export function TasksModule() {
           {canAssignTasks && (
             <button
               onClick={() => {
-                setShowAddForm(!showAddForm);
-                setEditingTask(null);
-                resetForm();
+                if (showAddForm) {
+                  resetForm();
+                } else {
+                  setShowAddForm(true);
+                  setEditingTask(null);
+                }
               }}
               className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
             >
