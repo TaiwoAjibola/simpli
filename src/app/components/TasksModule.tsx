@@ -53,6 +53,7 @@ export function TasksModule() {
   const canApprove = hasPermission('approve_tasks');
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const [formData, setFormData] = useState({
@@ -64,6 +65,15 @@ export function TasksModule() {
     startDate: '',
     endDate: ''
   });
+  const [multiGoalId, setMultiGoalId] = useState('');
+  const [multiTasks, setMultiTasks] = useState<{
+    name: string;
+    description: string;
+    assignedTo: string[];
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    startDate: string;
+    endDate: string;
+  }[]>([]);
   const [showSubtasksSection, setShowSubtasksSection] = useState(false);
   const [subtasks, setSubtasks] = useState<{ name: string; assignedTo: string[]; priority: Subtask['priority']; startDate: string; endDate: string }[]>([]);
   const [newSubtask, setNewSubtask] = useState({ name: '', assignedTo: [] as string[], priority: 'medium' as Subtask['priority'], startDate: '', endDate: '' });
@@ -101,6 +111,23 @@ export function TasksModule() {
           startDate: formData.startDate ? new Date(formData.startDate) : undefined,
           endDate: formData.endDate ? new Date(formData.endDate) : undefined
         });
+        resetForm();
+      } else if (taskMode === 'multi') {
+        const createdTasks = [];
+        for (const row of multiTasks) {
+          const task = await addTask({
+            name: row.name,
+            description: row.description,
+            goalId: multiGoalId,
+            assignedTo: row.assignedTo,
+            priority: row.priority,
+            startDate: row.startDate ? new Date(row.startDate) : undefined,
+            endDate: row.endDate ? new Date(row.endDate) : undefined,
+            status: 'not_started'
+          });
+          if (task) createdTasks.push(task);
+        }
+        resetForm();
       } else {
         const newTask = await addTask({
           ...formData,
@@ -142,22 +169,8 @@ export function TasksModule() {
             await updateTask(newTask.id, { attachments: uploadedAttachments });
           }
         }
+        resetForm();
       }
-      setFormData({
-        name: '',
-        description: '',
-        goalId: '',
-        assignedTo: [],
-        priority: 'medium',
-        startDate: '',
-        endDate: ''
-      });
-      setSubtasks([]);
-      setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
-      setShowSubtasksSection(false);
-      setAttachments([]);
-      setShowAddForm(false);
-      setEditingTask(null);
     } catch (error) {
       console.error('Error creating task:', error);
     } finally {
@@ -214,8 +227,60 @@ export function TasksModule() {
     setSubtasks(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addMultiTaskRow = () => {
+    setMultiTasks(prev => [...prev, {
+      name: '',
+      description: '',
+      assignedTo: [],
+      priority: 'medium',
+      startDate: '',
+      endDate: ''
+    }]);
+  };
+
+  const updateMultiTaskRow = (index: number, field: string, value: any) => {
+    setMultiTasks(prev => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
+  };
+
+  const removeMultiTaskRow = (index: number) => {
+    setMultiTasks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleMultiAssignee = (index: number, employeeId: string) => {
+    setMultiTasks(prev => prev.map((row, i) => {
+      if (i !== index) return row;
+      return {
+        ...row,
+        assignedTo: row.assignedTo.includes(employeeId)
+          ? row.assignedTo.filter(id => id !== employeeId)
+          : [...row.assignedTo, employeeId]
+      };
+    }));
+  };
+
   const handleApprove = (taskId: string) => {
     approveTask(taskId, currentUser!.id);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      goalId: '',
+      assignedTo: [],
+      priority: 'medium',
+      startDate: '',
+      endDate: ''
+    });
+    setMultiTasks([]);
+    setMultiGoalId('');
+    setSubtasks([]);
+    setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
+    setShowSubtasksSection(false);
+    setAttachments([]);
+    setShowAddForm(false);
+    setEditingTask(null);
+    setTaskMode('single');
   };
 
   return (
@@ -245,7 +310,7 @@ export function TasksModule() {
               onClick={() => {
                 setShowAddForm(!showAddForm);
                 setEditingTask(null);
-                setFormData({ name: '', description: '', goalId: '', assignedTo: [], priority: 'medium' });
+                resetForm();
               }}
               className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
             >
@@ -261,39 +326,118 @@ export function TasksModule() {
           <h3 className="font-semibold text-[#f0f0f5] mb-4">
             {editingTask ? 'Edit Task' : 'Create New Task'}
           </h3>
+
+          {!editingTask && (
+            <div className="flex items-center gap-1 mb-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] w-fit">
+              <button
+                type="button"
+                onClick={() => setTaskMode('single')}
+                className={`px-4 py-2 text-sm font-medium transition ${
+                  taskMode === 'single'
+                    ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                    : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                }`}
+              >
+                Single Task
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaskMode('multi')}
+                className={`px-4 py-2 text-sm font-medium transition ${
+                  taskMode === 'multi'
+                    ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                    : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                }`}
+              >
+                Multiple Tasks
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Task Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                required
-              />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                rows={3}
-                required
-              />
-            </div>
+            {taskMode === 'single' && (
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Task Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  required
+                />
+              </div>
+            )}
 
-            <div className="grid grid-cols-2 gap-4">
+            {taskMode === 'single' && (
               <div>
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                  Goal
+                  Description
                 </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  rows={3}
+                  required
+                />
+              </div>
+            )}
+
+            {taskMode === 'single' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal</label>
+                  <select
+                    value={formData.goalId}
+                    onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                    required
+                  >
+                    <option value="">Select goal</option>
+                    {goals.map((goal) => {
+                      const app = getAppById(goal.appId);
+                      return (
+                        <option key={goal.id} value={goal.id}>
+                          {app?.name} / {goal.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Assign To</label>
+                  <div className="flex flex-wrap gap-2">
+                    {employees.map((emp) => {
+                      const isSelected = formData.assignedTo.includes(emp.id);
+                      return (
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onClick={() => toggleAssignee(emp.id)}
+                          className={`px-3 py-1.5 text-sm border-2 transition ${
+                            isSelected
+                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                          }`}
+                        >
+                          {emp.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {formData.assignedTo.length === 0 && (
+                    <p className="text-xs text-[#6b6b80] mt-1">Select one or more assignees</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal (all tasks)</label>
                 <select
-                  value={formData.goalId}
-                  onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
+                  value={multiGoalId}
+                  onChange={(e) => setMultiGoalId(e.target.value)}
                   className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                   required
                 >
@@ -308,77 +452,168 @@ export function TasksModule() {
                   })}
                 </select>
               </div>
+            )}
 
+            {taskMode === 'single' && (
               <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
-                  Assign To
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {employees.map((emp) => {
-                    const isSelected = formData.assignedTo.includes(emp.id);
-                    return (
-                      <button
-                        key={emp.id}
-                        type="button"
-                        onClick={() => toggleAssignee(emp.id)}
-                        className={`px-3 py-1.5 text-sm border-2 transition ${
-                          isSelected
-                            ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                            : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
-                        }`}
-                      >
-                        {emp.name}
-                      </button>
-                    );
-                  })}
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent'
+                    })
+                  }
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            )}
+
+            {taskMode === 'single' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  />
                 </div>
-                {formData.assignedTo.length === 0 && (
-                  <p className="text-xs text-[#6b6b80] mt-1">Select one or more assignees</p>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {taskMode === 'multi' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-[#f0f0f5]">Tasks ({multiTasks.length})</label>
+                  <button
+                    type="button"
+                    onClick={addMultiTaskRow}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Task
+                  </button>
+                </div>
+
+                {multiTasks.length === 0 && (
+                  <div className="text-center py-8 bg-[#1a1a2e] border border-dashed border-[rgba(0,229,255,0.1)]">
+                    <p className="text-sm text-[#6b6b80]">Click "Add Task" to add tasks under this goal</p>
+                  </div>
                 )}
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Priority</label>
-              <select
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent'
-                  })
-                }
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
+                {multiTasks.map((row, idx) => (
+                  <div key={idx} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-[#f0f0f5]">Task {idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeMultiTaskRow(idx)}
+                        className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)]"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                />
-              </div>
-            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Task Name</label>
+                        <input
+                          type="text"
+                          value={row.name}
+                          onChange={(e) => updateMultiTaskRow(idx, 'name', e.target.value)}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Description</label>
+                        <input
+                          type="text"
+                          value={row.description}
+                          onChange={(e) => updateMultiTaskRow(idx, 'description', e.target.value)}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                        />
+                      </div>
+                    </div>
 
-            {!editingTask && (
+                    <div>
+                      <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Assign To</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {employees.map((emp) => {
+                          const selected = row.assignedTo.includes(emp.id);
+                          return (
+                            <button
+                              key={emp.id}
+                              type="button"
+                              onClick={() => toggleMultiAssignee(idx, emp.id)}
+                              className={`px-2 py-1 text-xs border transition ${
+                                selected
+                                  ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                                  : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                              }`}
+                            >
+                              {emp.name.split(' ')[0]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Priority</label>
+                        <select
+                          value={row.priority}
+                          onChange={(e) => updateMultiTaskRow(idx, 'priority', e.target.value)}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Start Date</label>
+                        <input
+                          type="date"
+                          value={row.startDate}
+                          onChange={(e) => updateMultiTaskRow(idx, 'startDate', e.target.value)}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">End Date</label>
+                        <input
+                          type="date"
+                          value={row.endDate}
+                          onChange={(e) => updateMultiTaskRow(idx, 'endDate', e.target.value)}
+                          className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {taskMode === 'single' && !editingTask && (
               <div className="pt-4 border-t border-[rgba(0,229,255,0.1)]">
                 <button
                   type="button"
@@ -514,7 +749,7 @@ export function TasksModule() {
               </div>
             )}
 
-            {!editingTask && (
+            {taskMode === 'single' && !editingTask && (
               <div className="pt-4 border-t border-[rgba(0,229,255,0.1)]">
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2 flex items-center gap-2">
                   <Paperclip className="w-4 h-4" />
@@ -565,24 +800,14 @@ export function TasksModule() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                disabled={uploading}
+                disabled={uploading || (taskMode === 'multi' && (multiTasks.length === 0 || !multiGoalId))}
                 className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
               >
-                {uploading ? 'Uploading...' : (editingTask ? 'Update' : 'Create') + ' Task'}
+                {uploading ? 'Uploading...' : editingTask ? 'Update Task' : taskMode === 'multi' ? `Create ${multiTasks.filter(t => t.name.trim()).length} Tasks` : 'Create Task'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setEditingTask(null);
-                  setFormData({
-                    name: '',
-                    description: '',
-                    goalId: '',
-                    assignedTo: [],
-                    priority: 'medium'
-                  });
-                }}
+                onClick={resetForm}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
               >
                 Cancel
