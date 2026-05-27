@@ -16,6 +16,7 @@ import { TimelinePage } from './components/TimelinePage';
 import { ArchivePage } from './components/ArchivePage';
 import { DefectDashboard } from './components/DefectDashboard';
 import { AppDetailsPage } from './components/AppDetailsPage';
+import { ActionPointsPage } from './components/ActionPointsPage';
 import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
 
@@ -58,6 +59,7 @@ function AppContent() {
         {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
         {currentPage === 'goals' && <GoalsModule />}
         {currentPage === 'tasks' && <TasksModule />}
+        {currentPage === 'action-points' && <ActionPointsPage />}
         {currentPage === 'admin' && <AdminPanel />}
       </main>
     </div>

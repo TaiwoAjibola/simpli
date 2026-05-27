@@ -43,6 +43,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
         { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
         { id: 'defects', label: 'Defects', icon: Bug, show: true },
+        { id: 'action-points', label: 'Action Points', icon: CheckSquare, show: true },
         { id: 'activities', label: 'Activities', icon: Activity, show: true }
       ]
     },

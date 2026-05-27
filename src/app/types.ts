@@ -17,7 +17,8 @@ export type Permission =
   | 'view_assigned_only'
   | 'report_defects'
   | 'manage_defects'
-  | 'verify_defects';
+  | 'verify_defects'
+  | 'manage_action_points';
 
 export type Employee = {
   id: string;
@@ -181,7 +182,25 @@ export const NOTIFICATION_VARIABLES = {
   goal: ['{goal_name}']
 } as const;
 
-export type DefectStatus = 'open' | 'in_progress' | 'pending_qa' | 'resolved' | 'closed' | 'reopened';
+export type ActionPointStatus = 'pending' | 'completed' | 'carried_over';
+
+export type ActionPoint = {
+  id: string;
+  title: string;
+  description?: string;
+  goalId: string;
+  assignedTo: string[];
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: ActionPointStatus;
+  weekStart: Date;
+  dayOfWeek: 'monday' | 'friday';
+  taskId?: string;
+  completedAt?: Date;
+  completedBy?: string;
+  createdBy: string;
+  createdAt: Date;
+  notes?: string;
+};
 export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor';
 export type DefectPriority = 'high' | 'medium' | 'low';
 export type DefectIssueType = 'bug' | 'ui_issue' | 'performance' | 'security' | 'crash' | 'enhancement';
