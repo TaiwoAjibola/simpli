@@ -97,7 +97,7 @@ type AppContextType = {
   deletePhase: (phaseId: string) => Promise<void>;
   getPhasesForApp: (appId: string) => Phase[];
   getPhaseById: (phaseId: string) => Phase | undefined;
-  addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'>) => Promise<void>;
+  addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => Promise<void>;
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
 };
@@ -1049,20 +1049,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return phases.find(p => p.id === phaseId);
   }, [phases]);
 
-  const addActionPoint = useCallback(async (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'>) => {
+  const addActionPoint = useCallback(async (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => {
     const apId = `ap-${Date.now()}`;
     const now = new Date();
 
-    const task = await addTask({
-      name: ap.title,
-      description: ap.description || '',
-      goalId: ap.goalId,
-      assignedTo: ap.assignedTo,
-      priority: ap.priority,
-      status: 'not_started'
-    });
+    let linkedTaskId = ap.taskId;
 
-    const taskId = task?.id;
+    if (!linkedTaskId) {
+      const task = await addTask({
+        name: ap.title,
+        description: ap.description || '',
+        goalId: ap.goalId,
+        assignedTo: ap.assignedTo,
+        priority: ap.priority,
+        status: 'not_started'
+      });
+      linkedTaskId = (task as any)?.id;
+    }
 
     await setDoc(doc(db, 'actionPoints', apId), sanitizeForFirestore({
       id: apId,
@@ -1074,27 +1077,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       status: 'pending',
       weekStart: ap.weekStart,
       dayOfWeek: ap.dayOfWeek,
-      taskId,
+      taskId: linkedTaskId || null,
       createdBy: ap.createdBy,
       createdAt: now,
       notes: ap.notes || ''
     }));
-
-    setActionPoints(prev => [{
-      id: apId,
-      title: ap.title,
-      description: ap.description || '',
-      goalId: ap.goalId,
-      assignedTo: ap.assignedTo,
-      priority: ap.priority,
-      status: 'pending',
-      weekStart: ap.weekStart,
-      dayOfWeek: ap.dayOfWeek,
-      taskId,
-      createdBy: ap.createdBy,
-      createdAt: now,
-      notes: ap.notes || ''
-    }, ...prev]);
   }, [addTask]);
 
   const updateActionPoint = useCallback(async (apId: string, updates: Partial<ActionPoint>) => {

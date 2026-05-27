@@ -33,6 +33,7 @@ export function ActionPointsPage() {
   const {
     actionPoints,
     goals,
+    tasks,
     employees,
     addActionPoint,
     updateActionPoint,
@@ -57,26 +58,32 @@ export function ActionPointsPage() {
     assignedTo: [] as string[],
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     dayOfWeek: 'monday' as 'monday' | 'friday',
-    notes: ''
+    notes: '',
+    linkType: 'new' as 'new' | 'existing',
+    existingTaskId: ''
   });
 
   const [multiGoalId, setMultiGoalId] = useState('');
   const [multiDayOfWeek, setMultiDayOfWeek] = useState<'monday' | 'friday'>('monday');
+  const [multiLinkType, setMultiLinkType] = useState<'new' | 'existing'>('new');
   const [multiRows, setMultiRows] = useState<{
     title: string;
     description: string;
     assignedTo: string[];
     priority: 'low' | 'medium' | 'high' | 'urgent';
     notes: string;
+    existingTaskId: string;
   }[]>([]);
 
   const resetForm = () => {
     setFormData({
-      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', dayOfWeek: 'monday', notes: ''
+      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', dayOfWeek: 'monday', notes: '',
+      linkType: 'new', existingTaskId: ''
     });
     setMultiRows([]);
     setMultiGoalId('');
     setMultiDayOfWeek('monday');
+    setMultiLinkType('new');
     setShowForm(false);
     setTaskMode('single');
   };
@@ -182,7 +189,8 @@ export function ActionPointsPage() {
           weekStart: getWeekStart(),
           dayOfWeek: multiDayOfWeek,
           createdBy: currentUser.id,
-          notes: row.notes
+          notes: row.notes,
+          taskId: row.existingTaskId || undefined
         });
       }
     } else {
@@ -195,7 +203,8 @@ export function ActionPointsPage() {
         weekStart: getWeekStart(),
         dayOfWeek: formData.dayOfWeek,
         createdBy: currentUser.id,
-        notes: formData.notes
+        notes: formData.notes,
+        taskId: formData.linkType === 'existing' ? formData.existingTaskId : undefined
       });
     }
     resetForm();
@@ -394,6 +403,60 @@ export function ActionPointsPage() {
                     rows={2}
                   />
                 </div>
+
+                <div className="pt-2 border-t border-[rgba(0,229,255,0.1)]">
+                  <div className="flex items-center gap-4 mb-3">
+                    <label className="text-sm font-medium text-[#f0f0f5]">Task</label>
+                    <div className="flex items-center gap-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, linkType: 'new', existingTaskId: '' }))}
+                        className={`px-3 py-1.5 text-xs ${formData.linkType === 'new' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}
+                      >
+                        Create New
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, linkType: 'existing' }))}
+                        className={`px-3 py-1.5 text-xs ${formData.linkType === 'existing' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}
+                      >
+                        Link Existing
+                      </button>
+                    </div>
+                  </div>
+                  {formData.linkType === 'existing' && (
+                    <select
+                      value={formData.existingTaskId}
+                      onChange={(e) => {
+                        const task = tasks.find(t => t.id === e.target.value);
+                        if (task) {
+                          const goal = getGoalById(task.goalId);
+                          setFormData(prev => ({
+                            ...prev,
+                            existingTaskId: task.id,
+                            title: task.name,
+                            description: task.description,
+                            goalId: task.goalId,
+                            assignedTo: task.assignedTo,
+                            priority: task.priority
+                          }));
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none text-sm"
+                    >
+                      <option value="">Select existing task...</option>
+                      {tasks.filter(t => t.status !== 'approved').map(task => {
+                        const goal = getGoalById(task.goalId);
+                        const app = goal ? getAppById(goal.appId) : null;
+                        return (
+                          <option key={task.id} value={task.id}>
+                            {app?.name} / {goal?.name} — {task.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -427,6 +490,26 @@ export function ActionPointsPage() {
                       <option value="monday">Monday</option>
                       <option value="friday">Friday</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mb-3">
+                  <label className="text-sm font-medium text-[#f0f0f5]">Task</label>
+                  <div className="flex items-center gap-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                    <button
+                      type="button"
+                      onClick={() => setMultiLinkType('new')}
+                      className={`px-3 py-1.5 text-xs ${multiLinkType === 'new' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}
+                    >
+                      Create New
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMultiLinkType('existing')}
+                      className={`px-3 py-1.5 text-xs ${multiLinkType === 'existing' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}
+                    >
+                      Link Existing
+                    </button>
                   </div>
                 </div>
 
@@ -469,7 +552,7 @@ export function ActionPointsPage() {
                             value={row.title}
                             onChange={(e) => updateMultiRow(idx, 'title', e.target.value)}
                             className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
-                            required
+                            required={multiLinkType === 'new'}
                           />
                         </div>
                         <div>
@@ -482,6 +565,37 @@ export function ActionPointsPage() {
                           />
                         </div>
                       </div>
+
+                      {multiLinkType === 'existing' && (
+                        <div>
+                          <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Link Existing Task</label>
+                          <select
+                            value={row.existingTaskId}
+                            onChange={(e) => {
+                              const task = tasks.find(t => t.id === e.target.value);
+                              if (task) {
+                                updateMultiRow(idx, 'existingTaskId', task.id);
+                                updateMultiRow(idx, 'title', task.name);
+                                updateMultiRow(idx, 'description', task.description);
+                                updateMultiRow(idx, 'assignedTo', task.assignedTo);
+                                updateMultiRow(idx, 'priority', task.priority);
+                              }
+                            }}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          >
+                            <option value="">Select task...</option>
+                            {tasks.filter(t => t.status !== 'approved').map(task => {
+                              const goal = getGoalById(task.goalId);
+                              const app = goal ? getAppById(goal.appId) : null;
+                              return (
+                                <option key={task.id} value={task.id}>
+                                  {app?.name} / {goal?.name} — {task.name}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Assign To</label>
@@ -611,7 +725,12 @@ export function ActionPointsPage() {
                         <p className={`text-sm font-medium text-[#f0f0f5] ${ap.status === 'completed' ? 'line-through opacity-60' : ''}`}>
                           {ap.title}
                         </p>
-                        <p className="text-xs text-[#6b6b80">{app?.name} → {goal?.name}</p>
+                        <p className="text-xs text-[#6b6b80]">{app?.name} → {goal?.name}</p>
+                        {ap.taskId && (
+                          <p className="text-xs text-[#00e5ff] mt-0.5 flex items-center gap-1">
+                            <Layers className="w-3 h-3" /> Linked to task
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -741,6 +860,15 @@ export function ActionPointsPage() {
                           </div>
                           {ap.description && (
                             <p className="text-xs text-[#6b6b80] mt-1">{ap.description}</p>
+                          )}
+                          {ap.taskId && (
+                            <a
+                              href="#"
+                              onClick={(e) => { e.preventDefault(); }}
+                              className="text-xs text-[#00e5ff] mt-1 inline-flex items-center gap-1 hover:underline"
+                            >
+                              <Layers className="w-3 h-3" /> Linked to task
+                            </a>
                           )}
                         </div>
                       </div>
