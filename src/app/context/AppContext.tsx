@@ -239,6 +239,7 @@ function docToActionPoint(doc: any): ActionPoint {
     id: doc.id,
     ...data,
     weekStart: safeDate(data.weekStart) || new Date(),
+    date: safeDate(data.date) || new Date(),
     createdAt: safeDate(data.createdAt) || new Date(),
     completedAt: safeDate(data.completedAt)
   };
@@ -1076,7 +1077,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       priority: ap.priority,
       status: 'pending',
       weekStart: ap.weekStart,
-      dayOfWeek: ap.dayOfWeek,
+      date: ap.date,
       taskId: linkedTaskId || null,
       createdBy: ap.createdBy,
       createdAt: now,

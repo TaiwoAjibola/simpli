@@ -16,7 +16,7 @@ import {
   X,
   Trash2
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
 
 function getWeekStart(date: Date = new Date()): Date {
@@ -57,14 +57,14 @@ export function ActionPointsPage() {
     goalId: '',
     assignedTo: [] as string[],
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-    dayOfWeek: 'monday' as 'monday' | 'friday',
     notes: '',
+    date: '',
     linkType: 'new' as 'new' | 'existing',
     existingTaskId: ''
   });
 
   const [multiGoalId, setMultiGoalId] = useState('');
-  const [multiDayOfWeek, setMultiDayOfWeek] = useState<'monday' | 'friday'>('monday');
+  const [multiDate, setMultiDate] = useState('');
   const [multiLinkType, setMultiLinkType] = useState<'new' | 'existing'>('new');
   const [multiRows, setMultiRows] = useState<{
     title: string;
@@ -77,12 +77,12 @@ export function ActionPointsPage() {
 
   const resetForm = () => {
     setFormData({
-      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', dayOfWeek: 'monday', notes: '',
-      linkType: 'new', existingTaskId: ''
+      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', notes: '',
+      date: '', linkType: 'new', existingTaskId: ''
     });
     setMultiRows([]);
     setMultiGoalId('');
-    setMultiDayOfWeek('monday');
+    setMultiDate('');
     setMultiLinkType('new');
     setShowForm(false);
     setTaskMode('single');
@@ -187,10 +187,10 @@ export function ActionPointsPage() {
           assignedTo: row.assignedTo,
           priority: row.priority,
           weekStart: getWeekStart(),
-          dayOfWeek: multiDayOfWeek,
           createdBy: currentUser.id,
           notes: row.notes,
-          taskId: row.existingTaskId || undefined
+          taskId: row.existingTaskId || undefined,
+          date: multiDate ? new Date(multiDate) : new Date()
         });
       }
     } else {
@@ -201,10 +201,10 @@ export function ActionPointsPage() {
         assignedTo: formData.assignedTo,
         priority: formData.priority,
         weekStart: getWeekStart(),
-        dayOfWeek: formData.dayOfWeek,
-        createdBy: currentUser.id,
-        notes: formData.notes,
-        taskId: formData.linkType === 'existing' ? formData.existingTaskId : undefined
+          createdBy: currentUser.id,
+          notes: formData.notes,
+        taskId: formData.linkType === 'existing' ? formData.existingTaskId : undefined,
+        date: formData.date ? new Date(formData.date) : new Date()
       });
     }
     resetForm();
@@ -359,15 +359,14 @@ export function ActionPointsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Day</label>
-                    <select
-                      value={formData.dayOfWeek}
-                      onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as 'monday' | 'friday' })}
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Date</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                    >
-                      <option value="monday">Monday</option>
-                      <option value="friday">Friday</option>
-                    </select>
+                      required
+                    />
                   </div>
                 </div>
 
@@ -481,15 +480,14 @@ export function ActionPointsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Day (all rows)</label>
-                    <select
-                      value={multiDayOfWeek}
-                      onChange={(e) => setMultiDayOfWeek(e.target.value as 'monday' | 'friday')}
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Date (all rows)</label>
+                    <input
+                      type="date"
+                      value={multiDate}
+                      onChange={(e) => setMultiDate(e.target.value)}
                       className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                    >
-                      <option value="monday">Monday</option>
-                      <option value="friday">Friday</option>
-                    </select>
+                      required
+                    />
                   </div>
                 </div>
 
@@ -851,7 +849,7 @@ export function ActionPointsPage() {
                           </div>
                           <div className="flex items-center gap-3 mt-1">
                             <p className="text-xs text-[#6b6b80]">{app?.name} / {goal?.name}</p>
-                            <span className="text-xs text-[#6b6b80] capitalize">{ap.dayOfWeek}</span>
+                            <span className="text-xs text-[#6b6b80]">{format(ap.date, 'MMM d, yyyy')}</span>
                             {ap.status === 'carried_over' && (
                               <span className="text-xs text-[#f59e0b] flex items-center gap-1">
                                 <ArrowRight className="w-3 h-3" /> Carried over

@@ -193,7 +193,7 @@ export type ActionPoint = {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: ActionPointStatus;
   weekStart: Date;
-  dayOfWeek: 'monday' | 'friday';
+  date: Date;
   taskId?: string;
   completedAt?: Date;
   completedBy?: string;
