@@ -13,7 +13,8 @@ import {
   Target,
   Layers,
   Check,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
@@ -43,6 +44,7 @@ export function ActionPointsPage() {
 
   const canManage = hasPermission('manage_action_points');
   const [showForm, setShowForm] = useState(false);
+  const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
@@ -57,6 +59,27 @@ export function ActionPointsPage() {
     dayOfWeek: 'monday' as 'monday' | 'friday',
     notes: ''
   });
+
+  const [multiGoalId, setMultiGoalId] = useState('');
+  const [multiDayOfWeek, setMultiDayOfWeek] = useState<'monday' | 'friday'>('monday');
+  const [multiRows, setMultiRows] = useState<{
+    title: string;
+    description: string;
+    assignedTo: string[];
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    notes: string;
+  }[]>([]);
+
+  const resetForm = () => {
+    setFormData({
+      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', dayOfWeek: 'monday', notes: ''
+    });
+    setMultiRows([]);
+    setMultiGoalId('');
+    setMultiDayOfWeek('monday');
+    setShowForm(false);
+    setTaskMode('single');
+  };
 
   const toggleWeek = (weekKey: string) => {
     setExpandedWeeks(prev => {
@@ -118,30 +141,64 @@ export function ActionPointsPage() {
     }));
   };
 
+  const toggleMultiAssignee = (index: number, employeeId: string) => {
+    setMultiRows(prev => prev.map((row, i) => {
+      if (i !== index) return row;
+      return {
+        ...row,
+        assignedTo: row.assignedTo.includes(employeeId)
+          ? row.assignedTo.filter(id => id !== employeeId)
+          : [...row.assignedTo, employeeId]
+      };
+    }));
+  };
+
+  const addMultiRow = () => {
+    setMultiRows(prev => [...prev, {
+      title: '', description: '', assignedTo: [], priority: 'medium' as const, notes: ''
+    }]);
+  };
+
+  const updateMultiRow = (index: number, field: string, value: any) => {
+    setMultiRows(prev => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
+  };
+
+  const removeMultiRow = (index: number) => {
+    setMultiRows(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
-    await addActionPoint({
-      title: formData.title,
-      description: formData.description,
-      goalId: formData.goalId,
-      assignedTo: formData.assignedTo,
-      priority: formData.priority,
-      weekStart: getWeekStart(),
-      dayOfWeek: formData.dayOfWeek,
-      createdBy: currentUser.id,
-      notes: formData.notes
-    });
-    setFormData({
-      title: '',
-      description: '',
-      goalId: '',
-      assignedTo: [],
-      priority: 'medium',
-      dayOfWeek: 'monday',
-      notes: ''
-    });
-    setShowForm(false);
+
+    if (taskMode === 'multi') {
+      for (const row of multiRows) {
+        await addActionPoint({
+          title: row.title,
+          description: row.description,
+          goalId: multiGoalId,
+          assignedTo: row.assignedTo,
+          priority: row.priority,
+          weekStart: getWeekStart(),
+          dayOfWeek: multiDayOfWeek,
+          createdBy: currentUser.id,
+          notes: row.notes
+        });
+      }
+    } else {
+      await addActionPoint({
+        title: formData.title,
+        description: formData.description,
+        goalId: formData.goalId,
+        assignedTo: formData.assignedTo,
+        priority: formData.priority,
+        weekStart: getWeekStart(),
+        dayOfWeek: formData.dayOfWeek,
+        createdBy: currentUser.id,
+        notes: formData.notes
+      });
+    }
+    resetForm();
   };
 
   const handleStatusChange = async (apId: string, status: ActionPointStatus) => {
@@ -207,119 +264,291 @@ export function ActionPointsPage() {
       {showForm && (
         <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
           <h3 className="font-semibold text-[#f0f0f5] mb-4">Create Action Point</h3>
+
+          <div className="flex items-center gap-1 mb-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] w-fit">
+            <button
+              type="button"
+              onClick={() => setTaskMode('single')}
+              className={`px-4 py-2 text-sm font-medium transition ${
+                taskMode === 'single'
+                  ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                  : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+              }`}
+            >
+              Single
+            </button>
+            <button
+              type="button"
+              onClick={() => setTaskMode('multi')}
+              className={`px-4 py-2 text-sm font-medium transition ${
+                taskMode === 'multi'
+                  ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                  : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+              }`}
+            >
+              Multiple
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal</label>
-                <select
-                  value={formData.goalId}
-                  onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                  required
-                >
-                  <option value="">Select goal</option>
-                  {goals.map((goal) => {
-                    const app = getAppById(goal.appId);
-                    return (
-                      <option key={goal.id} value={goal.id}>
-                        {app?.name} / {goal.name}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                rows={2}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Priority</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Day</label>
-                <select
-                  value={formData.dayOfWeek}
-                  onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as 'monday' | 'friday' })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                >
-                  <option value="monday">Monday</option>
-                  <option value="friday">Friday</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Assign To</label>
-              <div className="flex flex-wrap gap-2">
-                {employees.map((emp) => {
-                  const selected = formData.assignedTo.includes(emp.id);
-                  return (
-                    <button
-                      key={emp.id}
-                      type="button"
-                      onClick={() => toggleAssignee(emp.id)}
-                      className={`px-3 py-1.5 text-sm border-2 transition ${
-                        selected
-                          ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                          : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
-                      }`}
+            {taskMode === 'single' ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal</label>
+                    <select
+                      value={formData.goalId}
+                      onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                      required
                     >
-                      {emp.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                      <option value="">Select goal</option>
+                      {goals.map((goal) => {
+                        const app = getAppById(goal.appId);
+                        return (
+                          <option key={goal.id} value={goal.id}>
+                            {app?.name} / {goal.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                rows={2}
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Priority</label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Day</label>
+                    <select
+                      value={formData.dayOfWeek}
+                      onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as 'monday' | 'friday' })}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    >
+                      <option value="monday">Monday</option>
+                      <option value="friday">Friday</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Assign To</label>
+                  <div className="flex flex-wrap gap-2">
+                    {employees.map((emp) => {
+                      const selected = formData.assignedTo.includes(emp.id);
+                      return (
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onClick={() => toggleAssignee(emp.id)}
+                          className={`px-3 py-1.5 text-sm border-2 transition ${
+                            selected
+                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                          }`}
+                        >
+                          {emp.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    rows={2}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal (all rows)</label>
+                    <select
+                      value={multiGoalId}
+                      onChange={(e) => setMultiGoalId(e.target.value)}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                      required
+                    >
+                      <option value="">Select goal</option>
+                      {goals.map((goal) => {
+                        const app = getAppById(goal.appId);
+                        return (
+                          <option key={goal.id} value={goal.id}>
+                            {app?.name} / {goal.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Day (all rows)</label>
+                    <select
+                      value={multiDayOfWeek}
+                      onChange={(e) => setMultiDayOfWeek(e.target.value as 'monday' | 'friday')}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    >
+                      <option value="monday">Monday</option>
+                      <option value="friday">Friday</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-[#f0f0f5]">Action Points ({multiRows.length})</label>
+                    <button
+                      type="button"
+                      onClick={addMultiRow}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Row
+                    </button>
+                  </div>
+
+                  {multiRows.length === 0 && (
+                    <div className="text-center py-8 bg-[#1a1a2e] border border-dashed border-[rgba(0,229,255,0.1)]">
+                      <p className="text-sm text-[#6b6b80]">Click "Add Row" to add action points</p>
+                    </div>
+                  )}
+
+                  {multiRows.map((row, idx) => (
+                    <div key={idx} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-[#f0f0f5]">Item {idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeMultiRow(idx)}
+                          className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)]"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={row.title}
+                            onChange={(e) => updateMultiRow(idx, 'title', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={row.description}
+                            onChange={(e) => updateMultiRow(idx, 'description', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Assign To</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {employees.map((emp) => {
+                            const selected = row.assignedTo.includes(emp.id);
+                            return (
+                              <button
+                                key={emp.id}
+                                type="button"
+                                onClick={() => toggleMultiAssignee(idx, emp.id)}
+                                className={`px-2 py-1 text-xs border transition ${
+                                  selected
+                                    ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                                    : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                                }`}
+                              >
+                                {emp.name.split(' ')[0]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Priority</label>
+                          <select
+                            value={row.priority}
+                            onChange={(e) => updateMultiRow(idx, 'priority', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Notes</label>
+                          <input
+                            type="text"
+                            value={row.notes}
+                            onChange={(e) => updateMultiRow(idx, 'notes', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
 
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+                disabled={taskMode === 'multi' && (multiRows.length === 0 || !multiGoalId)}
+                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
               >
-                Create Action Point & Task
+                {taskMode === 'multi'
+                  ? `Create ${multiRows.filter(r => r.title.trim()).length} Action Points`
+                  : 'Create Action Point'}
               </button>
               <button
                 type="button"
-                onClick={() => setShowForm(false)}
+                onClick={resetForm}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
               >
                 Cancel
