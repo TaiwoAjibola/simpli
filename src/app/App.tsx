@@ -18,6 +18,7 @@ import { DefectDashboard } from './components/DefectDashboard';
 import { AppDetailsPage } from './components/AppDetailsPage';
 import { ActionPointsPage } from './components/ActionPointsPage';
 import { SettingsPage } from './components/SettingsPage';
+import { PageLoader } from './components/PageLoader';
 import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
 
@@ -33,11 +34,7 @@ function AppContent() {
   };
 
   if (authLoading || appLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-        <div className="text-[#f0f0f5] text-lg">Loading Simpli...</div>
-      </div>
-    );
+    return <PageLoader message="Loading Simpli..." />;
   }
 
   if (!currentUser) {
