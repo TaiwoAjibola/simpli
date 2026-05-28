@@ -6,6 +6,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowRight,
+  RefreshCw,
   User,
   Calendar,
   ChevronDown,
@@ -14,7 +15,9 @@ import {
   Layers,
   Check,
   X,
-  Trash2
+  Trash2,
+  Edit2,
+  Eye
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
@@ -46,6 +49,8 @@ export function ActionPointsPage() {
   const canManage = hasPermission('manage_action_points');
   const [showForm, setShowForm] = useState(false);
   const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
+  const [editingActionPoint, setEditingActionPoint] = useState<ActionPoint | null>(null);
+  const [viewingActionPoint, setViewingActionPoint] = useState<ActionPoint | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
@@ -882,28 +887,55 @@ export function ActionPointsPage() {
                             </div>
                           ))}
                         </div>
-                        {ap.status === 'pending' && (
+                        <div className="flex items-center gap-1">
                           <button
-                            onClick={() => handleStatusChange(ap.id, 'carried_over')}
-                            className="p-1.5 text-[#f59e0b] hover:bg-[rgba(245,158,11,0.1)] transition"
-                            title="Mark as carried over"
+                            onClick={() => setViewingActionPoint(ap)}
+                            className="p-1.5 text-[#6b6b80] hover:text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                            title="View"
                           >
-                            <ArrowRight className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
-                        )}
-                        {canManage && (
-                          <button
-                            onClick={() => {
-                              if (confirm('Delete this action point and its linked task?')) {
-                                deleteActionPoint(ap.id);
-                              }
-                            }}
-                            className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
-                            title="Delete"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
+                          {ap.status === 'pending' && (
+                            <button
+                              onClick={() => handleStatusChange(ap.id, 'carried_over')}
+                              className="flex items-center gap-1 px-2 py-1.5 text-[#f59e0b] hover:bg-[rgba(245,158,11,0.1)] transition text-xs"
+                              title="Carry over to next week"
+                            >
+                              <ArrowRight className="w-3.5 h-3.5" /> Carry Over
+                            </button>
+                          )}
+                          {ap.status === 'carried_over' && (
+                            <button
+                              onClick={() => handleStatusChange(ap.id, 'pending')}
+                              className="flex items-center gap-1 px-2 py-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition text-xs"
+                              title="Move back to pending"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" /> Reverse
+                            </button>
+                          )}
+                          {canManage && (
+                            <>
+                              <button
+                                onClick={() => setEditingActionPoint(ap)}
+                                className="p-1.5 text-[#f59e0b] hover:bg-[rgba(245,158,11,0.1)] transition"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Delete this action point and its linked task?')) {
+                                    deleteActionPoint(ap.id);
+                                  }
+                                }}
+                                className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                                title="Delete"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -929,6 +961,167 @@ export function ActionPointsPage() {
               Create First Action Point
             </button>
           )}
+        </div>
+      )}
+
+      {editingActionPoint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-[#f0f0f5]">Edit Action Point</h3>
+              <button onClick={() => setEditingActionPoint(null)} className="p-1 text-[#6b6b80] hover:text-[#f0f0f5]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!editingActionPoint) return;
+              await updateActionPoint(editingActionPoint.id, {
+                title: editingActionPoint.title,
+                description: editingActionPoint.description,
+                goalId: editingActionPoint.goalId,
+                assignedTo: editingActionPoint.assignedTo,
+                priority: editingActionPoint.priority,
+                notes: editingActionPoint.notes
+              });
+              setEditingActionPoint(null);
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Title</label>
+                <input
+                  type="text"
+                  value={editingActionPoint.title}
+                  onChange={(e) => setEditingActionPoint({ ...editingActionPoint, title: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
+                <textarea
+                  value={editingActionPoint.description || ''}
+                  onChange={(e) => setEditingActionPoint({ ...editingActionPoint, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none"
+                  rows={2}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Priority</label>
+                  <select
+                    value={editingActionPoint.priority}
+                    onChange={(e) => setEditingActionPoint({ ...editingActionPoint, priority: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Assign To</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {employees.map((emp) => {
+                      const selected = editingActionPoint.assignedTo.includes(emp.id);
+                      return (
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onClick={() => setEditingActionPoint(prev => prev ? {
+                            ...prev,
+                            assignedTo: prev.assignedTo.includes(emp.id)
+                              ? prev.assignedTo.filter(id => id !== emp.id)
+                              : [...prev.assignedTo, emp.id]
+                          } : prev)}
+                          className={`px-2 py-1 text-xs border transition ${
+                            selected
+                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                              : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                          }`}
+                        >
+                          {emp.name.split(' ')[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
+                <textarea
+                  value={editingActionPoint.notes || ''}
+                  onChange={(e) => setEditingActionPoint({ ...editingActionPoint, notes: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none"
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]">
+                  Update
+                </button>
+                <button type="button" onClick={() => setEditingActionPoint(null)} className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)]">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {viewingActionPoint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setViewingActionPoint(null)}>
+          <div className="w-full max-w-lg bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-[#f0f0f5]">{viewingActionPoint.title}</h3>
+              <button onClick={() => setViewingActionPoint(null)} className="p-1 text-[#6b6b80] hover:text-[#f0f0f5]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {viewingActionPoint.description && (
+                <p className="text-sm text-[#6b6b80]">{viewingActionPoint.description}</p>
+              )}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-[#6b6b80]">Goal:</span>
+                  <p className="text-[#f0f0f5]">{getGoalById(viewingActionPoint.goalId)?.name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-[#6b6b80]">Priority:</span>
+                  <p className={`font-medium ${priorityColor(viewingActionPoint.priority)}`}>{viewingActionPoint.priority}</p>
+                </div>
+                <div>
+                  <span className="text-[#6b6b80]">Date:</span>
+                  <p className="text-[#f0f0f5]">{format(viewingActionPoint.date, 'MMM d, yyyy')}</p>
+                </div>
+                <div>
+                  <span className="text-[#6b6b80]">Status:</span>
+                  <p className="text-[#f0f0f5] capitalize">{viewingActionPoint.status.replace('_', ' ')}</p>
+                </div>
+              </div>
+              {viewingActionPoint.assignedTo.length > 0 && (
+                <div>
+                  <span className="text-sm text-[#6b6b80]">Assigned to:</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {viewingActionPoint.assignedTo.map(id => {
+                      const emp = getEmployeeById(id);
+                      return emp ? <span key={id} className="text-xs px-2 py-1 bg-[#1a1a2e] text-[#f0f0f5]">{emp.name}</span> : null;
+                    })}
+                  </div>
+                </div>
+              )}
+              {viewingActionPoint.notes && (
+                <div>
+                  <span className="text-sm text-[#6b6b80]">Notes:</span>
+                  <p className="text-sm text-[#f0f0f5] mt-1">{viewingActionPoint.notes}</p>
+                </div>
+              )}
+              {viewingActionPoint.taskId && (
+                <p className="text-xs text-[#00e5ff]">Linked to task</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

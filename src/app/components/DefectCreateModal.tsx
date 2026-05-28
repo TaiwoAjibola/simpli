@@ -3,36 +3,38 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { X, Upload, Paperclip, Loader } from 'lucide-react';
-import { DefectIssueType, DefectSeverity, DefectPriority, DefectReproducibility, DefectFrequency } from '../types';
+import { DefectIssueType, DefectSeverity, DefectPriority, DefectReproducibility, DefectFrequency, Defect } from '../types';
 
 type DefectCreateModalProps = {
   onClose: () => void;
-  appId: string;
+  appId?: string;
+  editDefect?: Defect;
 };
 
-export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
-  const { addDefect, apps, employees } = useApp();
+export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateModalProps) {
+  const { addDefect, updateDefect, apps, employees } = useApp();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const isEditing = !!editDefect;
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    applicationId: appId,
-    module: '',
-    environment: 'dev' as 'dev' | 'staging' | 'production' | 'uat',
-    assignedTo: '',
-    dueDate: '',
-    issueType: 'bug' as DefectIssueType,
-    severity: 'major' as DefectSeverity,
-    priority: 'medium' as DefectPriority,
-    reproducibility: 'always' as DefectReproducibility,
-    frequency: '100' as DefectFrequency,
-    stepsToReproduce: '',
-    expectedResult: '',
-    actualResult: '',
-    qaComments: '',
-    developerNotes: '',
-    testCycle: ''
+    title: editDefect?.title || '',
+    description: editDefect?.description || '',
+    applicationId: editDefect?.applicationId || appId || '',
+    module: editDefect?.module || '',
+    environment: editDefect?.environment || 'dev' as 'dev' | 'staging' | 'production' | 'uat',
+    assignedTo: editDefect?.assignedTo || '',
+    dueDate: editDefect?.dueDate ? (typeof editDefect.dueDate === 'string' ? editDefect.dueDate : editDefect.dueDate.toISOString().split('T')[0]) : '',
+    issueType: editDefect?.issueType || 'bug' as DefectIssueType,
+    severity: editDefect?.severity || 'major' as DefectSeverity,
+    priority: editDefect?.priority || 'medium' as DefectPriority,
+    reproducibility: editDefect?.reproducibility || 'always' as DefectReproducibility,
+    frequency: editDefect?.frequency || '100' as DefectFrequency,
+    stepsToReproduce: editDefect?.stepsToReproduce || '',
+    expectedResult: editDefect?.expectedResult || '',
+    actualResult: editDefect?.actualResult || '',
+    qaComments: editDefect?.qaComments || '',
+    developerNotes: editDefect?.developerNotes || '',
+    testCycle: editDefect?.testCycle || ''
   });
   const [attachments, setAttachments] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -46,6 +48,31 @@ export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
     setUploadProgress(0);
 
     try {
+      if (isEditing) {
+        await updateDefect(editDefect.id, {
+          title: formData.title,
+          description: formData.description,
+          module: formData.module,
+          environment: formData.environment,
+          assignedTo: formData.assignedTo,
+          dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+          issueType: formData.issueType,
+          severity: formData.severity,
+          priority: formData.priority,
+          reproducibility: formData.reproducibility,
+          frequency: formData.frequency,
+          stepsToReproduce: formData.stepsToReproduce,
+          expectedResult: formData.expectedResult,
+          actualResult: formData.actualResult,
+          qaComments: formData.qaComments,
+          developerNotes: formData.developerNotes,
+          testCycle: formData.testCycle
+        }, currentUser.id, currentUser.name);
+        showToast('info', 'Defect updated successfully');
+        onClose();
+        return;
+      }
+
       let attachmentUrls: any[] = [];
       if (attachments.length > 0) {
         setUploadStatus(`Uploading ${attachments.length} file(s)...`);
@@ -368,8 +395,8 @@ export function DefectCreateModal({ onClose, appId }: DefectCreateModalProps) {
               className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
-                <><Loader className="w-4 h-4 animate-spin" /> {uploadStatus || 'Creating...'}</>
-              ) : 'Create Defect'}
+                <><Loader className="w-4 h-4 animate-spin" /> {uploadStatus || (isEditing ? 'Updating...' : 'Creating...')}</>
+              ) : (isEditing ? 'Update Defect' : 'Create Defect')}
             </button>
           </div>
           {submitting && uploadProgress > 0 && (

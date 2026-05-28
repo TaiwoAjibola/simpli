@@ -14,22 +14,25 @@ import {
   XCircle,
   Eye,
   RefreshCw,
-  Download
+  Download,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { Defect, DefectSeverity, DefectStatus } from '../types';
 import { DefectDetailModal } from './DefectDetailModal';
 import { DefectCreateModal } from './DefectCreateModal';
 
 export function DefectDashboard() {
-  const { apps, defects, employees } = useApp();
+  const { apps, defects, employees, deleteDefect } = useApp();
   const { currentUser, hasPermission } = useAuth();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editDefect, setEditDefect] = useState<Defect | null>(null);
+  const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || '');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const appDefects = defects.filter(d => d.applicationId === selectedAppId);
 
@@ -385,12 +388,37 @@ export function DefectDashboard() {
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => setSelectedDefect(defect)}
-                          className="p-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setSelectedDefect(defect)}
+                            className="p-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {hasPermission('manage_defects') && (
+                            <>
+                              <button
+                                onClick={() => setEditDefect(defect)}
+                                className="p-1.5 text-[#f59e0b] hover:bg-[rgba(245,158,11,0.1)] rounded"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Delete this defect?')) {
+                                    deleteDefect(defect.id);
+                                  }
+                                }}
+                                className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -412,6 +440,13 @@ export function DefectDashboard() {
         <DefectCreateModal
           onClose={() => setShowCreateModal(false)}
           appId={selectedAppId}
+        />
+      )}
+
+      {editDefect && (
+        <DefectCreateModal
+          editDefect={editDefect}
+          onClose={() => setEditDefect(null)}
         />
       )}
     </div>
