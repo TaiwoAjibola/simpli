@@ -55,6 +55,9 @@ export function ActionPointsPage() {
   const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>(() => ({
     [currentWeekKey]: true
   }));
+  const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
+  const [filterGoal, setFilterGoal] = useState<string>('all');
+  const [view, setView] = useState<'list' | 'review'>('list');
 
   const resetForm = () => {
     setFormData({
