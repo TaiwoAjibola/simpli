@@ -35,8 +35,7 @@ import {
   Comment,
   Defect,
   Phase,
-  ActionPoint,
-  TaskCategory
+  ActionPoint
 } from '../types';
 
 type AppContextType = {
@@ -53,7 +52,6 @@ type AppContextType = {
   defects: Defect[];
   phases: Phase[];
   actionPoints: ActionPoint[];
-  taskCategories: TaskCategory[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -102,9 +100,6 @@ type AppContextType = {
   addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => Promise<void>;
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
-  addTaskCategory: (category: Omit<TaskCategory, 'id'>) => Promise<void>;
-  updateTaskCategory: (categoryId: string, updates: Partial<TaskCategory>) => Promise<void>;
-  deleteTaskCategory: (categoryId: string) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -264,7 +259,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [defects, setDefects] = useState<Defect[]>([]);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
-  const [taskCategories, setTaskCategories] = useState<TaskCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -282,8 +276,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment },
       { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect },
       { ref: collection(db, 'phases'), setter: setPhases, transformer: docToPhase },
-      { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint },
-      { ref: collection(db, 'taskCategories'), setter: setTaskCategories, transformer: (doc: any) => ({ id: doc.id, ...doc.data() }) as TaskCategory }
+      { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -1070,8 +1063,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         goalId: ap.goalId,
         assignedTo: ap.assignedTo,
         priority: ap.priority,
-        status: 'not_started',
-        categoryId: ap.categoryId
+        status: 'not_started'
       });
       linkedTaskId = (task as any)?.id;
     }
@@ -1081,7 +1073,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       title: ap.title,
       description: ap.description || '',
       goalId: ap.goalId || null,
-      categoryId: ap.categoryId || null,
       assignedTo: ap.assignedTo,
       priority: ap.priority,
       status: 'pending',
@@ -1105,19 +1096,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     await deleteDoc(doc(db, 'actionPoints', apId));
   }, [actionPoints]);
-
-  const addTaskCategory = useCallback(async (category: Omit<TaskCategory, 'id'>) => {
-    const catId = `cat-${Date.now()}`;
-    await setDoc(doc(db, 'taskCategories', catId), sanitizeForFirestore({ id: catId, ...category }));
-  }, []);
-
-  const updateTaskCategory = useCallback(async (categoryId: string, updates: Partial<TaskCategory>) => {
-    await updateDoc(doc(db, 'taskCategories', categoryId), sanitizeForFirestore(updates));
-  }, []);
-
-  const deleteTaskCategory = useCallback(async (categoryId: string) => {
-    await deleteDoc(doc(db, 'taskCategories', categoryId));
-  }, []);
 
   return (
     <AppContext.Provider
@@ -1182,11 +1160,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         actionPoints,
         addActionPoint,
         updateActionPoint,
-        deleteActionPoint,
-        taskCategories,
-        addTaskCategory,
-        updateTaskCategory,
-        deleteTaskCategory
+        deleteActionPoint
       }}
     >
       {children}

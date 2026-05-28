@@ -9,6 +9,12 @@ type AppsModuleProps = {
   onNavigate: (page: string, appId?: string) => void;
 };
 
+const PRESET_COLORS = [
+  '#00e5ff', '#8b5cf6', '#ff006e', '#ff6b35',
+  '#00c853', '#ffd600', '#2979ff', '#ff3d00',
+  '#00bfa5', '#d500f9', '#536dfe', '#f50057'
+];
+
 export function AppsModule({ onNavigate }: AppsModuleProps) {
   const { currentUser, hasPermission } = useAuth();
   const { apps, goals, tasks, addApp, updateApp, deleteApp, getGoalsForApp, getTasksForGoal } = useApp();
@@ -17,7 +23,9 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'active' as 'active' | 'completed' | 'on_hold'
+    status: 'active' as 'active' | 'completed' | 'on_hold',
+    color: '#00e5ff',
+    cardStyle: 'default' as 'default' | 'compact' | 'detailed'
   });
 
   const canCreateApp = hasPermission('create_app');
@@ -34,7 +42,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
         createdBy: currentUser!.id
       });
     }
-    setFormData({ name: '', description: '', status: 'active' });
+    setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
     setShowForm(false);
     setEditingApp(null);
   };
@@ -43,7 +51,9 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     setFormData({
       name: app.name,
       description: app.description,
-      status: app.status
+      status: app.status,
+      color: app.color || '#00e5ff',
+      cardStyle: app.cardStyle || 'default'
     });
     setEditingApp(app);
     setShowForm(true);
@@ -67,7 +77,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
             onClick={() => {
               setShowForm(!showForm);
               setEditingApp(null);
-              setFormData({ name: '', description: '', status: 'active' });
+              setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
@@ -125,6 +135,45 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
               </select>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                    className="w-10 h-10 border-0 cursor-pointer bg-transparent"
+                  />
+                  <span className="text-sm text-[#6b6b80] font-mono">{formData.color}</span>
+                </div>
+                <div className="flex gap-1 mt-2 flex-wrap">
+                  {PRESET_COLORS.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, color: c }))}
+                      className={`w-6 h-6 border-2 ${formData.color === c ? 'border-[#f0f0f5]' : 'border-transparent'} hover:scale-110 transition`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Style</label>
+                <select
+                  value={formData.cardStyle}
+                  onChange={(e) => setFormData({ ...formData, cardStyle: e.target.value as 'default' | 'compact' | 'detailed' })}
+                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                >
+                  <option value="default">Default</option>
+                  <option value="compact">Compact</option>
+                  <option value="detailed">Detailed</option>
+                </select>
+                <p className="text-xs text-[#6b6b80] mt-1">Tasks and action points will use this color and style on their cards.</p>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <button
                 type="submit"
@@ -137,7 +186,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 onClick={() => {
                   setShowForm(false);
                   setEditingApp(null);
-                  setFormData({ name: '', description: '', status: 'active' });
+                  setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
                 }}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
               >
@@ -172,6 +221,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
             <div
               key={app.id}
               className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6 hover:border-[rgba(0,229,255,0.3)] transition relative overflow-hidden"
+              style={{ borderLeft: `4px solid ${app.color || '#00e5ff'}` }}
             >
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
 

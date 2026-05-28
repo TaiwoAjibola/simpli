@@ -16,8 +16,7 @@ import {
   Archive,
   Bug,
   Menu,
-  X,
-  Settings
+  X
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 
@@ -59,8 +58,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     {
       label: 'Settings',
       items: [
-        { id: 'admin', label: 'Admin Panel', icon: Zap, show: hasPermission('manage_users') },
-        { id: 'settings', label: 'Settings', icon: Settings, show: true }
+        { id: 'admin', label: 'Admin Panel', icon: Zap, show: hasPermission('manage_users') }
       ]
     }
   ];

@@ -18,8 +18,7 @@ export type Permission =
   | 'report_defects'
   | 'manage_defects'
   | 'verify_defects'
-  | 'manage_action_points'
-  | 'manage_categories';
+  | 'manage_action_points';
 
 export type Employee = {
   id: string;
@@ -38,6 +37,8 @@ export type App = {
   createdAt: Date;
   createdBy: string;
   status: 'active' | 'completed' | 'on_hold';
+  color?: string;
+  cardStyle?: 'default' | 'compact' | 'detailed';
 };
 
 export type Phase = {
@@ -64,18 +65,9 @@ export type Goal = {
   endDate?: Date;
 };
 
-export type TaskCategory = {
-  id: string;
-  name: string;
-  color: string;
-  cardStyle: 'default' | 'compact' | 'detailed';
-  icon?: string;
-};
-
 export type Task = {
   id: string;
   goalId?: string;
-  categoryId?: string;
   name: string;
   description: string;
   assignedTo: string[];
@@ -199,7 +191,6 @@ export type ActionPoint = {
   title: string;
   description?: string;
   goalId?: string;
-  categoryId?: string;
   assignedTo: string[];
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: ActionPointStatus;

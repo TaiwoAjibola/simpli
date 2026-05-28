@@ -24,7 +24,7 @@ import {
   X
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Task, TaskStatus, Subtask, SubtaskStatus, TaskCategory } from '../types';
+import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
 
 export function TasksModule() {
@@ -45,8 +45,7 @@ export function TasksModule() {
     addSubtask,
     getSubtasksForTask,
     getCommentsForSubtask,
-    addComment,
-    taskCategories
+    addComment
   } = useApp();
 
   const canAssignTasks = hasPermission('assign_tasks');
@@ -61,14 +60,12 @@ export function TasksModule() {
     name: '',
     description: '',
     goalId: '',
-    categoryId: '',
     assignedTo: [] as string[],
     priority: 'medium' as const,
     startDate: '',
     endDate: ''
   });
   const [multiGoalId, setMultiGoalId] = useState('');
-  const [multiCategoryId, setMultiCategoryId] = useState('');
   const [multiTasks, setMultiTasks] = useState<{
     name: string;
     description: string;
@@ -122,7 +119,6 @@ export function TasksModule() {
             name: row.name,
             description: row.description,
             goalId: multiGoalId || undefined,
-            categoryId: multiCategoryId || undefined,
             assignedTo: row.assignedTo,
             priority: row.priority,
             startDate: row.startDate ? new Date(row.startDate) : undefined,
@@ -136,7 +132,6 @@ export function TasksModule() {
         const newTask = await addTask({
           ...formData,
           goalId: formData.goalId || undefined,
-          categoryId: formData.categoryId || undefined,
           startDate: formData.startDate ? new Date(formData.startDate) : undefined,
           endDate: formData.endDate ? new Date(formData.endDate) : undefined,
           status: 'not_started'
@@ -189,7 +184,6 @@ export function TasksModule() {
       name: task.name,
       description: task.description,
       goalId: task.goalId || '',
-      categoryId: task.categoryId || '',
       assignedTo: [...task.assignedTo],
       priority: task.priority,
       startDate: task.startDate ? format(task.startDate, 'yyyy-MM-dd') : '',
@@ -274,7 +268,6 @@ export function TasksModule() {
       name: '',
       description: '',
       goalId: '',
-      categoryId: '',
       assignedTo: [],
       priority: 'medium',
       startDate: '',
@@ -282,7 +275,6 @@ export function TasksModule() {
     });
     setMultiTasks([]);
     setMultiGoalId('');
-    setMultiCategoryId('');
     setSubtasks([]);
     setNewSubtask({ name: '', assignedTo: [], priority: 'medium' });
     setShowSubtasksSection(false);
@@ -460,42 +452,6 @@ export function TasksModule() {
                       </option>
                     );
                   })}
-                </select>
-              </div>
-            )}
-
-            {taskMode === 'single' && (
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Category (optional)</label>
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                >
-                  <option value="">No Category</option>
-                  {taskCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {taskMode === 'multi' && taskCategories.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Category (optional, all tasks)</label>
-                <select
-                  value={multiCategoryId}
-                  onChange={(e) => setMultiCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-                >
-                  <option value="">No Category</option>
-                  {taskCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
                 </select>
               </div>
             )}
@@ -896,7 +852,6 @@ export function TasksModule() {
                 getGoalById={getGoalById}
                 getAppById={getAppById}
                 getEmployeeById={getEmployeeById}
-                taskCategories={taskCategories}
               />
           ))}
         </div>
@@ -908,18 +863,15 @@ export function TasksModule() {
               <div key={status} className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4">
                 <h3 className="font-semibold text-[#f0f0f5] mb-3 capitalize text-sm">{status.replace('_', ' ')}</h3>
                 <div className="space-y-2">
-                  {statusTasks.map(task => (
+                  {statusTasks.map(task => {
+                    const taskGoal = task.goalId ? getGoalById(task.goalId) : null;
+                    const taskApp = taskGoal ? getAppById(taskGoal.appId) : null;
+                    const taskAppColor = taskApp?.color || '#00e5ff';
+                    return (
                     <div
                       key={task.id}
                       className="p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] cursor-pointer hover:border-[rgba(0,229,255,0.3)] transition group"
-                      style={
-                        task.categoryId
-                          ? (() => {
-                              const cat = taskCategories.find(c => c.id === task.categoryId);
-                              return cat ? { borderLeft: `3px solid ${cat.color}` } : undefined;
-                            })()
-                          : undefined
-                      }
+                      style={{ borderLeft: `3px solid ${taskAppColor}` }}
                       onClick={() => setSelectedTask(task)}
                     >
                       <div className="flex items-start justify-between">
@@ -956,12 +908,13 @@ export function TasksModule() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+      </div>
       )}
 
       {filteredTasks.length === 0 && (
@@ -993,7 +946,6 @@ type TaskCardProps = {
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   getEmployeeById: (id: string) => any;
-  taskCategories: TaskCategory[];
 };
 
 function TaskCard({
@@ -1008,14 +960,13 @@ function TaskCard({
   canDelete,
   getGoalById,
   getAppById,
-  getEmployeeById,
-  taskCategories
+  getEmployeeById
 }: TaskCardProps) {
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
+  const appColor = app?.color || '#00e5ff';
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
-  const category = task.categoryId ? taskCategories.find(c => c.id === task.categoryId) : null;
 
   const statusConfig = {
     not_started: { icon: XCircle, color: 'text-[#6b6b80]', bg: 'bg-[rgba(107,107,128,0.05)]' },
@@ -1038,7 +989,7 @@ function TaskCard({
   return (
     <div
       className={`p-5 bg-[#12121a] border border-[rgba(0,229,255,0.1)] ${config.bg} cursor-pointer hover:border-[rgba(0,229,255,0.3)] hover:shadow-lg transition`}
-      style={category ? { borderLeft: `4px solid ${category.color}` } : undefined}
+      style={{ borderLeft: `4px solid ${appColor}` }}
       onClick={onClick}
     >
       <div className="flex items-start gap-4">
@@ -1078,18 +1029,17 @@ function TaskCard({
           <div className="mb-3">
             <p className="text-xs text-[#6b6b80]">
               {app?.name}{goal ? ` → ${goal.name}` : ''}
-              {!app && !goal && !category && ''}
             </p>
-            {category && (
+            {app && (
               <span
                 className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1"
                 style={{
-                  backgroundColor: `${category.color}20`,
-                  color: category.color,
-                  borderLeft: `2px solid ${category.color}`
+                  backgroundColor: `${appColor}20`,
+                  color: appColor,
+                  borderLeft: `2px solid ${appColor}`
                 }}
               >
-                {category.name}
+                {app.name}
               </span>
             )}
           </div>

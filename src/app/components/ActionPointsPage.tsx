@@ -20,7 +20,7 @@ import {
   Eye
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ActionPointStatus, TaskCategory } from '../types';
+import { ActionPointStatus } from '../types';
 
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
@@ -43,8 +43,7 @@ export function ActionPointsPage() {
     deleteActionPoint,
     getGoalById,
     getAppById,
-    getEmployeeById,
-    taskCategories
+    getEmployeeById
   } = useApp();
 
   const canManage = hasPermission('manage_action_points');
@@ -63,7 +62,6 @@ export function ActionPointsPage() {
     title: '',
     description: '',
     goalId: '',
-    categoryId: '',
     assignedTo: [] as string[],
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
     notes: '',
@@ -75,7 +73,6 @@ export function ActionPointsPage() {
   const [multiGoalId, setMultiGoalId] = useState('');
   const [multiDate, setMultiDate] = useState('');
   const [multiLinkType, setMultiLinkType] = useState<'new' | 'existing'>('new');
-  const [multiCategoryId, setMultiCategoryId] = useState('');
   const [multiRows, setMultiRows] = useState<{
     title: string;
     description: string;
@@ -87,14 +84,13 @@ export function ActionPointsPage() {
 
   const resetForm = () => {
     setFormData({
-      title: '', description: '', goalId: '', categoryId: '', assignedTo: [], priority: 'medium', notes: '',
+      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', notes: '',
       date: '', linkType: 'new', existingTaskId: ''
     });
     setMultiRows([]);
     setMultiGoalId('');
     setMultiDate('');
     setMultiLinkType('new');
-    setMultiCategoryId('');
     setShowForm(false);
     setTaskMode('single');
   };
@@ -190,7 +186,6 @@ export function ActionPointsPage() {
           title: row.title,
           description: row.description,
           goalId: multiGoalId || undefined,
-          categoryId: multiCategoryId || undefined,
           assignedTo: row.assignedTo,
           priority: row.priority,
           weekStart: getWeekStart(),
@@ -205,7 +200,6 @@ export function ActionPointsPage() {
         title: formData.title,
         description: formData.description,
         goalId: formData.goalId || undefined,
-        categoryId: formData.categoryId || undefined,
         assignedTo: formData.assignedTo,
         priority: formData.priority,
         weekStart: getWeekStart(),
@@ -349,20 +343,6 @@ export function ActionPointsPage() {
                     className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
                     rows={2}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Category (optional)</label>
-                  <select
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                  >
-                    <option value="">No Category</option>
-                    {taskCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -727,11 +707,11 @@ export function ActionPointsPage() {
             {weeklyReview.thisWeek.map(ap => {
               const goal = ap.goalId ? getGoalById(ap.goalId) : null;
               const app = goal ? getAppById(goal.appId) : null;
+              const appColor = app?.color || '#00e5ff';
               const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
-              const category = ap.categoryId ? taskCategories.find(c => c.id === ap.categoryId) : null;
               return (
                 <div key={ap.id} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]"
-                  style={category ? { borderLeft: `3px solid ${category.color}` } : undefined}
+                  style={{ borderLeft: `3px solid ${appColor}` }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -749,16 +729,16 @@ export function ActionPointsPage() {
                         <p className="text-xs text-[#6b6b80]">
                           {app?.name}{goal ? ` → ${goal.name}` : ''}
                         </p>
-                        {category && (
+                        {app && (
                           <span
                             className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 mt-0.5"
                             style={{
-                              backgroundColor: `${category.color}20`,
-                              color: category.color,
-                              borderLeft: `2px solid ${category.color}`
+                              backgroundColor: `${appColor}20`,
+                              color: appColor,
+                              borderLeft: `2px solid ${appColor}`
                             }}
                           >
-                            {category.name}
+                            {app.name}
                           </span>
                         )}
                         {ap.taskId && (
@@ -855,12 +835,12 @@ export function ActionPointsPage() {
                 {items.map(ap => {
                   const goal = ap.goalId ? getGoalById(ap.goalId) : null;
                   const app = goal ? getAppById(goal.appId) : null;
+                  const appColor = app?.color || '#00e5ff';
                   const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
-                  const category = ap.categoryId ? taskCategories.find(c => c.id === ap.categoryId) : null;
 
                   return (
                     <div key={ap.id} className="flex items-center justify-between p-4 hover:bg-[rgba(0,229,255,0.02)] transition border-b border-[rgba(0,229,255,0.05)] last:border-b-0"
-                      style={category ? { borderLeft: `3px solid ${category.color}` } : undefined}
+                      style={{ borderLeft: `3px solid ${appColor}` }}
                     >
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <button
@@ -891,16 +871,16 @@ export function ActionPointsPage() {
                                 <ArrowRight className="w-3 h-3" /> Carried over
                               </span>
                             )}
-                            {category && (
+                            {app && (
                               <span
                                 className="text-xs px-1.5 py-0.5"
                                 style={{
-                                  backgroundColor: `${category.color}20`,
-                                  color: category.color,
-                                  borderLeft: `2px solid ${category.color}`
+                                  backgroundColor: `${appColor}20`,
+                                  color: appColor,
+                                  borderLeft: `2px solid ${appColor}`
                                 }}
                               >
-                                {category.name}
+                                {app.name}
                               </span>
                             )}
                           </div>
