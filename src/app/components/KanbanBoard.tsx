@@ -7,6 +7,7 @@ import { Task, TaskStatus, DefectStatus, Defect } from '../types';
 import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
+import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 const TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'not_started', title: 'Not Started', color: '#6b6b80' },
@@ -36,7 +37,7 @@ export function KanbanBoard() {
 
 function KanbanContent() {
   const { currentUser, hasPermission } = useAuth();
-  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, apps } = useApp();
+  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, getAppById, apps } = useApp();
 
   const canViewAll = hasPermission('view_all_apps');
   const displayTasks = canViewAll ? tasks : getTasksForEmployee(currentUser!.id);
@@ -122,6 +123,7 @@ function KanbanContent() {
               onCardClick={(task) => setSelectedTask(task as Task)}
               getEmployeeById={getEmployeeById}
               getGoalById={getGoalById}
+              getAppById={getAppById}
               type="task"
             />
           );
@@ -137,6 +139,7 @@ function KanbanContent() {
               onCardClick={(defect) => setSelectedDefect(defect as Defect)}
               getEmployeeById={getEmployeeById}
               getGoalById={getGoalById}
+              getAppById={getAppById}
               type="defect"
             />
           );
@@ -173,10 +176,11 @@ type KanbanColumnProps = {
   onCardClick: (item: any) => void;
   getEmployeeById: (id: string) => any;
   getGoalById: (id: string) => any;
+  getAppById: (id: string) => any;
   type: 'task' | 'defect';
 };
 
-function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, type }: KanbanColumnProps) {
+function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop({
     accept: type === 'task' ? 'TASK' : 'DEFECT',
     drop: (item: { taskId: string }) => {
@@ -226,6 +230,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
               onClick={onCardClick}
               getEmployeeById={getEmployeeById}
               getGoalById={getGoalById}
+              getAppById={getAppById}
             />
           )
         ))}
@@ -244,9 +249,10 @@ type TaskCardProps = {
   onClick: (task: Task) => void;
   getEmployeeById: (id: string) => any;
   getGoalById: (id: string) => any;
+  getAppById: (id: string) => any;
 };
 
-function TaskCard({ task, onClick, getEmployeeById, getGoalById }: TaskCardProps) {
+function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { taskId: task.id },
@@ -257,6 +263,9 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById }: TaskCardProps
 
   const assignee = getEmployeeById(task.assignedTo);
   const goal = getGoalById(task.goalId);
+  const app = goal ? getAppById(goal.appId) : null;
+  const appColor = app?.color || '#00e5ff';
+  const cardStyle = app?.cardStyle || 'default';
 
   const priorityColors: Record<string, string> = {
     low: 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]',
@@ -269,9 +278,10 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById }: TaskCardProps
     <div
       ref={drag}
       onClick={() => onClick(task)}
-      className={`bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] p-3 lg:p-4 cursor-pointer hover:border-[rgba(0,229,255,0.3)] hover:shadow-md transition ${
+      className={`${getCardClasses(cardStyle, appColor, true)} cursor-pointer transition ${
         isDragging ? 'opacity-50' : ''
       }`}
+      style={getCardInlineStyle(cardStyle, appColor)}
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-medium text-[#f0f0f5] text-sm line-clamp-2">{task.name}</h4>
