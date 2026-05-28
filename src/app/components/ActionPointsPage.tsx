@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
+import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
@@ -708,10 +709,11 @@ export function ActionPointsPage() {
               const goal = ap.goalId ? getGoalById(ap.goalId) : null;
               const app = goal ? getAppById(goal.appId) : null;
               const appColor = app?.color || '#00e5ff';
+              const cardStyle = (app?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
               const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
               return (
-                <div key={ap.id} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]"
-                  style={{ borderLeft: `3px solid ${appColor}` }}
+                <div key={ap.id} className={`flex items-center justify-between ${getCardClasses(cardStyle, appColor)}`}
+                  style={getCardInlineStyle(cardStyle, appColor)}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -836,11 +838,12 @@ export function ActionPointsPage() {
                   const goal = ap.goalId ? getGoalById(ap.goalId) : null;
                   const app = goal ? getAppById(goal.appId) : null;
                   const appColor = app?.color || '#00e5ff';
+                  const cardStyle = (app?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
                   const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
 
                   return (
-                    <div key={ap.id} className="flex items-center justify-between p-4 hover:bg-[rgba(0,229,255,0.02)] transition border-b border-[rgba(0,229,255,0.05)] last:border-b-0"
-                      style={{ borderLeft: `3px solid ${appColor}` }}
+                    <div key={ap.id} className={`flex items-center justify-between ${getCardClasses(cardStyle, appColor)} border-b border-[rgba(0,229,255,0.05)] last:border-b-0 hover:bg-[rgba(0,229,255,0.02)]`}
+                      style={getCardInlineStyle(cardStyle, appColor)}
                     >
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <button

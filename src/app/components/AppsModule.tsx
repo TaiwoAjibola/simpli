@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { App } from '../types';
+import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 type AppsModuleProps = {
   onNavigate: (page: string, appId?: string) => void;
@@ -25,7 +26,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     description: '',
     status: 'active' as 'active' | 'completed' | 'on_hold',
     color: '#00e5ff',
-    cardStyle: 'default' as 'default' | 'compact' | 'detailed'
+    cardStyle: 'default' as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal'
   });
 
   const canCreateApp = hasPermission('create_app');
@@ -163,12 +164,14 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Style</label>
                 <select
                   value={formData.cardStyle}
-                  onChange={(e) => setFormData({ ...formData, cardStyle: e.target.value as 'default' | 'compact' | 'detailed' })}
+                  onChange={(e) => setFormData({ ...formData, cardStyle: e.target.value as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal' })}
                   className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
                 >
                   <option value="default">Default</option>
-                  <option value="compact">Compact</option>
-                  <option value="detailed">Detailed</option>
+                  <option value="rounded">Rounded</option>
+                  <option value="stroked">Stroked</option>
+                  <option value="elevated">Elevated</option>
+                  <option value="minimal">Minimal</option>
                 </select>
                 <p className="text-xs text-[#6b6b80] mt-1">Tasks and action points will use this color and style on their cards.</p>
               </div>
@@ -220,8 +223,8 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
           return (
             <div
               key={app.id}
-              className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6 hover:border-[rgba(0,229,255,0.3)] transition relative overflow-hidden"
-              style={{ borderLeft: `4px solid ${app.color || '#00e5ff'}` }}
+              className={`${getCardClasses(app.cardStyle || 'default', app.color || '#00e5ff')} relative overflow-hidden`}
+              style={getCardInlineStyle(app.cardStyle || 'default', app.color || '#00e5ff')}
             >
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
 

@@ -26,6 +26,7 @@ import {
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
+import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 export function TasksModule() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -867,11 +868,12 @@ export function TasksModule() {
                     const taskGoal = task.goalId ? getGoalById(task.goalId) : null;
                     const taskApp = taskGoal ? getAppById(taskGoal.appId) : null;
                     const taskAppColor = taskApp?.color || '#00e5ff';
+                    const taskCardStyle = (taskApp?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
                     return (
                     <div
                       key={task.id}
-                      className="p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] cursor-pointer hover:border-[rgba(0,229,255,0.3)] transition group"
-                      style={{ borderLeft: `3px solid ${taskAppColor}` }}
+                      className={`${getCardClasses(taskCardStyle, taskAppColor, true)}`}
+                      style={getCardInlineStyle(taskCardStyle, taskAppColor)}
                       onClick={() => setSelectedTask(task)}
                     >
                       <div className="flex items-start justify-between">
@@ -965,6 +967,7 @@ function TaskCard({
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
   const appColor = app?.color || '#00e5ff';
+  const cardStyle = (app?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
 
@@ -988,8 +991,8 @@ function TaskCard({
 
   return (
     <div
-      className={`p-5 bg-[#12121a] border border-[rgba(0,229,255,0.1)] ${config.bg} cursor-pointer hover:border-[rgba(0,229,255,0.3)] hover:shadow-lg transition`}
-      style={{ borderLeft: `4px solid ${appColor}` }}
+      className={`${getCardClasses(cardStyle, appColor)} ${config.bg}`}
+      style={getCardInlineStyle(cardStyle, appColor)}
       onClick={onClick}
     >
       <div className="flex items-start gap-4">

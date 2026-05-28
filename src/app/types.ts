@@ -38,7 +38,7 @@ export type App = {
   createdBy: string;
   status: 'active' | 'completed' | 'on_hold';
   color?: string;
-  cardStyle?: 'default' | 'compact' | 'detailed';
+  cardStyle?: 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
 };
 
 export type Phase = {
