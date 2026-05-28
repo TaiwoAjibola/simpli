@@ -25,7 +25,7 @@ import { ActionPointStatus } from '../types';
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const diff = d.getDate() - day;
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -51,34 +51,10 @@ export function ActionPointsPage() {
   const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [editingActionPoint, setEditingActionPoint] = useState<ActionPoint | null>(null);
   const [viewingActionPoint, setViewingActionPoint] = useState<ActionPoint | null>(null);
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set([format(getWeekStart(), 'yyyy-MM-dd')]));
-  const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
-  const [filterGoal, setFilterGoal] = useState<string>('all');
-  const [view, setView] = useState<'list' | 'review'>('list');
-
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    goalId: '',
-    assignedTo: [] as string[],
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-    notes: '',
-    date: '',
-    linkType: 'new' as 'new' | 'existing',
-    existingTaskId: ''
-  });
-
-  const [multiGoalId, setMultiGoalId] = useState('');
-  const [multiDate, setMultiDate] = useState('');
-  const [multiLinkType, setMultiLinkType] = useState<'new' | 'existing'>('new');
-  const [multiRows, setMultiRows] = useState<{
-    title: string;
-    description: string;
-    assignedTo: string[];
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    notes: string;
-    existingTaskId: string;
-  }[]>([]);
+  const currentWeekKey = format(getWeekStart(), 'yyyy-MM-dd');
+  const [expandedWeeks, setExpandedWeeks] = useState<Record<string, boolean>>(() => ({
+    [currentWeekKey]: true
+  }));
 
   const resetForm = () => {
     setFormData({
@@ -94,12 +70,7 @@ export function ActionPointsPage() {
   };
 
   const toggleWeek = (weekKey: string) => {
-    setExpandedWeeks(prev => {
-      const next = new Set(prev);
-      if (next.has(weekKey)) next.delete(weekKey);
-      else next.add(weekKey);
-      return next;
-    });
+    setExpandedWeeks(prev => ({ ...prev, [weekKey]: !prev[weekKey] }));
   };
 
   const groupedByWeek = useMemo(() => {
@@ -792,7 +763,7 @@ export function ActionPointsPage() {
 
       {groupedByWeek.map(({ weekKey, weekStart, items }) => {
         const counts = weekStatusCounts(items);
-        const isExpanded = expandedWeeks.has(weekKey);
+        const isExpanded = expandedWeeks[weekKey] ?? false;
 
         return (
           <div key={weekKey} className="mb-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] overflow-hidden">
