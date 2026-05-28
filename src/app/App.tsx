@@ -17,6 +17,7 @@ import { ArchivePage } from './components/ArchivePage';
 import { DefectDashboard } from './components/DefectDashboard';
 import { AppDetailsPage } from './components/AppDetailsPage';
 import { ActionPointsPage } from './components/ActionPointsPage';
+import { SettingsPage } from './components/SettingsPage';
 import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
 
@@ -60,6 +61,7 @@ function AppContent() {
         {currentPage === 'goals' && <GoalsModule />}
         {currentPage === 'tasks' && <TasksModule />}
         {currentPage === 'action-points' && <ActionPointsPage />}
+        {currentPage === 'settings' && <SettingsPage />}
         {currentPage === 'admin' && <AdminPanel />}
       </main>
     </div>

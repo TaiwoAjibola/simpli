@@ -20,7 +20,7 @@ import {
   Eye
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ActionPointStatus } from '../types';
+import { ActionPointStatus, TaskCategory } from '../types';
 
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
@@ -43,7 +43,8 @@ export function ActionPointsPage() {
     deleteActionPoint,
     getGoalById,
     getAppById,
-    getEmployeeById
+    getEmployeeById,
+    taskCategories
   } = useApp();
 
   const canManage = hasPermission('manage_action_points');
@@ -58,16 +59,42 @@ export function ActionPointsPage() {
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
   const [view, setView] = useState<'list' | 'review'>('list');
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    goalId: '',
+    categoryId: '',
+    assignedTo: [] as string[],
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    notes: '',
+    date: '',
+    linkType: 'new' as 'new' | 'existing',
+    existingTaskId: ''
+  });
+
+  const [multiGoalId, setMultiGoalId] = useState('');
+  const [multiDate, setMultiDate] = useState('');
+  const [multiLinkType, setMultiLinkType] = useState<'new' | 'existing'>('new');
+  const [multiCategoryId, setMultiCategoryId] = useState('');
+  const [multiRows, setMultiRows] = useState<{
+    title: string;
+    description: string;
+    assignedTo: string[];
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    notes: string;
+    existingTaskId: string;
+  }[]>([]);
 
   const resetForm = () => {
     setFormData({
-      title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', notes: '',
+      title: '', description: '', goalId: '', categoryId: '', assignedTo: [], priority: 'medium', notes: '',
       date: '', linkType: 'new', existingTaskId: ''
     });
     setMultiRows([]);
     setMultiGoalId('');
     setMultiDate('');
     setMultiLinkType('new');
+    setMultiCategoryId('');
     setShowForm(false);
     setTaskMode('single');
   };
@@ -162,7 +189,8 @@ export function ActionPointsPage() {
         await addActionPoint({
           title: row.title,
           description: row.description,
-          goalId: multiGoalId,
+          goalId: multiGoalId || undefined,
+          categoryId: multiCategoryId || undefined,
           assignedTo: row.assignedTo,
           priority: row.priority,
           weekStart: getWeekStart(),
@@ -176,7 +204,8 @@ export function ActionPointsPage() {
       await addActionPoint({
         title: formData.title,
         description: formData.description,
-        goalId: formData.goalId,
+        goalId: formData.goalId || undefined,
+        categoryId: formData.categoryId || undefined,
         assignedTo: formData.assignedTo,
         priority: formData.priority,
         weekStart: getWeekStart(),
@@ -293,14 +322,13 @@ export function ActionPointsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal</label>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal (optional)</label>
                     <select
                       value={formData.goalId}
                       onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
                       className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                      required
                     >
-                      <option value="">Select goal</option>
+                      <option value="">No Goal</option>
                       {goals.map((goal) => {
                         const app = getAppById(goal.appId);
                         return (
@@ -321,6 +349,20 @@ export function ActionPointsPage() {
                     className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
                     rows={2}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Category (optional)</label>
+                  <select
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                  >
+                    <option value="">No Category</option>
+                    {taskCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -440,14 +482,13 @@ export function ActionPointsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal (all rows)</label>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Goal (optional, all rows)</label>
                     <select
                       value={multiGoalId}
                       onChange={(e) => setMultiGoalId(e.target.value)}
                       className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
-                      required
                     >
-                      <option value="">Select goal</option>
+                      <option value="">No Goal</option>
                       {goals.map((goal) => {
                         const app = getAppById(goal.appId);
                         return (
@@ -684,11 +725,14 @@ export function ActionPointsPage() {
 
           <div className="space-y-2">
             {weeklyReview.thisWeek.map(ap => {
-              const goal = getGoalById(ap.goalId);
+              const goal = ap.goalId ? getGoalById(ap.goalId) : null;
               const app = goal ? getAppById(goal.appId) : null;
               const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
+              const category = ap.categoryId ? taskCategories.find(c => c.id === ap.categoryId) : null;
               return (
-                <div key={ap.id} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                <div key={ap.id} className="flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]"
+                  style={category ? { borderLeft: `3px solid ${category.color}` } : undefined}
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <button
@@ -702,7 +746,21 @@ export function ActionPointsPage() {
                         <p className={`text-sm font-medium text-[#f0f0f5] ${ap.status === 'completed' ? 'line-through opacity-60' : ''}`}>
                           {ap.title}
                         </p>
-                        <p className="text-xs text-[#6b6b80]">{app?.name} → {goal?.name}</p>
+                        <p className="text-xs text-[#6b6b80]">
+                          {app?.name}{goal ? ` → ${goal.name}` : ''}
+                        </p>
+                        {category && (
+                          <span
+                            className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 mt-0.5"
+                            style={{
+                              backgroundColor: `${category.color}20`,
+                              color: category.color,
+                              borderLeft: `2px solid ${category.color}`
+                            }}
+                          >
+                            {category.name}
+                          </span>
+                        )}
                         {ap.taskId && (
                           <p className="text-xs text-[#00e5ff] mt-0.5 flex items-center gap-1">
                             <Layers className="w-3 h-3" /> Linked to task
@@ -795,12 +853,15 @@ export function ActionPointsPage() {
             {isExpanded && (
               <div className="border-t border-[rgba(0,229,255,0.1)]">
                 {items.map(ap => {
-                  const goal = getGoalById(ap.goalId);
+                  const goal = ap.goalId ? getGoalById(ap.goalId) : null;
                   const app = goal ? getAppById(goal.appId) : null;
                   const assignees = ap.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
+                  const category = ap.categoryId ? taskCategories.find(c => c.id === ap.categoryId) : null;
 
                   return (
-                    <div key={ap.id} className="flex items-center justify-between p-4 hover:bg-[rgba(0,229,255,0.02)] transition border-b border-[rgba(0,229,255,0.05)] last:border-b-0">
+                    <div key={ap.id} className="flex items-center justify-between p-4 hover:bg-[rgba(0,229,255,0.02)] transition border-b border-[rgba(0,229,255,0.05)] last:border-b-0"
+                      style={category ? { borderLeft: `3px solid ${category.color}` } : undefined}
+                    >
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <button
                           onClick={() => handleStatusChange(ap.id, ap.status === 'completed' ? 'pending' : 'completed')}
@@ -823,11 +884,23 @@ export function ActionPointsPage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-3 mt-1">
-                            <p className="text-xs text-[#6b6b80]">{app?.name} / {goal?.name}</p>
+                            <p className="text-xs text-[#6b6b80]">{app?.name}{goal ? ` / ${goal.name}` : ''}</p>
                             <span className="text-xs text-[#6b6b80]">{format(ap.date, 'MMM d, yyyy')}</span>
                             {ap.status === 'carried_over' && (
                               <span className="text-xs text-[#f59e0b] flex items-center gap-1">
                                 <ArrowRight className="w-3 h-3" /> Carried over
+                              </span>
+                            )}
+                            {category && (
+                              <span
+                                className="text-xs px-1.5 py-0.5"
+                                style={{
+                                  backgroundColor: `${category.color}20`,
+                                  color: category.color,
+                                  borderLeft: `2px solid ${category.color}`
+                                }}
+                              >
+                                {category.name}
                               </span>
                             )}
                           </div>
