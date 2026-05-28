@@ -51,7 +51,7 @@ export function ActionPointsPage() {
   const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [editingActionPoint, setEditingActionPoint] = useState<ActionPoint | null>(null);
   const [viewingActionPoint, setViewingActionPoint] = useState<ActionPoint | null>(null);
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set([format(getWeekStart(), 'yyyy-MM-dd')]));
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
   const [view, setView] = useState<'list' | 'review'>('list');
@@ -791,9 +791,8 @@ export function ActionPointsPage() {
       </div>
 
       {groupedByWeek.map(({ weekKey, weekStart, items }) => {
-        const isCurrentWeek = format(getWeekStart(), 'yyyy-MM-dd') === weekKey;
         const counts = weekStatusCounts(items);
-        const isExpanded = expandedWeeks.has(weekKey) || isCurrentWeek;
+        const isExpanded = expandedWeeks.has(weekKey);
 
         return (
           <div key={weekKey} className="mb-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] overflow-hidden">
@@ -808,9 +807,6 @@ export function ActionPointsPage() {
                     <span className="font-semibold text-[#f0f0f5] text-sm">
                       Week of {format(weekStart, 'MMM d, yyyy')}
                     </span>
-                    {isCurrentWeek && (
-                      <span className="text-xs px-2 py-0.5 bg-[rgba(0,229,255,0.1)] text-[#00e5ff]">Current</span>
-                    )}
                   </div>
                   <p className="text-xs text-[#6b6b80] mt-0.5">{items.length} items</p>
                 </div>
