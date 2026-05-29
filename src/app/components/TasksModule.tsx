@@ -46,7 +46,8 @@ export function TasksModule() {
     addSubtask,
     getSubtasksForTask,
     getCommentsForSubtask,
-    addComment
+    addComment,
+    sendTaskNotification
   } = useApp();
 
   const canAssignTasks = hasPermission('assign_tasks');
@@ -847,6 +848,7 @@ export function TasksModule() {
                 onEdit={() => handleEdit(task)}
                 onDelete={() => handleDelete(task.id)}
                 onClick={() => setSelectedTask(task)}
+                onMailTask={() => sendTaskNotification(task.id)}
                 canApprove={canApprove}
                 canEdit={canAssignTasks}
                 canDelete={canAssignTasks}
@@ -889,6 +891,17 @@ export function TasksModule() {
                           </span>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition ml-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); sendTaskNotification(task.id); }}
+                            className={`p-1 rounded ${
+                              task.lastEmailSentAt
+                                ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                            }`}
+                            title={task.lastEmailSentAt ? `Resend email` : 'Send email'}
+                          >
+                            <Send className="w-3 h-3" />
+                          </button>
                           {canAssignTasks && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleEdit(task); }}
@@ -942,6 +955,7 @@ type TaskCardProps = {
   onEdit: () => void;
   onDelete: () => void;
   onClick: () => void;
+  onMailTask: () => void;
   canApprove: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -957,6 +971,7 @@ function TaskCard({
   onEdit,
   onDelete,
   onClick,
+  onMailTask,
   canApprove,
   canEdit,
   canDelete,
@@ -1008,6 +1023,17 @@ function TaskCard({
               <Star className="w-5 h-5 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />
             )}
             <div className="flex gap-1 flex-shrink-0">
+              <button
+                onClick={(e) => { e.stopPropagation(); onMailTask(); }}
+                className={`p-1.5 rounded transition ${
+                  task.lastEmailSentAt
+                    ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                    : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                }`}
+                title={task.lastEmailSentAt ? `Resend email (last sent: ${format(task.lastEmailSentAt, 'MMM d, HH:mm')})` : 'Send email notification'}
+              >
+                <Send className="w-4 h-4" />
+              </button>
               {canEdit && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(); }}

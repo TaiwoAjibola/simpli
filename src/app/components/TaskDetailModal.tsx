@@ -20,7 +20,8 @@ import {
   Trash2,
   Edit2,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -44,7 +45,8 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     addSubtask,
     updateSubtask,
     deleteSubtask,
-    employees
+    employees,
+    sendTaskNotification
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity'>('details');
@@ -121,6 +123,13 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     }
   };
 
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const handleSendEmail = async () => {
+    setSendingEmail(true);
+    await sendTaskNotification(task.id);
+    setSendingEmail(false);
+  };
+
   const toggleAssignee = (employeeId: string) => {
     setNewSubtask(prev => ({
       ...prev,
@@ -173,12 +182,27 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               {app?.name} → {goal?.name}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[rgba(255,255,255,0.02)] transition"
-          >
-            <X className="w-6 h-6 text-[#6b6b80]" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSendEmail}
+              disabled={sendingEmail}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
+                task.lastEmailSentAt
+                  ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]'
+                  : 'bg-[rgba(16,185,129,0.1)] text-[#10b981] hover:bg-[rgba(16,185,129,0.2)]'
+              }`}
+              title={task.lastEmailSentAt ? `Last sent: ${format(task.lastEmailSentAt, 'MMM d, HH:mm')}` : 'Send notification email'}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              {sendingEmail ? 'Sending...' : task.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-[rgba(255,255,255,0.02)] transition"
+            >
+              <X className="w-6 h-6 text-[#6b6b80]" />
+            </button>
+          </div>
         </div>
 
         <div className="border-b border-[rgba(0,229,255,0.1)]">

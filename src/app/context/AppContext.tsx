@@ -100,6 +100,7 @@ type AppContextType = {
   addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => Promise<void>;
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
+  sendTaskNotification: (taskId: string) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -457,6 +458,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [notificationRules, employees, tasks, goals, apps, subtasks]);
+
+  const sendTaskNotification = useCallback(async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const statusToEvent: Record<string, string> = {
+      not_started: 'task_assigned',
+      in_progress: 'task_started',
+      completed: 'task_ready_for_testing',
+      approved: 'task_approved',
+      blocked: 'task_blocked'
+    };
+
+    const event = statusToEvent[task.status] || 'task_assigned';
+    await createNotification(
+      event as any,
+      `Task: ${task.name}`,
+      `Notification for "${task.name}" (${task.status.replace(/_/g, ' ')})`,
+      { type: 'task', id: task.id }
+    );
+
+    await updateDoc(doc(db, 'tasks', taskId), {
+      lastEmailSentAt: serverTimestamp()
+    });
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, lastEmailSentAt: new Date() } : t));
+  }, [tasks, createNotification]);
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
     const appId = `app-${Date.now()}`;
@@ -1167,7 +1194,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         actionPoints,
         addActionPoint,
         updateActionPoint,
-        deleteActionPoint
+        deleteActionPoint,
+        sendTaskNotification
       }}
     >
       {children}

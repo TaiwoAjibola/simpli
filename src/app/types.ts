@@ -80,6 +80,7 @@ export type Task = {
   completedAt?: Date;
   approvedAt?: Date;
   approvedBy?: string;
+  lastEmailSentAt?: Date;
   attachments?: {
     id: string;
     name: string;
