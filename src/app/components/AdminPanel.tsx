@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Employee, Role, NotificationRule, Permission, NOTIFICATION_VARIABLES } from '../types';
 import { syncEmployeesToFirebaseAuth } from '../../utils/syncEmployees';
+import { sendEmail } from '../../utils/sendEmail';
 
 export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'employees' | 'roles' | 'notifications'>('employees');
@@ -574,6 +575,18 @@ function NotificationsTab() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  const handleTestEmail = async () => {
+    if (!testEmail) return;
+    setTestSending(true);
+    setTestResult(null);
+    const ok = await sendEmail({ to: [testEmail] }, 'Simpli Test Email', '<h1>Test</h1><p>If you see this, email is working.</p>');
+    setTestResult(ok ? 'Email sent successfully!' : 'Failed to send email. Check console for details.');
+    setTestSending(false);
+  };
 
   const insertVariable = (variable: string) => {
     setFormData(prev => ({
@@ -691,7 +704,29 @@ function NotificationsTab() {
             Configure notifications for system events
           </p>
         </div>
-        <button
+        <div className="flex items-center gap-3 flex-wrap">
+          {testResult && (
+            <span className={`text-xs ${testResult.includes('successfully') ? 'text-[#10b981]' : 'text-[#ff3b5c]'}`}>
+              {testResult}
+            </span>
+          )}
+          <div className="flex items-center gap-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] px-3 py-1.5">
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="bg-transparent text-sm text-[#f0f0f5] outline-none w-32 lg:w-40"
+            />
+            <button
+              onClick={handleTestEmail}
+              disabled={testSending || !testEmail}
+              className="text-xs text-[#00e5ff] hover:text-[#00c4e0] disabled:text-[#6b6b80] disabled:cursor-not-allowed transition whitespace-nowrap"
+            >
+              {testSending ? 'Sending...' : 'Test Email'}
+            </button>
+          </div>
+          <button
           onClick={() => {
             setShowForm(!showForm);
             setEditingId(null);
@@ -710,6 +745,7 @@ function NotificationsTab() {
           New Notification Rule
         </button>
       </div>
+    </div>
 
       {showForm && (
         <div className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">

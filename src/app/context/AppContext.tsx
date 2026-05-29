@@ -319,6 +319,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rule => rule.event === type && rule.enabled
     );
 
+    if (matchingRules.length === 0) {
+      console.log(`[Email] No matching notification rules for event: "${type}"`);
+    }
+
     for (const rule of matchingRules) {
       const primaryRecipients = rule.primaryRecipients || [];
       const ccRecipients = rule.ccRecipients || [];
@@ -447,6 +451,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         await sendEmail({ to: toEmails, cc: ccEmails.length > 0 ? ccEmails : undefined }, emailSubject, emailMessage.replace(/\n/g, '<br>'));
+        console.log(`[Email] Sent to:`, toEmails, ccEmails.length > 0 ? ccEmails : undefined, `| Subject:`, emailSubject);
+      } else {
+        console.log(`[Email] No recipients resolved for rule:`, rule.event);
       }
     }
   }, [notificationRules, employees, tasks, goals, apps, subtasks]);

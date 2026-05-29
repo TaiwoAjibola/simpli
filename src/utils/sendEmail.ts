@@ -4,6 +4,7 @@ export async function sendEmail(
   html: string
 ): Promise<boolean> {
   try {
+    console.log(`[Email] Sending to:`, recipients.to, `| Subject:`, subject);
     const response = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -18,13 +19,14 @@ export async function sendEmail(
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Email API error:', data.error);
+      console.error(`[Email] API error (${response.status}):`, data.error);
       return false;
     }
 
+    console.log(`[Email] Sent successfully to:`, recipients.to, `| Subject:`, subject);
     return true;
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('[Email] Network/fetch error:', error);
     return false;
   }
 }

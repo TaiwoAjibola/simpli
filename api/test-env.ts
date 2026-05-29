@@ -17,7 +17,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
       projectId: process.env.FIREBASE_PROJECT_ID || 'missing',
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'missing',
-      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0
+      privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+      hasGmailUser: !!process.env.GMAIL_USER,
+      hasGmailPassword: !!process.env.GMAIL_APP_PASSWORD,
+      gmailUser: process.env.GMAIL_USER || 'missing',
+      gmailPasswordLength: process.env.GMAIL_APP_PASSWORD?.length || 0
     }
   });
 }
