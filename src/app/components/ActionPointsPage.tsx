@@ -17,7 +17,8 @@ import {
   X,
   Trash2,
   Edit2,
-  Eye
+  Eye,
+  Mail
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
@@ -44,7 +45,8 @@ export function ActionPointsPage() {
     deleteActionPoint,
     getGoalById,
     getAppById,
-    getEmployeeById
+    getEmployeeById,
+    sendActionPointNotification
   } = useApp();
 
   const canManage = hasPermission('manage_action_points');
@@ -751,22 +753,33 @@ export function ActionPointsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium px-2 py-1 ${priorityColor(ap.priority)}`}>
-                      {ap.priority}
-                    </span>
-                    <div className="flex -space-x-2">
-                      {assignees.slice(0, 2).map((emp, i) => (
-                        <div
-                          key={i}
-                          className="w-6 h-6 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold border-2 border-[#1a1a2e]"
-                          title={emp?.name}
-                        >
-                          {emp?.name?.charAt(0)}
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-medium px-2 py-1 ${priorityColor(ap.priority)}`}>
+                        {ap.priority}
+                      </span>
+                      <div className="flex -space-x-2">
+                        {assignees.slice(0, 2).map((emp, i) => (
+                          <div
+                            key={i}
+                            className="w-6 h-6 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#0a0a0f] text-xs font-bold border-2 border-[#1a1a2e]"
+                            title={emp?.name}
+                          >
+                            {emp?.name?.charAt(0)}
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => sendActionPointNotification(ap.id)}
+                        className={`p-1.5 transition ${
+                          ap.lastEmailSentAt
+                            ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                            : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                        }`}
+                        title={ap.lastEmailSentAt ? 'Resend email' : 'Send email'}
+                      >
+                        <Mail className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
                 </div>
               );
             })}
@@ -920,6 +933,17 @@ export function ActionPointsPage() {
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => sendActionPointNotification(ap.id)}
+                            className={`p-1.5 transition ${
+                              ap.lastEmailSentAt
+                                ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                            }`}
+                            title={ap.lastEmailSentAt ? 'Resend email' : 'Send email'}
+                          >
+                            <Mail className="w-4 h-4" />
                           </button>
                           {ap.status === 'pending' && (
                             <button

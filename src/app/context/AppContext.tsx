@@ -101,6 +101,7 @@ type AppContextType = {
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
   sendTaskNotification: (taskId: string) => Promise<void>;
+  sendActionPointNotification: (apId: string) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -242,7 +243,8 @@ function docToActionPoint(doc: any): ActionPoint {
     weekStart: safeDate(data.weekStart) || new Date(),
     date: safeDate(data.date) || new Date(),
     createdAt: safeDate(data.createdAt) || new Date(),
-    completedAt: safeDate(data.completedAt)
+    completedAt: safeDate(data.completedAt),
+    lastEmailSentAt: safeDate(data.lastEmailSentAt)
   };
 }
 
@@ -484,6 +486,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, lastEmailSentAt: new Date() } : t));
   }, [tasks, createNotification]);
+
+  const sendActionPointNotification = useCallback(async (apId: string) => {
+    const ap = actionPoints.find(a => a.id === apId);
+    if (!ap) return;
+
+    const toEmails: string[] = [];
+    ap.assignedTo.forEach(uid => {
+      const user = employees.find(e => e.id === uid);
+      if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
+    });
+
+    if (toEmails.length === 0) return;
+
+    const goal = ap.goalId ? goals.find(g => g.id === ap.goalId) : null;
+    const assigneeNames = ap.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
+
+    const subject = `Action Point: ${ap.title}`;
+    const message = `
+      <h2>Action Point: ${ap.title}</h2>
+      <p><strong>Assigned to:</strong> ${assigneeNames}</p>
+      <p><strong>Priority:</strong> ${ap.priority}</p>
+      <p><strong>Status:</strong> ${ap.status.replace(/_/g, ' ')}</p>
+      <p><strong>Date:</strong> ${new Date(ap.date).toLocaleDateString()}</p>
+      ${ap.description ? `<p><strong>Description:</strong> ${ap.description}</p>` : ''}
+      ${goal ? `<p><strong>Goal:</strong> ${goal.name}</p>` : ''}
+    `;
+
+    await sendEmail({ to: toEmails }, subject, message);
+
+    await updateDoc(doc(db, 'actionPoints', apId), {
+      lastEmailSentAt: serverTimestamp()
+    });
+    setActionPoints(prev => prev.map(a => a.id === apId ? { ...a, lastEmailSentAt: new Date() } : a));
+  }, [actionPoints, employees, goals]);
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
     const appId = `app-${Date.now()}`;
@@ -1195,7 +1231,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addActionPoint,
         updateActionPoint,
         deleteActionPoint,
-        sendTaskNotification
+        sendTaskNotification,
+        sendActionPointNotification
       }}
     >
       {children}
