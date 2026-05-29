@@ -1030,7 +1030,7 @@ function TaskCard({
                     ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
                     : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
                 }`}
-                title={task.lastEmailSentAt ? `Resend email (last sent: ${format(task.lastEmailSentAt, 'MMM d, HH:mm')})` : 'Send email notification'}
+                title={task.lastEmailSentAt ? 'Resend email' : 'Send email'}
               >
                 <Send className="w-4 h-4" />
               </button>

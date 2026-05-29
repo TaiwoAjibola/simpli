@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import {
   Plus,
   CheckCircle,
@@ -35,6 +36,7 @@ function getWeekStart(date: Date = new Date()): Date {
 
 export function ActionPointsPage() {
   const { currentUser, hasPermission } = useAuth();
+  const { showToast } = useToast();
   const {
     actionPoints,
     goals,
@@ -100,6 +102,11 @@ export function ActionPointsPage() {
 
   const toggleWeek = (weekKey: string) => {
     setExpandedWeeks(prev => ({ ...prev, [weekKey]: !prev[weekKey] }));
+  };
+
+  const handleSendApEmail = async (ap: ActionPoint) => {
+    await sendActionPointNotification(ap.id);
+    showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${ap.title}"` });
   };
 
   const groupedByWeek = useMemo(() => {
@@ -769,7 +776,7 @@ export function ActionPointsPage() {
                         ))}
                       </div>
                       <button
-                        onClick={() => sendActionPointNotification(ap.id)}
+                        onClick={() => handleSendApEmail(ap)}
                         className={`p-1.5 transition ${
                           ap.lastEmailSentAt
                             ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
@@ -777,18 +784,18 @@ export function ActionPointsPage() {
                         }`}
                         title={ap.lastEmailSentAt ? 'Resend email' : 'Send email'}
                       >
-                        <Mail className="w-4 h-4" />
-                      </button>
+                          <Mail className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                </div>
-              );
-            })}
-            {weeklyReview.thisWeek.length === 0 && (
-              <p className="text-sm text-[#6b6b80] text-center py-6">No action points for this week</p>
-            )}
-          </div>
-        </div>
-      ) : null}
+                  );
+                })}
+                {weeklyReview.thisWeek.length === 0 && (
+                  <p className="text-sm text-[#6b6b80] text-center py-6">No action points for this week</p>
+                )}
+              </div>
+            </div>
+          ) : null}
 
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <div className="flex items-center gap-1 bg-[#1a1a2e] px-3 py-1.5 border border-[rgba(0,229,255,0.1)]">
@@ -935,7 +942,7 @@ export function ActionPointsPage() {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => sendActionPointNotification(ap.id)}
+                            onClick={() => handleSendApEmail(ap)}
                             className={`p-1.5 transition ${
                               ap.lastEmailSentAt
                                 ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'

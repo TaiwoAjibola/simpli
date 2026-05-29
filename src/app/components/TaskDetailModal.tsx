@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import {
   X,
@@ -32,6 +33,7 @@ type TaskDetailModalProps = {
 
 export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalProps) {
   const { currentUser, hasPermission } = useAuth();
+  const { showToast } = useToast();
   const {
     tasks,
     updateTask,
@@ -128,6 +130,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     setSendingEmail(true);
     await sendTaskNotification(task.id);
     setSendingEmail(false);
+    showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${task.name}"` });
   };
 
   const toggleAssignee = (employeeId: string) => {
@@ -183,19 +186,18 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleSendEmail}
-              disabled={sendingEmail}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
-                task.lastEmailSentAt
-                  ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]'
-                  : 'bg-[rgba(16,185,129,0.1)] text-[#10b981] hover:bg-[rgba(16,185,129,0.2)]'
-              }`}
-              title={task.lastEmailSentAt ? `Last sent: ${format(task.lastEmailSentAt, 'MMM d, HH:mm')}` : 'Send notification email'}
-            >
-              <Mail className="w-3.5 h-3.5" />
-              {sendingEmail ? 'Sending...' : task.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
-            </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={sendingEmail}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
+                  task.lastEmailSentAt
+                    ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]'
+                    : 'bg-[rgba(16,185,129,0.1)] text-[#10b981] hover:bg-[rgba(16,185,129,0.2)]'
+                } ${sendingEmail ? 'opacity-50 cursor-wait' : ''}`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                {sendingEmail ? 'Sending...' : task.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
+              </button>
             <button
               onClick={onClose}
               className="p-2 hover:bg-[rgba(255,255,255,0.02)] transition"

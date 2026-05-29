@@ -145,7 +145,8 @@ function docToTask(doc: any): Task {
     dueDate: safeDate(data.dueDate),
     endDate: safeDate(data.endDate),
     completedAt: safeDate(data.completedAt),
-    approvedAt: safeDate(data.approvedAt)
+    approvedAt: safeDate(data.approvedAt),
+    lastEmailSentAt: safeDate(data.lastEmailSentAt)
   };
 }
 
