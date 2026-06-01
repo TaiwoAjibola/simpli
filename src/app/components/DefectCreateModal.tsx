@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { X, Upload, Paperclip, Loader } from 'lucide-react';
+import { storage } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { DefectIssueType, DefectSeverity, DefectPriority, DefectReproducibility, DefectFrequency, Defect } from '../types';
 
 type DefectCreateModalProps = {
@@ -68,7 +70,7 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
           developerNotes: formData.developerNotes,
           testCycle: formData.testCycle
         }, currentUser.id, currentUser.name);
-        showToast('info', 'Defect updated successfully');
+        showToast({ type: 'info', title: 'Defect Updated', message: 'Defect updated successfully' });
         onClose();
         return;
       }
@@ -76,41 +78,29 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
       let attachmentUrls: any[] = [];
       if (attachments.length > 0) {
         setUploadStatus(`Uploading ${attachments.length} file(s)...`);
-        const { storage } = await import('../../firebase/config');
-        const { ref, uploadBytesResumable, getDownloadURL } = await import('firebase/storage');
 
         for (let i = 0; i < attachments.length; i++) {
           const file = attachments[i];
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           setUploadStatus(`Uploading ${file.name} (${i + 1}/${attachments.length})...`);
-          const fileRef = ref(storage, `defects/${Date.now()}_${file.name}`);
-          const uploadTask = uploadBytesResumable(fileRef, file);
+          setUploadProgress(Math.round(((i) / attachments.length) * 100));
 
-          await new Promise<void>((resolve, reject) => {
-            uploadTask.on(
-              'state_changed',
-              (snapshot) => {
-                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                setUploadProgress(Math.round(((i + pct / 100) / attachments.length) * 100));
-              },
-              (error) => {
-                reject(error);
-              },
-              async () => {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                attachmentUrls.push({
-                  id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  name: file.name,
-                  url: downloadURL,
-                  size: file.size,
-                  type: file.type,
-                  uploadedAt: new Date(),
-                  uploadedBy: currentUser.id
-                });
-                resolve();
-              }
-            );
+          const fileRef = ref(storage, `defects/${Date.now()}_${safeName}`);
+          await uploadBytes(fileRef, file);
+          const downloadURL = await getDownloadURL(fileRef);
+
+          attachmentUrls.push({
+            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: file.name,
+            url: downloadURL,
+            size: file.size,
+            type: file.type,
+            uploadedAt: new Date(),
+            uploadedBy: currentUser.id
           });
         }
+
+        setUploadProgress(100);
       }
 
       setUploadStatus('Creating defect...');

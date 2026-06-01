@@ -263,4 +263,5 @@ export type Defect = {
   createdAt: Date;
   updatedAt: Date;
   closedAt?: Date;
+  lastEmailSentAt?: Date;
 };

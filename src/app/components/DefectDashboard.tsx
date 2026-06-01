@@ -16,15 +16,18 @@ import {
   RefreshCw,
   Download,
   Edit2,
-  Trash2
+  Trash2,
+  Mail
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import { Defect, DefectSeverity, DefectStatus } from '../types';
 import { DefectDetailModal } from './DefectDetailModal';
 import { DefectCreateModal } from './DefectCreateModal';
 
 export function DefectDashboard() {
-  const { apps, defects, employees, deleteDefect } = useApp();
+  const { apps, defects, employees, deleteDefect, sendDefectNotification } = useApp();
   const { currentUser, hasPermission } = useAuth();
+  const { showToast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editDefect, setEditDefect] = useState<Defect | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
@@ -404,6 +407,21 @@ export function DefectDashboard() {
                                 title="Edit"
                               >
                                 <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await sendDefectNotification(defect.id);
+                                  showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${defect.defectCode}"` });
+                                }}
+                                className={`p-1.5 rounded ${
+                                  defect.lastEmailSentAt
+                                    ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                                    : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                                }`}
+                                title={defect.lastEmailSentAt ? 'Resend email' : 'Send email'}
+                              >
+                                <Mail className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => {

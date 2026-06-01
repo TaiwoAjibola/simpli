@@ -89,6 +89,7 @@ type AppContextType = {
   addDefect: (defect: Omit<Defect, 'id' | 'defectCode' | 'createdAt' | 'updatedAt' | 'activityLogs' | 'reopenedCount' | 'fixVerified'>) => Promise<Defect | undefined>;
   updateDefect: (defectId: string, updates: Partial<Defect>, userId?: string, userName?: string) => Promise<void>;
   deleteDefect: (defectId: string) => Promise<void>;
+  sendDefectNotification: (defectId: string) => Promise<void>;
   addDefectComment: (defectId: string, userId: string, userName: string, content: string) => Promise<void>;
   getDefectsForApp: (appId: string) => Defect[];
   getDefectById: (defectId: string) => Defect | undefined;
@@ -221,7 +222,8 @@ function docToDefect(doc: any): Defect {
     })),
     attachments: data.attachments || [],
     reopenedCount: data.reopenedCount || 0,
-    fixVerified: data.fixVerified || false
+    fixVerified: data.fixVerified || false,
+    lastEmailSentAt: safeDate(data.lastEmailSentAt)
   };
 }
 
@@ -521,6 +523,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
     setActionPoints(prev => prev.map(a => a.id === apId ? { ...a, lastEmailSentAt: new Date() } : a));
   }, [actionPoints, employees, goals]);
+
+  const sendDefectNotification = useCallback(async (defectId: string) => {
+    const defect = defects.find(d => d.id === defectId);
+    if (!defect) return;
+
+    const assignee = employees.find(e => e.id === defect.assignedTo);
+    const reporter = employees.find(e => e.id === defect.reportedBy);
+    const app = defect.applicationId ? apps.find(a => a.id === defect.applicationId) : null;
+
+    const toEmails: string[] = [];
+    if (assignee?.email) toEmails.push(assignee.email);
+    if (reporter?.email && !toEmails.includes(reporter.email)) toEmails.push(reporter.email);
+
+    if (toEmails.length === 0) return;
+
+    const subject = `[${defect.defectCode}] ${defect.title}`;
+    const message = `
+      <h2>Defect: ${defect.defectCode} - ${defect.title}</h2>
+      <p><strong>Status:</strong> ${defect.status.replace(/_/g, ' ')}</p>
+      <p><strong>Severity:</strong> ${defect.severity}</p>
+      <p><strong>Priority:</strong> ${defect.priority}</p>
+      <p><strong>Assigned to:</strong> ${assignee?.name || 'Unassigned'}</p>
+      <p><strong>Reported by:</strong> ${reporter?.name || 'Unknown'}</p>
+      ${app ? `<p><strong>Application:</strong> ${app.name}</p>` : ''}
+      ${defect.dueDate ? `<p><strong>Due Date:</strong> ${new Date(defect.dueDate).toLocaleDateString()}</p>` : ''}
+      <p><strong>Module:</strong> ${defect.module || '-'}</p>
+      <p><strong>Environment:</strong> ${defect.environment}</p>
+      <p><strong>Description:</strong> ${defect.description || 'No description'}</p>
+    `;
+
+    await sendEmail({ to: toEmails }, subject, message);
+
+    await updateDoc(doc(db, 'defects', defectId), {
+      lastEmailSentAt: serverTimestamp()
+    });
+    setDefects(prev => prev.map(d => d.id === defectId ? { ...d, lastEmailSentAt: new Date() } : d));
+  }, [defects, employees, apps]);
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
     const appId = `app-${Date.now()}`;
@@ -988,12 +1027,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fixVerified: false
     };
 
-    await setDoc(doc(db, 'defects', defectId), {
+    await setDoc(doc(db, 'defects', defectId), sanitizeForFirestore({
       ...newDefect,
       dateReported: new Date(),
       createdAt: new Date(),
       updatedAt: new Date()
-    });
+    }));
 
     await addActivity({
       type: 'task_created',
@@ -1048,11 +1087,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ];
     }
 
-    await updateDoc(doc(db, 'defects', defectId), updateData);
+    await updateDoc(doc(db, 'defects', defectId), sanitizeForFirestore(updateData));
   }, [defects]);
 
   const deleteDefect = useCallback(async (defectId: string) => {
     await deleteDoc(doc(db, 'defects', defectId));
+    setDefects(prev => prev.filter(d => d.id !== defectId));
   }, []);
 
   const addDefectComment = useCallback(async (defectId: string, userId: string, userName: string, content: string) => {
@@ -1233,7 +1273,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateActionPoint,
         deleteActionPoint,
         sendTaskNotification,
-        sendActionPointNotification
+        sendActionPointNotification,
+        sendDefectNotification
       }}
     >
       {children}

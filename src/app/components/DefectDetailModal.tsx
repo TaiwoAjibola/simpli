@@ -17,8 +17,10 @@ import {
   Send,
   Activity,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Mail
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import { Defect, DefectStatus, DefectResolution } from '../types';
 
 type DefectDetailModalProps = {
@@ -27,8 +29,10 @@ type DefectDetailModalProps = {
 };
 
 export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
-  const { employees, apps, updateDefect, addDefectComment } = useApp();
+  const { employees, apps, updateDefect, addDefectComment, sendDefectNotification } = useApp();
   const { currentUser, hasPermission } = useAuth();
+  const { showToast } = useToast();
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reproduction' | 'attachments' | 'activity'>('overview');
   const [commentText, setCommentText] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -67,6 +71,13 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const handleReopen = async () => {
     if (!currentUser) return;
     await updateDefect(defect.id, { status: 'reopened' }, currentUser.id, currentUser.name);
+  };
+
+  const handleSendDefectEmail = async () => {
+    setSendingEmail(true);
+    await sendDefectNotification(defect.id);
+    setSendingEmail(false);
+    showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${defect.defectCode}"` });
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -146,6 +157,18 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                 Reopen
               </button>
             )}
+            <button
+              onClick={handleSendDefectEmail}
+              disabled={sendingEmail}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
+                defect.lastEmailSentAt
+                  ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]'
+                  : 'bg-[rgba(16,185,129,0.1)] text-[#10b981] hover:bg-[rgba(16,185,129,0.2)]'
+              } ${sendingEmail ? 'opacity-50 cursor-wait' : ''}`}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              {sendingEmail ? 'Sending...' : defect.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
+            </button>
           </div>
         </div>
 

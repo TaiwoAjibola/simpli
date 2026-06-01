@@ -3,8 +3,9 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import { Task, TaskStatus, DefectStatus, Defect } from '../types';
-import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
@@ -322,6 +323,8 @@ function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
       isDragging: monitor.isDragging()
     })
   });
+  const { sendDefectNotification } = useApp();
+  const { showToast } = useToast();
 
   const assignee = getEmployeeById(defect.assignedTo);
 
@@ -330,6 +333,12 @@ function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
     critical: 'bg-[rgba(220,38,38,0.2)] text-[#dc2626]',
     major: 'bg-[rgba(245,158,11,0.2)] text-[#f59e0b]',
     minor: 'bg-[rgba(234,179,8,0.2)] text-[#eab308]'
+  };
+
+  const handleMailClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await sendDefectNotification(defect.id);
+    showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${defect.defectCode}"` });
   };
 
   return (
@@ -355,12 +364,25 @@ function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
         <span className={`text-xs font-medium px-2 py-1 ${severityColors[defect.severity]}`}>
           {defect.severity.toUpperCase()}
         </span>
-        {assignee && (
-          <div className="flex items-center gap-1.5">
-            <User className="w-3 h-3 text-[#6b6b80]" />
-            <span className="text-xs text-[#6b6b80]">{assignee.name.split(' ')[0]}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {assignee && (
+            <div className="flex items-center gap-1.5">
+              <User className="w-3 h-3 text-[#6b6b80]" />
+              <span className="text-xs text-[#6b6b80]">{assignee.name.split(' ')[0]}</span>
+            </div>
+          )}
+          <button
+            onClick={handleMailClick}
+            className={`p-1 rounded transition ${
+              defect.lastEmailSentAt
+                ? 'text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)]'
+                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+            }`}
+            title={defect.lastEmailSentAt ? 'Resend email' : 'Send email'}
+          >
+            <Mail className="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </div>
   );
