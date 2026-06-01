@@ -223,11 +223,18 @@ export function ActionPointsPage() {
   };
 
   const handleStatusChange = async (apId: string, status: ActionPointStatus) => {
-    await updateActionPoint(apId, {
+    const updates: any = {
       status,
       completedAt: status === 'completed' ? new Date() : undefined,
       completedBy: status === 'completed' ? currentUser?.id : undefined
-    });
+    };
+    if (status === 'carried_over') {
+      const nextWeek = new Date(getWeekStart());
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      updates.weekStart = nextWeek;
+      updates.date = nextWeek;
+    }
+    await updateActionPoint(apId, updates);
   };
 
   const weekStatusCounts = (items: ActionPoint[]) => {
