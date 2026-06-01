@@ -247,7 +247,8 @@ function docToActionPoint(doc: any): ActionPoint {
     date: safeDate(data.date) || new Date(),
     createdAt: safeDate(data.createdAt) || new Date(),
     completedAt: safeDate(data.completedAt),
-    lastEmailSentAt: safeDate(data.lastEmailSentAt)
+    lastEmailSentAt: safeDate(data.lastEmailSentAt),
+    carriedFrom: safeDate(data.carriedFrom)
   };
 }
 

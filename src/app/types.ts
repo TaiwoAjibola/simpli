@@ -204,6 +204,7 @@ export type ActionPoint = {
   createdAt: Date;
   notes?: string;
   lastEmailSentAt?: Date;
+  carriedFrom?: Date;
 };
 export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor';
 export type DefectPriority = 'high' | 'medium' | 'low';

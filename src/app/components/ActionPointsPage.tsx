@@ -7,7 +7,7 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowRight,
-  RefreshCw,
+  RotateCcw,
   User,
   Calendar,
   ChevronDown,
@@ -230,12 +230,24 @@ export function ActionPointsPage() {
     };
     if (status === 'carried_over') {
       const ap = actionPoints.find(a => a.id === apId);
-      const base = ap?.weekStart ? new Date(ap.weekStart) : getWeekStart();
+      if (!ap) return;
+      updates.carriedFrom = ap.weekStart;
+      const base = new Date(ap.weekStart);
       base.setDate(base.getDate() + 7);
       updates.weekStart = base;
       updates.date = base;
     }
     await updateActionPoint(apId, updates);
+  };
+
+  const handleUndoCarryOver = async (apId: string) => {
+    const ap = actionPoints.find(a => a.id === apId);
+    if (!ap?.carriedFrom) return;
+    await updateActionPoint(apId, {
+      weekStart: ap.carriedFrom,
+      date: ap.carriedFrom,
+      carriedFrom: undefined
+    });
   };
 
   const weekStatusCounts = (items: ActionPoint[]) => {
@@ -760,6 +772,12 @@ export function ActionPointsPage() {
                             {app.name}
                           </span>
                         )}
+                        {ap.status === 'carried_over' && (
+                          <span className="text-xs text-[#f59e0b] flex items-center gap-1 mt-0.5">
+                            <ArrowRight className="w-3 h-3" />
+                            {ap.carriedFrom ? `Carried from ${format(ap.carriedFrom, 'MMM d')}` : 'Carried over'}
+                          </span>
+                        )}
                         {ap.taskId && (
                           <p className="text-xs text-[#00e5ff] mt-0.5 flex items-center gap-1">
                             <Layers className="w-3 h-3" /> Linked to task
@@ -899,7 +917,8 @@ export function ActionPointsPage() {
                             <span className="text-xs text-[#6b6b80]">{format(ap.date, 'MMM d, yyyy')}</span>
                             {ap.status === 'carried_over' && (
                               <span className="text-xs text-[#f59e0b] flex items-center gap-1">
-                                <ArrowRight className="w-3 h-3" /> Carried over
+                                <ArrowRight className="w-3 h-3" />
+                                {ap.carriedFrom ? `Carried from ${format(ap.carriedFrom, 'MMM d')}` : 'Carried over'}
                               </span>
                             )}
                             {app && (
@@ -960,22 +979,22 @@ export function ActionPointsPage() {
                           >
                             <Mail className="w-4 h-4" />
                           </button>
-                          {ap.status === 'pending' && (
+                          {(ap.status === 'pending' || ap.status === 'carried_over') && (
                             <button
                               onClick={() => handleStatusChange(ap.id, 'carried_over')}
                               className="flex items-center gap-1 px-2 py-1.5 text-[#f59e0b] hover:bg-[rgba(245,158,11,0.1)] transition text-xs"
-                              title="Carry over to next week"
+                              title={`Carry over to week of ${format(new Date(new Date(ap.weekStart).getTime() + 7 * 86400000), 'MMM d')}`}
                             >
                               <ArrowRight className="w-3.5 h-3.5" /> Carry Over
                             </button>
                           )}
-                          {ap.status === 'carried_over' && (
+                          {ap.status === 'carried_over' && ap.carriedFrom && (
                             <button
-                              onClick={() => handleStatusChange(ap.id, 'pending')}
+                              onClick={() => handleUndoCarryOver(ap.id)}
                               className="flex items-center gap-1 px-2 py-1.5 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition text-xs"
-                              title="Move back to pending"
+                              title={`Undo carry over — move back to week of ${format(ap.carriedFrom, 'MMM d')}`}
                             >
-                              <RefreshCw className="w-3.5 h-3.5" /> Reverse
+                              <RotateCcw className="w-3.5 h-3.5" /> Undo
                             </button>
                           )}
                           {canManage && (
