@@ -229,10 +229,11 @@ export function ActionPointsPage() {
       completedBy: status === 'completed' ? currentUser?.id : undefined
     };
     if (status === 'carried_over') {
-      const nextWeek = new Date(getWeekStart());
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      updates.weekStart = nextWeek;
-      updates.date = nextWeek;
+      const ap = actionPoints.find(a => a.id === apId);
+      const base = ap?.weekStart ? new Date(ap.weekStart) : getWeekStart();
+      base.setDate(base.getDate() + 7);
+      updates.weekStart = base;
+      updates.date = base;
     }
     await updateActionPoint(apId, updates);
   };
