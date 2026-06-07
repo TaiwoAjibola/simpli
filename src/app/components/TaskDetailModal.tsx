@@ -25,6 +25,7 @@ import {
   Mail
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { TagBadges } from './TagBadges';
 
 type TaskDetailModalProps = {
   task: Task;
@@ -48,7 +49,8 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     updateSubtask,
     deleteSubtask,
     employees,
-    sendTaskNotification
+    sendTaskNotification,
+    tags
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity'>('details');
@@ -352,12 +354,15 @@ function DetailsTab({
   priorityColors,
   statusColors
 }: any) {
+  const { tags } = useApp();
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-sm font-semibold text-[#f0f0f5] mb-3">Description</h3>
         <p className="text-[#f0f0f5] leading-relaxed">{task.description}</p>
       </div>
+
+      <TagBadges tagIds={task.tags} allTags={tags} size="sm" />
 
       <div className="grid grid-cols-2 gap-6">
         <div>

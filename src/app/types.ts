@@ -30,6 +30,14 @@ export type Employee = {
   firebaseUid?: string;
 };
 
+export type Tag = {
+  id: string;
+  appId: string;
+  name: string;
+  color: string;
+  createdAt: Date;
+};
+
 export type App = {
   id: string;
   name: string;
@@ -81,6 +89,7 @@ export type Task = {
   approvedAt?: Date;
   approvedBy?: string;
   lastEmailSentAt?: Date;
+  tags?: string[];
   attachments?: {
     id: string;
     name: string;
@@ -205,6 +214,7 @@ export type ActionPoint = {
   notes?: string;
   lastEmailSentAt?: Date;
   carriedFrom?: Date;
+  tags?: string[];
 };
 export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor';
 export type DefectPriority = 'high' | 'medium' | 'low';

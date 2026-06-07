@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight, Tag as TagIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { App } from '../types';
+import { App, Tag } from '../types';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 type AppsModuleProps = {
@@ -18,9 +18,11 @@ const PRESET_COLORS = [
 
 export function AppsModule({ onNavigate }: AppsModuleProps) {
   const { currentUser, hasPermission } = useAuth();
-  const { apps, goals, tasks, addApp, updateApp, deleteApp, getGoalsForApp, getTasksForGoal } = useApp();
+  const { apps, goals, tasks, tags, addApp, updateApp, deleteApp, addTag, deleteTag, getGoalsForApp, getTasksForGoal, getTagsForApp } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<App | null>(null);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#00e5ff');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -64,6 +66,13 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     if (confirm('Delete this app and all its goals and tasks?')) {
       deleteApp(appId);
     }
+  };
+
+  const handleAddTag = async (appId: string) => {
+    if (!newTagName.trim()) return;
+    await addTag({ appId, name: newTagName.trim(), color: newTagColor });
+    setNewTagName('');
+    setNewTagColor('#00e5ff');
   };
 
   return (
@@ -306,6 +315,60 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                   <p className="text-xs text-[#6b6b80]">Tasks</p>
                   <p className="text-lg font-bold text-[#f0f0f5]">{appTasks.length}</p>
                 </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-[rgba(0,229,255,0.1)]">
+                <div className="flex items-center gap-2 mb-2">
+                  <TagIcon className="w-4 h-4 text-[#6b6b80]" />
+                  <span className="text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Tags</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {getTagsForApp(app.id).map(tag => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-0.5"
+                      style={{ backgroundColor: `${tag.color}20`, color: tag.color, borderLeft: `2px solid ${tag.color}` }}
+                    >
+                      {tag.name}
+                      {canEditApp && (
+                        <button
+                          onClick={() => deleteTag(tag.id)}
+                          className="hover:opacity-60"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                  {getTagsForApp(app.id).length === 0 && (
+                    <span className="text-xs text-[#6b6b80]">No tags</span>
+                  )}
+                </div>
+                {canEditApp && (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={newTagName}
+                      onChange={(e) => setNewTagName(e.target.value)}
+                      placeholder="Tag name..."
+                      className="flex-1 px-2 py-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(app.id))}
+                    />
+                    <input
+                      type="color"
+                      value={newTagColor}
+                      onChange={(e) => setNewTagColor(e.target.value)}
+                      className="w-6 h-6 border-0 cursor-pointer bg-transparent p-0"
+                    />
+                    <button
+                      onClick={() => handleAddTag(app.id)}
+                      disabled={!newTagName.trim()}
+                      className="px-2 py-1 bg-[#00e5ff] text-[#0a0a0f] text-xs font-medium disabled:opacity-50"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );

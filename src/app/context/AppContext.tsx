@@ -35,7 +35,8 @@ import {
   Comment,
   Defect,
   Phase,
-  ActionPoint
+  ActionPoint,
+  Tag
 } from '../types';
 
 type AppContextType = {
@@ -52,6 +53,7 @@ type AppContextType = {
   defects: Defect[];
   phases: Phase[];
   actionPoints: ActionPoint[];
+  tags: Tag[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -103,6 +105,10 @@ type AppContextType = {
   deleteActionPoint: (actionPointId: string) => Promise<void>;
   sendTaskNotification: (taskId: string) => Promise<void>;
   sendActionPointNotification: (apId: string) => Promise<void>;
+  addTag: (tag: Omit<Tag, 'id' | 'createdAt'>) => Promise<void>;
+  updateTag: (tagId: string, updates: Partial<Tag>) => Promise<void>;
+  deleteTag: (tagId: string) => Promise<void>;
+  getTagsForApp: (appId: string) => Tag[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -238,6 +244,15 @@ function docToPhase(doc: any): Phase {
   };
 }
 
+function docToTag(doc: any): Tag {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
 function docToActionPoint(doc: any): ActionPoint {
   const data = doc.data();
   return {
@@ -266,6 +281,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [defects, setDefects] = useState<Defect[]>([]);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -283,6 +299,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment },
       { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect },
       { ref: collection(db, 'phases'), setter: setPhases, transformer: docToPhase },
+      { ref: collection(db, 'tags'), setter: setTags, transformer: docToTag },
       { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint }
     ];
 
@@ -1209,6 +1226,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'actionPoints', apId));
   }, [actionPoints]);
 
+  const addTag = useCallback(async (tag: Omit<Tag, 'id' | 'createdAt'>) => {
+    const tagId = `tag-${Date.now()}`;
+    await setDoc(doc(db, 'tags', tagId), {
+      ...tag,
+      id: tagId,
+      createdAt: serverTimestamp()
+    });
+    setTags(prev => [{ ...tag, id: tagId, createdAt: new Date() }, ...prev]);
+  }, []);
+
+  const updateTag = useCallback(async (tagId: string, updates: Partial<Tag>) => {
+    await updateDoc(doc(db, 'tags', tagId), updates);
+  }, []);
+
+  const deleteTag = useCallback(async (tagId: string) => {
+    await deleteDoc(doc(db, 'tags', tagId));
+    setTags(prev => prev.filter(t => t.id !== tagId));
+  }, []);
+
+  const getTagsForApp = useCallback((appId: string) => {
+    return tags.filter(t => t.appId === appId);
+  }, [tags]);
+
   return (
     <AppContext.Provider
       value={{
@@ -1275,7 +1315,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteActionPoint,
         sendTaskNotification,
         sendActionPointNotification,
-        sendDefectNotification
+        sendDefectNotification,
+        tags,
+        addTag,
+        updateTag,
+        deleteTag,
+        getTagsForApp
       }}
     >
       {children}

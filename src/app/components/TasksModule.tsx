@@ -21,11 +21,13 @@ import {
   Send,
   Paperclip,
   FileText,
-  X
+  X,
+  Tag as TagIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
+import { TagBadges } from './TagBadges';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 export function TasksModule() {
@@ -47,7 +49,9 @@ export function TasksModule() {
     getSubtasksForTask,
     getCommentsForSubtask,
     addComment,
-    sendTaskNotification
+    sendTaskNotification,
+    tags,
+    getTagsForApp
   } = useApp();
 
   const canAssignTasks = hasPermission('assign_tasks');
@@ -65,7 +69,8 @@ export function TasksModule() {
     assignedTo: [] as string[],
     priority: 'medium' as const,
     startDate: '',
-    endDate: ''
+    endDate: '',
+    tags: [] as string[]
   });
   const [multiGoalId, setMultiGoalId] = useState('');
   const [multiTasks, setMultiTasks] = useState<{
@@ -189,7 +194,8 @@ export function TasksModule() {
       assignedTo: [...task.assignedTo],
       priority: task.priority,
       startDate: task.startDate ? format(task.startDate, 'yyyy-MM-dd') : '',
-      endDate: task.endDate ? format(task.endDate, 'yyyy-MM-dd') : ''
+      endDate: task.endDate ? format(task.endDate, 'yyyy-MM-dd') : '',
+      tags: [...(task.tags || [])]
     });
     setEditingTask(task);
     setShowAddForm(true);
@@ -273,7 +279,8 @@ export function TasksModule() {
       assignedTo: [],
       priority: 'medium',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      tags: []
     });
     setMultiTasks([]);
     setMultiGoalId('');
@@ -478,6 +485,51 @@ export function TasksModule() {
                 </select>
               </div>
             )}
+
+            {taskMode === 'single' && (() => {
+              const selectedGoal = formData.goalId ? getGoalById(formData.goalId) : null;
+              const selectedAppId = selectedGoal?.appId;
+              const appTags = selectedAppId ? getTagsForApp(selectedAppId) : [];
+              const toggleTag = (tagId: string) => {
+                setFormData(prev => ({
+                  ...prev,
+                  tags: prev.tags.includes(tagId)
+                    ? prev.tags.filter(id => id !== tagId)
+                    : [...prev.tags, tagId]
+                }));
+              };
+              return (
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2 flex items-center gap-2">
+                  <TagIcon className="w-4 h-4" />
+                  Tags
+                </label>
+                {appTags.length === 0 ? (
+                  <p className="text-xs text-[#6b6b80]">Select a goal with an app to see available tags</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {appTags.map(tag => {
+                      const isSelected = formData.tags.includes(tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => toggleTag(tag.id)}
+                          className={`px-3 py-1.5 text-sm border-2 transition ${
+                            isSelected
+                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                          }`}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              );
+            })()}
 
             {taskMode === 'single' && (
               <div className="grid grid-cols-2 gap-4">
@@ -881,6 +933,7 @@ export function TasksModule() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[#f0f0f5]">{task.name}</p>
+                          <p className="text-xs text-[#6b6b80] mt-0.5">{taskApp?.name}{taskGoal ? ` → ${taskGoal.name}` : ''}</p>
                           <span className={`text-xs px-2 py-0.5 mt-1 inline-block ${
                             task.priority === 'urgent' ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
                             task.priority === 'high' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
@@ -889,6 +942,7 @@ export function TasksModule() {
                           }`}>
                             {task.priority}
                           </span>
+                          <TagBadges tagIds={task.tags} allTags={tags} />
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition ml-2">
                           <button
@@ -1127,6 +1181,8 @@ function TaskCard({
               Created {format(task.createdAt, 'MMM d, yyyy')}
             </span>
           </div>
+
+          <TagBadges tagIds={task.tags} allTags={tags} />
 
           {task.status === 'completed' && !task.approvedBy && canApprove && (
             <button

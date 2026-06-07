@@ -5,10 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
 import { Task, TaskStatus, DefectStatus, Defect } from '../types';
-import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
+import { TagBadges } from './TagBadges';
 
 const TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'not_started', title: 'Not Started', color: '#6b6b80' },
@@ -38,7 +39,7 @@ export function KanbanBoard() {
 
 function KanbanContent() {
   const { currentUser, hasPermission } = useAuth();
-  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, getAppById, apps } = useApp();
+  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, getAppById, apps, tags } = useApp();
 
   const canViewAll = hasPermission('view_all_apps');
   const displayTasks = canViewAll ? tasks : getTasksForEmployee(currentUser!.id);
@@ -48,6 +49,7 @@ function KanbanContent() {
   const [viewMode, setViewMode] = useState<'both' | 'tasks' | 'defects'>('both');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [filterApp, setFilterApp] = useState<string>('all');
+  const [filterTag, setFilterTag] = useState<string>('all');
 
   const filteredDefects = useMemo(() => {
     let result = canViewAll ? defects : defects.filter(d => d.assignedTo === currentUser!.id);
@@ -63,8 +65,11 @@ function KanbanContent() {
         return goal?.appId === filterApp;
       });
     }
+    if (filterTag !== 'all') {
+      result = result.filter(t => t.tags?.includes(filterTag));
+    }
     return sortItems(result, sortBy);
-  }, [displayTasks, filterApp, sortBy]);
+  }, [displayTasks, filterApp, filterTag, sortBy]);
 
   const handleTaskDrop = (taskId: string, newStatus: TaskStatus) => {
     updateTask(taskId, { status: newStatus });
@@ -108,6 +113,17 @@ function KanbanContent() {
               <option value="all">All Apps</option>
               {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
             </select>
+            <div className="flex items-center gap-1">
+              <TagIcon className="w-3 h-3 text-[#6b6b80]" />
+              <select
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+                className="px-3 py-1.5 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs"
+              >
+                <option value="all">All Tags</option>
+                {tags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -126,6 +142,7 @@ function KanbanContent() {
               getGoalById={getGoalById}
               getAppById={getAppById}
               type="task"
+              allTags={tags}
             />
           );
         })}
@@ -142,6 +159,7 @@ function KanbanContent() {
               getGoalById={getGoalById}
               getAppById={getAppById}
               type="defect"
+              allTags={tags}
             />
           );
         })}
@@ -179,9 +197,10 @@ type KanbanColumnProps = {
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   type: 'task' | 'defect';
+  allTags: any[];
 };
 
-function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type }: KanbanColumnProps) {
+function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type, allTags }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop({
     accept: type === 'task' ? 'TASK' : 'DEFECT',
     drop: (item: { taskId: string }) => {
@@ -223,6 +242,8 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
               defect={item}
               onClick={onCardClick}
               getEmployeeById={getEmployeeById}
+              getAppById={getAppById}
+              allTags={allTags}
             />
           ) : (
             <TaskCard
@@ -232,6 +253,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
               getEmployeeById={getEmployeeById}
               getGoalById={getGoalById}
               getAppById={getAppById}
+              allTags={allTags}
             />
           )
         ))}
@@ -251,9 +273,10 @@ type TaskCardProps = {
   getEmployeeById: (id: string) => any;
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
+  allTags: any[];
 };
 
-function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById }: TaskCardProps) {
+function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, allTags }: TaskCardProps) {
   const [{ isDragging }, drag] = useDrag({
     type: 'TASK',
     item: { taskId: task.id },
@@ -289,6 +312,9 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById }: T
         {task.priority === 'urgent' && <Star className="w-4 h-4 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />}
       </div>
       <p className="text-xs text-[#6b6b80] mb-3 line-clamp-2">{task.description}</p>
+      <div className="mb-2">
+        <TagBadges tagIds={task.tags} allTags={allTags} />
+      </div>
       <div className="flex items-center justify-between">
         <span className={`text-xs font-medium px-2 py-1 ${priorityColors[task.priority]}`}>
           {task.priority.toUpperCase()}
@@ -302,7 +328,7 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById }: T
       </div>
       {goal && (
         <div className="mt-2 pt-2 border-t border-[rgba(0,229,255,0.1)]">
-          <p className="text-xs text-[#6b6b80] truncate">{goal.name}</p>
+          <p className="text-xs text-[#6b6b80] truncate">{app?.name} → {goal.name}</p>
         </div>
       )}
     </div>
@@ -313,11 +339,13 @@ type DefectCardProps = {
   defect: Defect;
   onClick: (defect: Defect) => void;
   getEmployeeById: (id: string) => any;
+  getAppById: (id: string) => any;
+  allTags: any[];
 };
 
-function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
+function DefectCard({ defect, onClick, getEmployeeById, getAppById, allTags }: DefectCardProps) {
   const [{ isDragging }, drag] = useDrag({
-    type: 'DEFECT',
+    type: 'TASK',
     item: { taskId: defect.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging()
@@ -327,6 +355,7 @@ function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
   const { showToast } = useToast();
 
   const assignee = getEmployeeById(defect.assignedTo);
+  const defectApp = getAppById(defect.applicationId);
 
   const severityColors: Record<string, string> = {
     blocker: 'bg-[rgba(153,27,27,0.2)] text-[#991b1b]',
@@ -360,6 +389,14 @@ function DefectCard({ defect, onClick, getEmployeeById }: DefectCardProps) {
         </div>
       </div>
       <p className="text-xs text-[#6b6b80] mb-2 line-clamp-2">{defect.module || defect.description}</p>
+      <div className="mb-2">
+        <TagBadges tagIds={(defect as any).tags} allTags={allTags} />
+      </div>
+      {defectApp && (
+        <div className="mb-2 pt-2 border-t border-[rgba(220,38,38,0.15)]">
+          <p className="text-xs text-[#6b6b80] truncate">{defectApp.name}</p>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <span className={`text-xs font-medium px-2 py-1 ${severityColors[defect.severity]}`}>
           {defect.severity.toUpperCase()}

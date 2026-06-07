@@ -19,11 +19,13 @@ import {
   Trash2,
   Edit2,
   Eye,
-  Mail
+  Mail,
+  Tag as TagIcon
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
+import { TagBadges } from './TagBadges';
 
 function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
@@ -48,7 +50,9 @@ export function ActionPointsPage() {
     getGoalById,
     getAppById,
     getEmployeeById,
-    sendActionPointNotification
+    sendActionPointNotification,
+    tags,
+    getTagsForApp
   } = useApp();
 
   const canManage = hasPermission('manage_action_points');
@@ -62,6 +66,7 @@ export function ActionPointsPage() {
   }));
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
+  const [filterTag, setFilterTag] = useState<string>('all');
   const [view, setView] = useState<'list' | 'review'>('list');
   const [formData, setFormData] = useState({
     title: '',
@@ -72,7 +77,8 @@ export function ActionPointsPage() {
     notes: '',
     date: '',
     linkType: 'new' as 'new' | 'existing',
-    existingTaskId: ''
+    existingTaskId: '',
+    tags: [] as string[]
   });
 
   const [multiGoalId, setMultiGoalId] = useState('');
@@ -85,12 +91,13 @@ export function ActionPointsPage() {
     priority: 'low' | 'medium' | 'high' | 'urgent';
     notes: string;
     existingTaskId: string;
+    tags: string[];
   }[]>([]);
 
   const resetForm = () => {
     setFormData({
       title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', notes: '',
-      date: '', linkType: 'new', existingTaskId: ''
+      date: '', linkType: 'new', existingTaskId: '', tags: [] as string[]
     });
     setMultiRows([]);
     setMultiGoalId('');
@@ -114,6 +121,7 @@ export function ActionPointsPage() {
     const filtered = actionPoints.filter(ap => {
       if (filterStatus !== 'all' && ap.status !== filterStatus) return false;
       if (filterGoal !== 'all' && ap.goalId !== filterGoal) return false;
+      if (filterTag !== 'all' && !ap.tags?.includes(filterTag)) return false;
       return true;
     });
 
@@ -130,7 +138,7 @@ export function ActionPointsPage() {
         weekStart: parseISO(weekKey),
         items
       }));
-  }, [actionPoints, filterStatus, filterGoal]);
+  }, [actionPoints, filterStatus, filterGoal, filterTag]);
 
   const weeklyReview = useMemo(() => {
     const currentWeek = getWeekStart();
@@ -174,7 +182,7 @@ export function ActionPointsPage() {
 
   const addMultiRow = () => {
     setMultiRows(prev => [...prev, {
-      title: '', description: '', assignedTo: [], priority: 'medium' as const, notes: ''
+      title: '', description: '', assignedTo: [], priority: 'medium' as const, notes: '', tags: [] as string[]
     }]);
   };
 
@@ -201,6 +209,7 @@ export function ActionPointsPage() {
           weekStart: getWeekStart(),
           createdBy: currentUser.id,
           notes: row.notes,
+          tags: row.tags,
           taskId: row.existingTaskId || undefined,
           date: multiDate ? new Date(multiDate) : new Date()
         });
@@ -215,6 +224,7 @@ export function ActionPointsPage() {
         weekStart: getWeekStart(),
           createdBy: currentUser.id,
           notes: formData.notes,
+          tags: formData.tags,
         taskId: formData.linkType === 'existing' ? formData.existingTaskId : undefined,
         date: formData.date ? new Date(formData.date) : new Date()
       });
@@ -421,6 +431,37 @@ export function ActionPointsPage() {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.goalId ? getTagsForApp(getGoalById(formData.goalId)?.appId || '') : tags).map(tag => {
+                      const selected = formData.tags.includes(tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            tags: prev.tags.includes(tag.id)
+                              ? prev.tags.filter(id => id !== tag.id)
+                              : [...prev.tags, tag.id]
+                          }))}
+                          className={`px-3 py-1.5 text-sm border-2 transition ${
+                            selected
+                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
+                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                          }`}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                    {tags.length === 0 && (
+                      <p className="text-xs text-[#6b6b80]">No tags available</p>
+                    )}
                   </div>
                 </div>
 
@@ -648,6 +689,36 @@ export function ActionPointsPage() {
                         </div>
                       </div>
 
+                      <div>
+                        <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Tags</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(multiGoalId ? getTagsForApp(getGoalById(multiGoalId)?.appId || '') : tags).map(tag => {
+                            const selected = row.tags?.includes(tag.id);
+                            return (
+                              <button
+                                key={tag.id}
+                                type="button"
+                                onClick={() => {
+                                  const currentTags = row.tags || [];
+                                  updateMultiRow(idx, 'tags',
+                                    currentTags.includes(tag.id)
+                                      ? currentTags.filter(id => id !== tag.id)
+                                      : [...currentTags, tag.id]
+                                  );
+                                }}
+                                className={`px-2 py-1 text-xs border transition ${
+                                  selected
+                                    ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff]'
+                                    : 'bg-[#12121a] border-[rgba(0,229,255,0.1)] text-[#f0f0f5]'
+                                }`}
+                              >
+                                {tag.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Priority</label>
@@ -772,6 +843,11 @@ export function ActionPointsPage() {
                             {app.name}
                           </span>
                         )}
+                        {ap.tags && ap.tags.length > 0 && (
+                          <div className="mt-0.5">
+                            <TagBadges tagIds={ap.tags} allTags={tags} size="xs" />
+                          </div>
+                        )}
                         {ap.status === 'carried_over' && (
                           <span className="text-xs text-[#f59e0b] flex items-center gap-1 mt-0.5">
                             <ArrowRight className="w-3 h-3" />
@@ -846,6 +922,17 @@ export function ActionPointsPage() {
           >
             <option value="all">All Goals</option>
             {goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center gap-1 bg-[#1a1a2e] px-3 py-1.5 border border-[rgba(0,229,255,0.1)]">
+          <TagIcon className="w-3.5 h-3.5 text-[#6b6b80]" />
+          <select
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+            className="bg-transparent text-[#f0f0f5] text-xs border-none outline-none"
+          >
+            <option value="all">All Tags</option>
+            {tags.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
       </div>
@@ -932,6 +1019,9 @@ export function ActionPointsPage() {
                               >
                                 {app.name}
                               </span>
+                            )}
+                            {ap.tags && ap.tags.length > 0 && (
+                              <TagBadges tagIds={ap.tags} allTags={tags} size="xs" />
                             )}
                           </div>
                           {ap.description && (
