@@ -377,6 +377,7 @@ function RolesTab() {
     'view_assigned_only',
     'report_defects',
     'manage_defects',
+    'handle_defects',
     'verify_defects',
     'manage_action_points'
   ];

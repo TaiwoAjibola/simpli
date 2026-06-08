@@ -41,6 +41,12 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown';
   const getAppName = (id: string) => apps.find(a => a.id === id)?.name || 'Unknown';
 
+  const allowedStatuses = (() => {
+    if (hasPermission('manage_defects')) return ['open', 'in_progress', 'pending_qa', 'resolved', 'closed'] as DefectStatus[];
+    if (hasPermission('handle_defects')) return ['open', 'in_progress', 'pending_qa'] as DefectStatus[];
+    return [];
+  })();
+
   const statusColors: Record<DefectStatus, string> = {
     open: 'bg-[#dc2626]',
     in_progress: 'bg-[#f97316]',
@@ -65,7 +71,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
 
   const handleVerifyFix = async () => {
     if (!currentUser) return;
-    await updateDefect(defect.id, { fixVerified: true }, currentUser.id, currentUser.name);
+    await updateDefect(defect.id, { fixVerified: true, status: 'closed' }, currentUser.id, currentUser.name);
   };
 
   const handleReopen = async () => {
@@ -267,11 +273,11 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
               <div>
                 <label className="text-xs text-[#6b6b80] uppercase tracking-wider mb-2 block">Change Status</label>
                 <div className="flex flex-wrap gap-2">
-                  {(['open', 'in_progress', 'pending_qa', 'resolved', 'closed'] as DefectStatus[]).map(status => (
+                  {allowedStatuses.map(status => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
-                      disabled={defect.status === status || !hasPermission('manage_defects')}
+                      disabled={defect.status === status}
                       className={`px-3 py-1.5 text-sm ${statusColors[status]} text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
                     >
                       {status.replace('_', ' ')}
