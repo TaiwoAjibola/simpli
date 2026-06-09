@@ -907,6 +907,7 @@ export function TasksModule() {
                 getGoalById={getGoalById}
                 getAppById={getAppById}
                 getEmployeeById={getEmployeeById}
+                allTags={tags}
               />
           ))}
         </div>
@@ -1016,6 +1017,7 @@ type TaskCardProps = {
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   getEmployeeById: (id: string) => any;
+  allTags: any[];
 };
 
 function TaskCard({
@@ -1031,7 +1033,8 @@ function TaskCard({
   canDelete,
   getGoalById,
   getAppById,
-  getEmployeeById
+  getEmployeeById,
+  allTags
 }: TaskCardProps) {
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
@@ -1182,7 +1185,7 @@ function TaskCard({
             </span>
           </div>
 
-          <TagBadges tagIds={task.tags} allTags={tags} />
+          <TagBadges tagIds={task.tags} allTags={allTags} />
 
           {task.status === 'completed' && !task.approvedBy && canApprove && (
             <button
