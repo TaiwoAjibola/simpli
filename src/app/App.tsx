@@ -1,25 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/LoginPage';
 import { Navigation } from './components/Navigation';
-import { Dashboard } from './components/Dashboard';
-import { KanbanBoard } from './components/KanbanBoard';
-import { MyWork } from './components/MyWork';
-import { AdminPanel } from './components/AdminPanel';
-import { AppsModule } from './components/AppsModule';
-import { GoalsModule } from './components/GoalsMilestonesModule';
-import { TasksModule } from './components/TasksModule';
-import { ActivitiesPage } from './components/ActivitiesPage';
-import { AnalyticsPage } from './components/AnalyticsPage';
-import { TimelinePage } from './components/TimelinePage';
-import { ArchivePage } from './components/ArchivePage';
-import { DefectDashboard } from './components/DefectDashboard';
-import { AppDetailsPage } from './components/AppDetailsPage';
-import { ActionPointsPage } from './components/ActionPointsPage';
 import { PageLoader } from './components/PageLoader';
 import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
+
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const KanbanBoard = lazy(() => import('./components/KanbanBoard').then(m => ({ default: m.KanbanBoard })));
+const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.MyWork })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const AppsModule = lazy(() => import('./components/AppsModule').then(m => ({ default: m.AppsModule })));
+const GoalsModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsModule })));
+const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
+const ActivitiesPage = lazy(() => import('./components/ActivitiesPage').then(m => ({ default: m.ActivitiesPage })));
+const AnalyticsPage = lazy(() => import('./components/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const TimelinePage = lazy(() => import('./components/TimelinePage').then(m => ({ default: m.TimelinePage })));
+const ArchivePage = lazy(() => import('./components/ArchivePage').then(m => ({ default: m.ArchivePage })));
+const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
+const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
+const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -44,20 +45,22 @@ function AppContent() {
     <div className="h-screen flex bg-[#0a0a0f]">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
-        {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-        {currentPage === 'my-work' && <MyWork />}
-        {currentPage === 'kanban' && <KanbanBoard />}
-        {currentPage === 'analytics' && <AnalyticsPage />}
-        {currentPage === 'timeline' && <TimelinePage />}
-        {currentPage === 'archive' && <ArchivePage />}
-        {currentPage === 'defects' && <DefectDashboard />}
-        {currentPage === 'activities' && <ActivitiesPage />}
-        {currentPage === 'apps' && <AppsModule onNavigate={handleNavigate} />}
-        {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
-        {currentPage === 'goals' && <GoalsModule />}
-        {currentPage === 'tasks' && <TasksModule />}
-        {currentPage === 'action-points' && <ActionPointsPage />}
-        {currentPage === 'admin' && <AdminPanel />}
+        <Suspense fallback={<PageLoader message="Loading..." />}>
+          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          {currentPage === 'my-work' && <MyWork />}
+          {currentPage === 'kanban' && <KanbanBoard />}
+          {currentPage === 'analytics' && <AnalyticsPage />}
+          {currentPage === 'timeline' && <TimelinePage />}
+          {currentPage === 'archive' && <ArchivePage />}
+          {currentPage === 'defects' && <DefectDashboard />}
+          {currentPage === 'activities' && <ActivitiesPage />}
+          {currentPage === 'apps' && <AppsModule onNavigate={handleNavigate} />}
+          {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
+          {currentPage === 'goals' && <GoalsModule />}
+          {currentPage === 'tasks' && <TasksModule />}
+          {currentPage === 'action-points' && <ActionPointsPage />}
+          {currentPage === 'admin' && <AdminPanel />}
+        </Suspense>
       </main>
     </div>
   );
