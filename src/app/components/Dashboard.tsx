@@ -47,7 +47,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     : 0;
 
   const activeApps = apps.filter(p => p.status === 'active');
-  const recentActivities = activities.slice(0, 8);
+  const viewedActivities = canViewAll
+    ? activities
+    : activities.filter(a =>
+        a.relatedTo?.type === 'task'
+          ? getTasksForEmployee(currentUser!.id).some(t => t.id === a.relatedTo!.id)
+          : true
+      );
+  const recentActivities = viewedActivities.slice(0, 8);
 
   const priorityTasks = myTasks
     .filter(t => t.status !== 'approved' && t.priority === 'urgent')

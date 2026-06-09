@@ -38,7 +38,7 @@ export function ActivitiesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Activities</h1>
-          <p className="text-[#6b6b80]">{activities.length} total activities</p>
+          <p className="text-[#6b6b80]">{filteredActivities.length} total activities</p>
         </div>
       </div>
 

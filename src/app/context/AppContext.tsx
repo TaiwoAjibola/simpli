@@ -652,11 +652,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
     const taskId = `task-${Date.now()}`;
-    await setDoc(doc(db, 'tasks', taskId), {
+    await setDoc(doc(db, 'tasks', taskId), sanitizeForFirestore({
       ...task,
       id: taskId,
       createdAt: serverTimestamp()
-    });
+    }));
     setTasks(prev => [{ ...task, id: taskId, createdAt: new Date() } as Task, ...prev]);
     const assigneeNames = task.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
     await addActivity({
@@ -1185,7 +1185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     let linkedTaskId = ap.taskId;
 
-    if (!linkedTaskId) {
+    if (!linkedTaskId && ap.goalId) {
       const task = await addTask({
         name: ap.title,
         description: ap.description || '',

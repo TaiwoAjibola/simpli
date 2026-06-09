@@ -45,6 +45,7 @@ export function ActionPointsPage() {
     tasks,
     employees,
     addActionPoint,
+    apps,
     updateActionPoint,
     deleteActionPoint,
     getGoalById,
@@ -67,6 +68,7 @@ export function ActionPointsPage() {
   const [filterStatus, setFilterStatus] = useState<ActionPointStatus | 'all'>('all');
   const [filterGoal, setFilterGoal] = useState<string>('all');
   const [filterTag, setFilterTag] = useState<string>('all');
+  const [tagAppId, setTagAppId] = useState<string>('');
   const [view, setView] = useState<'list' | 'review'>('list');
   const [formData, setFormData] = useState({
     title: '',
@@ -436,8 +438,25 @@ export function ActionPointsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tags</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <select
+                      value={tagAppId}
+                      onChange={(e) => setTagAppId(e.target.value)}
+                      className="w-full px-2 py-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                    >
+                      <option value="">All tags</option>
+                      {apps.map(app => (
+                        <option key={app.id} value={app.id}>{app.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex flex-wrap gap-2">
-                    {(formData.goalId ? getTagsForApp(getGoalById(formData.goalId)?.appId || '') : tags).map(tag => {
+                    {(formData.goalId
+                      ? getTagsForApp(getGoalById(formData.goalId)?.appId || '')
+                      : tagAppId
+                        ? getTagsForApp(tagAppId)
+                        : tags
+                    ).map(tag => {
                       const selected = formData.tags.includes(tag.id);
                       return (
                         <button
@@ -691,8 +710,25 @@ export function ActionPointsPage() {
 
                       <div>
                         <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Tags</label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <select
+                            value={tagAppId}
+                            onChange={(e) => setTagAppId(e.target.value)}
+                            className="w-full px-2 py-1 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                          >
+                            <option value="">All tags</option>
+                            {apps.map(app => (
+                              <option key={app.id} value={app.id}>{app.name}</option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {(multiGoalId ? getTagsForApp(getGoalById(multiGoalId)?.appId || '') : tags).map(tag => {
+                          {(multiGoalId
+                            ? getTagsForApp(getGoalById(multiGoalId)?.appId || '')
+                            : tagAppId
+                              ? getTagsForApp(tagAppId)
+                              : tags
+                          ).map(tag => {
                             const selected = row.tags?.includes(tag.id);
                             return (
                               <button
