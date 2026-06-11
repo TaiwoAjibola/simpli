@@ -379,7 +379,8 @@ function RolesTab() {
     'manage_defects',
     'handle_defects',
     'verify_defects',
-    'manage_action_points'
+    'manage_action_points',
+    'manage_modules'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {

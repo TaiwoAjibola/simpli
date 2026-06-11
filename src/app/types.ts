@@ -20,7 +20,8 @@ export type Permission =
   | 'manage_defects'
   | 'handle_defects'
   | 'verify_defects'
-  | 'manage_action_points';
+  | 'manage_action_points'
+  | 'manage_modules';
 
 export type Employee = {
   id: string;
@@ -64,9 +65,18 @@ export type Phase = {
   createdBy: string;
 };
 
+export type Module = {
+  id: string;
+  appId: string;
+  name: string;
+  status: 'open' | 'closed';
+  createdAt: Date;
+  createdBy: string;
+};
+
 export type ModuleExpectation = {
   id: string;
-  phaseId: string;
+  moduleId: string;
   description: string;
   status: ExpectationStatus;
   taskId?: string;

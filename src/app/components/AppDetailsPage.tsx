@@ -17,9 +17,10 @@ import {
   PauseCircle,
   Link,
   Unlink,
-  Flag
+  Flag,
+  ClipboardCheck
 } from 'lucide-react';
-import { Phase, ModuleExpectation } from '../types';
+import { Phase } from '../types';
 
 type AppDetailsPageProps = {
   appId: string;
@@ -27,12 +28,14 @@ type AppDetailsPageProps = {
 };
 
 export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
-  const { apps, phases, goals, tasks, addPhase, updatePhase, deletePhase, getEmployeeById, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForPhase, getGoalById } = useApp();
+  const { apps, phases, goals, tasks, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set());
-  const [newExpectationText, setNewExpectationText] = useState('');
+  const [showModules, setShowModules] = useState(false);
+  const [moduleFormName, setModuleFormName] = useState('');
+  const [newExpText, setNewExpText] = useState<Record<string, string>>({});
   const [linkingExpId, setLinkingExpId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -405,191 +408,209 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                         </div>
                       )}
                     </div>
-
-                    <div className="border-t border-[rgba(0,229,255,0.1)] pt-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-[#f0f0f5]">Expectations</h4>
-                      </div>
-                      {(() => {
-                        const phaseExps = getExpectationsForPhase(phase.id);
-                        const achieved = phaseExps.filter(e => e.status === 'achieved').length;
-                        return (
-                          <>
-                            {phaseExps.length > 0 && (
-                              <div className="flex items-center gap-2 mb-3">
-                                <div className="flex-1 h-1.5 bg-[#1a1a2e] rounded-full overflow-hidden">
-                                  <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${(achieved / phaseExps.length) * 100}%` }} />
-                                </div>
-                                <span className="text-xs text-[#6b6b80] whitespace-nowrap">{achieved}/{phaseExps.length} achieved</span>
-                              </div>
-                            )}
-                            <div className="space-y-2 mb-3">
-                              {phaseExps.map(exp => (
-                                <div key={exp.id} className="flex items-start gap-3 p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.05)]">
-                                  <button
-                                    onClick={() => updateExpectation(exp.id, {
-                                      status: exp.status === 'achieved' ? 'pending' : 'achieved'
-                                    })}
-                                    className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${
-                                      exp.status === 'achieved'
-                                        ? 'bg-[#10b981] border-[#10b981] text-white'
-                                        : exp.status === 'missed'
-                                          ? 'bg-[#ff3b5c] border-[#ff3b5c] text-white'
-                                          : 'border-[#6b6b80] hover:border-[#00e5ff]'
-                                    }`}
-                                  >
-                                    {(exp.status === 'achieved' || exp.status === 'missed') && (
-                                      exp.status === 'achieved' ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />
-                                    )}
-                                  </button>
-                                  <div className="flex-1 min-w-0">
-                                    <p className={`text-sm ${exp.status === 'missed' ? 'text-[#ff3b5c] line-through' : 'text-[#f0f0f5]'}`}>
-                                      {exp.description}
-                                    </p>
-                                    <div className="flex items-center gap-3 mt-1">
-                                      {exp.taskId && (
-                                        <span className="text-xs text-[#00e5ff] flex items-center gap-1">
-                                          <Link className="w-3 h-3" />
-                                          {tasks.find(t => t.id === exp.taskId)?.name || 'Unknown task'}
-                                        </span>
-                                      )}
-                                      <span className={`text-xs px-1.5 py-0.5 ${
-                                        exp.status === 'achieved' ? 'text-[#10b981]' :
-                                        exp.status === 'missed' ? 'text-[#ff3b5c]' :
-                                        'text-[#6b6b80]'
-                                      }`}>
-                                        {exp.status}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {hasPermission('create_app') && (
-                                      <>
-                                        <button
-                                          onClick={() => setLinkingExpId(linkingExpId === exp.id ? null : exp.id)}
-                                          className={`p-1 rounded ${exp.taskId ? 'text-[#10b981]' : 'text-[#6b6b80]'} hover:bg-[rgba(0,229,255,0.1)]`}
-                                          title={exp.taskId ? 'Change linked task' : 'Link to task'}
-                                        >
-                                          <Link className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => updateExpectation(exp.id, {
-                                            status: exp.status === 'missed' ? 'pending' : 'missed'
-                                          })}
-                                          className="p-1 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
-                                          title="Mark as missed"
-                                        >
-                                          <Flag className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => deleteExpectation(exp.id)}
-                                          className="p-1 text-[#6b6b80] hover:text-[#ff3b5c] rounded"
-                                          title="Delete"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                              {phaseExps.length === 0 && (
-                                <p className="text-sm text-[#6b6b80] text-center py-3">No expectations yet. Add your first one below.</p>
-                              )}
-                            </div>
-                            {hasPermission('create_app') && (
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={newExpectationText}
-                                  onChange={(e) => setNewExpectationText(e.target.value)}
-                                  placeholder="What do you hope to achieve?"
-                                  className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && newExpectationText.trim() && currentUser) {
-                                      e.preventDefault();
-                                      addExpectation({
-                                        phaseId: phase.id,
-                                        description: newExpectationText.trim(),
-                                        status: 'pending',
-                                        createdBy: currentUser.id
-                                      });
-                                      setNewExpectationText('');
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={() => {
-                                    if (newExpectationText.trim() && currentUser) {
-                                      addExpectation({
-                                        phaseId: phase.id,
-                                        description: newExpectationText.trim(),
-                                        status: 'pending',
-                                        createdBy: currentUser.id
-                                      });
-                                      setNewExpectationText('');
-                                    }
-                                  }}
-                                  disabled={!newExpectationText.trim()}
-                                  className="px-3 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium disabled:opacity-50"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-                            )}
-                            {linkingExpId && (() => {
-                              const linkingExp = phaseExps.find(e => e.id === linkingExpId);
-                              return (
-                              <div className="mt-2 p-3 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-medium text-[#f0f0f5]">Link to Task</span>
-                                  <button onClick={() => setLinkingExpId(null)} className="text-xs text-[#6b6b80] hover:text-[#f0f0f5]">Close</button>
-                                </div>
-                                <div className="max-h-32 overflow-y-auto space-y-1">
-                                  {(() => {
-                                    const phaseGoalIds = new Set(goals.filter(g => g.phaseId === phase.id).map(g => g.id));
-                                    const phaseTasks = tasks.filter(t => phaseGoalIds.has(t.goalId || ''));
-                                    return phaseTasks.length > 0 ? phaseTasks.map(t => (
-                                      <button
-                                        key={t.id}
-                                        onClick={() => {
-                                          updateExpectation(linkingExpId, { taskId: t.id });
-                                          setLinkingExpId(null);
-                                        }}
-                                        className="w-full text-left px-2 py-1.5 text-sm text-[#f0f0f5] hover:bg-[rgba(0,229,255,0.1)] rounded flex items-center gap-2"
-                                      >
-                                        <CheckSquare className="w-3 h-3 text-[#6b6b80]" />
-                                        <span className="truncate">{t.name}</span>
-                                      </button>
-                                    )) : (
-                                      <p className="text-xs text-[#6b6b80] py-2">No tasks in this phase yet</p>
-                                    );
-                                  })()}
-                                </div>
-                                {linkingExp?.taskId && (
-                                  <button
-                                    onClick={() => {
-                                      updateExpectation(linkingExpId, { taskId: undefined as any });
-                                      setLinkingExpId(null);
-                                    }}
-                                    className="mt-2 flex items-center gap-1 text-xs text-[#ff3b5c] hover:underline"
-                                  >
-                                    <Unlink className="w-3 h-3" /> Unlink current task
-                                  </button>
-                                )}
-                              </div>
-                              );
-                            })()}
-                          </>
-                        );
-                      })()}
-                    </div>
                   </div>
                 </div>
               )}
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-8 border-t border-[rgba(0,229,255,0.1)] pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="w-5 h-5 text-[#00e5ff]" />
+            <h2 className="text-xl font-bold text-[#f0f0f5]">Modules</h2>
+          </div>
+          {hasPermission('manage_modules') && (
+            <button
+              onClick={() => setShowModules(!showModules)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+            >
+              <Plus className="w-4 h-4" />
+              {showModules ? 'Cancel' : 'New Module'}
+            </button>
+          )}
+        </div>
+
+        {showModules && hasPermission('manage_modules') && currentUser && (
+          <div className="mb-4 p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] flex gap-2">
+            <input
+              type="text"
+              value={moduleFormName}
+              onChange={(e) => setModuleFormName(e.target.value)}
+              placeholder="Module name..."
+              className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && moduleFormName.trim()) {
+                  addModule({ appId, name: moduleFormName.trim(), status: 'open', createdBy: currentUser.id });
+                  setModuleFormName('');
+                  setShowModules(false);
+                }
+              }}
+            />
+            <button
+              onClick={() => {
+                if (moduleFormName.trim()) {
+                  addModule({ appId, name: moduleFormName.trim(), status: 'open', createdBy: currentUser.id });
+                  setModuleFormName('');
+                  setShowModules(false);
+                }
+              }}
+              disabled={!moduleFormName.trim()}
+              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium disabled:opacity-50"
+            >
+              Create
+            </button>
+          </div>
+        )}
+
+        {(() => {
+          const appModules = getModulesForApp(appId);
+          return appModules.length === 0 ? (
+            <p className="text-sm text-[#6b6b80] text-center py-6">No modules yet for this app</p>
+          ) : (
+            <div className="space-y-3">
+              {appModules.map(mod => {
+                const modExps = getExpectationsForModule(mod.id);
+                const modAchieved = modExps.filter(e => e.status === 'achieved').length;
+                return (
+                  <div key={mod.id} className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-[#f0f0f5]">{mod.name}</h3>
+                        <span className={`text-[10px] px-1.5 py-0.5 ${mod.status === 'open' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' : 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'}`}>
+                          {mod.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {modExps.length > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-16 h-1 bg-[#1a1a2e] rounded-full overflow-hidden">
+                              <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${(modAchieved / modExps.length) * 100}%` }} />
+                            </div>
+                            <span className="text-xs text-[#6b6b80]">{modAchieved}/{modExps.length}</span>
+                          </div>
+                        )}
+                        {hasPermission('manage_modules') && (
+                          <button onClick={() => deleteModule(mod.id)} className="p-1 text-[#6b6b80] hover:text-[#ff3b5c]">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {modExps.map(exp => (
+                        <div key={exp.id} className="flex items-start gap-2 p-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.03)]">
+                          <button
+                            onClick={() => updateExpectation(exp.id, { status: exp.status === 'achieved' ? 'pending' : 'achieved' })}
+                            className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                              exp.status === 'achieved' ? 'bg-[#10b981] border-[#10b981] text-white' :
+                              exp.status === 'missed' ? 'bg-[#ff3b5c] border-[#ff3b5c] text-white' :
+                              'border-[#6b6b80] hover:border-[#00e5ff]'
+                            }`}
+                          >
+                            {(exp.status === 'achieved' || exp.status === 'missed') && (
+                              exp.status === 'achieved' ? <CheckCircle className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />
+                            )}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs ${exp.status === 'missed' ? 'text-[#ff3b5c] line-through' : 'text-[#f0f0f5]'}`}>
+                              {exp.description}
+                            </p>
+                            {exp.taskId && (
+                              <span className="text-[10px] text-[#00e5ff] flex items-center gap-0.5 mt-0.5">
+                                <Link className="w-2.5 h-2.5" /> {tasks.find(t => t.id === exp.taskId)?.name || 'Unknown'}
+                              </span>
+                            )}
+                          </div>
+                          {hasPermission('manage_modules') && (
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              <button
+                                onClick={() => setLinkingExpId(linkingExpId === exp.id ? null : exp.id)}
+                                className={`p-0.5 ${exp.taskId ? 'text-[#10b981]' : 'text-[#6b6b80]'} hover:text-[#00e5ff]`}
+                              >
+                                <Link className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => updateExpectation(exp.id, { status: exp.status === 'missed' ? 'pending' : 'missed' })}
+                                className="p-0.5 text-[#6b6b80] hover:text-[#ff3b5c]"
+                              >
+                                <Flag className="w-3 h-3" />
+                              </button>
+                              <button onClick={() => deleteExpectation(exp.id)} className="p-0.5 text-[#6b6b80] hover:text-[#ff3b5c]">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                          {linkingExpId === exp.id && (
+                            <div className="absolute mt-5 right-0 z-10 w-56 p-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] shadow-lg">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-[#f0f0f5] font-medium">Link to Task</span>
+                                <button onClick={() => setLinkingExpId(null)} className="text-xs text-[#6b6b80]">Close</button>
+                              </div>
+                              <div className="max-h-24 overflow-y-auto space-y-0.5">
+                                {(() => {
+                                  const appGoalIds = new Set(goals.filter(g => g.appId === appId).map(g => g.id));
+                                  const appTasks = tasks.filter(t => appGoalIds.has(t.goalId || ''));
+                                  return appTasks.length > 0 ? appTasks.map(t => (
+                                    <button
+                                      key={t.id}
+                                      onClick={() => { updateExpectation(exp.id, { taskId: t.id }); setLinkingExpId(null); }}
+                                      className="w-full text-left px-2 py-1 text-xs text-[#f0f0f5] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                                    >
+                                      {t.name}
+                                    </button>
+                                  )) : <p className="text-xs text-[#6b6b80] py-1">No tasks</p>;
+                                })()}
+                              </div>
+                              {exp.taskId && (
+                                <button onClick={() => { updateExpectation(exp.id, { taskId: undefined as any }); setLinkingExpId(null); }}
+                                  className="mt-1 flex items-center gap-1 text-[10px] text-[#ff3b5c] hover:underline">
+                                  <Unlink className="w-2.5 h-2.5" /> Unlink
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <div className="flex gap-1.5 pt-1">
+                        <input
+                          type="text"
+                          value={newExpText[mod.id] || ''}
+                          onChange={(e) => setNewExpText(prev => ({ ...prev, [mod.id]: e.target.value }))}
+                          placeholder="What do you hope to achieve?"
+                          className="flex-1 px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (newExpText[mod.id] || '').trim() && currentUser) {
+                              addExpectation({ moduleId: mod.id, description: (newExpText[mod.id] || '').trim(), status: 'pending', createdBy: currentUser.id });
+                              setNewExpText(prev => ({ ...prev, [mod.id]: '' }));
+                            }
+                          }}
+                        />
+                        {hasPermission('manage_modules') && (
+                          <button
+                            onClick={() => {
+                              if ((newExpText[mod.id] || '').trim() && currentUser) {
+                                addExpectation({ moduleId: mod.id, description: (newExpText[mod.id] || '').trim(), status: 'pending', createdBy: currentUser.id });
+                                setNewExpText(prev => ({ ...prev, [mod.id]: '' }));
+                              }
+                            }}
+                            disabled={!(newExpText[mod.id] || '').trim()}
+                            className="px-2 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-xs font-medium disabled:opacity-50"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

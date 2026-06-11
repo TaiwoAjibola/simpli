@@ -21,6 +21,7 @@ const ArchivePage = lazy(() => import('./components/ArchivePage').then(m => ({ d
 const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
 const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
+const ModuleTracker = lazy(() => import('./components/ModuleTracker').then(m => ({ default: m.ModuleTracker })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -59,6 +60,7 @@ function AppContent() {
           {currentPage === 'goals' && <GoalsModule />}
           {currentPage === 'tasks' && <TasksModule />}
           {currentPage === 'action-points' && <ActionPointsPage />}
+          {currentPage === 'module-tracker' && <ModuleTracker />}
           {currentPage === 'admin' && <AdminPanel />}
         </Suspense>
       </main>
