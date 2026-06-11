@@ -1,4 +1,5 @@
 export type TaskStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed' | 'approved';
+export type ExpectationStatus = 'pending' | 'achieved' | 'missed';
 
 export type Role = {
   id: string;
@@ -61,6 +62,17 @@ export type Phase = {
   endDate?: Date;
   createdAt: Date;
   createdBy: string;
+};
+
+export type ModuleExpectation = {
+  id: string;
+  phaseId: string;
+  description: string;
+  status: ExpectationStatus;
+  taskId?: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: Date;
 };
 
 export type Goal = {

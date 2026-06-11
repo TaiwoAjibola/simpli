@@ -36,7 +36,8 @@ import {
   Defect,
   Phase,
   ActionPoint,
-  Tag
+  Tag,
+  ModuleExpectation
 } from '../types';
 
 type AppContextType = {
@@ -52,6 +53,7 @@ type AppContextType = {
   comments: Comment[];
   defects: Defect[];
   phases: Phase[];
+  expectations: ModuleExpectation[];
   actionPoints: ActionPoint[];
   tags: Tag[];
   loading: boolean;
@@ -100,6 +102,10 @@ type AppContextType = {
   deletePhase: (phaseId: string) => Promise<void>;
   getPhasesForApp: (appId: string) => Phase[];
   getPhaseById: (phaseId: string) => Phase | undefined;
+  addExpectation: (exp: Omit<ModuleExpectation, 'id' | 'createdAt'>) => Promise<void>;
+  updateExpectation: (expId: string, updates: Partial<ModuleExpectation>) => Promise<void>;
+  deleteExpectation: (expId: string) => Promise<void>;
+  getExpectationsForPhase: (phaseId: string) => ModuleExpectation[];
   addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => Promise<void>;
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
@@ -244,6 +250,20 @@ function docToPhase(doc: any): Phase {
   };
 }
 
+function docToModuleExpectation(doc: any): ModuleExpectation {
+  const data = doc.data() || doc;
+  return {
+    id: data.id || doc.id,
+    phaseId: data.phaseId || '',
+    description: data.description || '',
+    status: data.status || 'pending',
+    taskId: data.taskId,
+    notes: data.notes,
+    createdBy: data.createdBy || '',
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
 function docToTag(doc: any): Tag {
   const data = doc.data();
   return {
@@ -280,6 +300,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [defects, setDefects] = useState<Defect[]>([]);
   const [phases, setPhases] = useState<Phase[]>([]);
+  const [expectations, setExpectations] = useState<ModuleExpectation[]>([]);
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,6 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: query(collection(db, 'comments'), orderBy('timestamp', 'desc')), setter: setComments, transformer: docToComment },
       { ref: collection(db, 'defects'), setter: setDefects, transformer: docToDefect },
       { ref: collection(db, 'phases'), setter: setPhases, transformer: docToPhase },
+      { ref: collection(db, 'moduleExpectations'), setter: setExpectations, transformer: docToModuleExpectation },
       { ref: collection(db, 'tags'), setter: setTags, transformer: docToTag },
       { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint }
     ];
@@ -1179,6 +1201,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return phases.find(p => p.id === phaseId);
   }, [phases]);
 
+  const addExpectation = useCallback(async (exp: Omit<ModuleExpectation, 'id' | 'createdAt'>) => {
+    const expId = `exp-${Date.now()}`;
+    await setDoc(doc(db, 'moduleExpectations', expId), {
+      ...exp,
+      id: expId,
+      createdAt: serverTimestamp()
+    });
+    setExpectations(prev => [{ ...exp, id: expId, createdAt: new Date() } as ModuleExpectation, ...prev]);
+  }, []);
+
+  const updateExpectation = useCallback(async (expId: string, updates: Partial<ModuleExpectation>) => {
+    await updateDoc(doc(db, 'moduleExpectations', expId), sanitizeForFirestore(updates));
+  }, []);
+
+  const deleteExpectation = useCallback(async (expId: string) => {
+    await deleteDoc(doc(db, 'moduleExpectations', expId));
+    setExpectations(prev => prev.filter(e => e.id !== expId));
+  }, []);
+
+  const getExpectationsForPhase = useCallback((phaseId: string) => {
+    return expectations.filter(e => e.phaseId === phaseId);
+  }, [expectations]);
+
   const addActionPoint = useCallback(async (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => {
     const apId = `ap-${Date.now()}`;
     const now = new Date();
@@ -1309,6 +1354,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deletePhase,
         getPhasesForApp,
         getPhaseById,
+        expectations,
+        addExpectation,
+        updateExpectation,
+        deleteExpectation,
+        getExpectationsForPhase,
         actionPoints,
         addActionPoint,
         updateActionPoint,
