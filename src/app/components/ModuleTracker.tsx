@@ -157,7 +157,7 @@ export function ModuleTracker() {
                       <div className="w-24 h-1.5 bg-[#1a1a2e] rounded-full overflow-hidden">
                         <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${(achievedModExps / totalModExps.length) * 100}%` }} />
                       </div>
-                      <span className="text-xs text-[#6b6b80] whitespace-nowrap">{achievedModExps}/{totalModExps.length}</span>
+                      <span className="text-xs text-[#6b6b80] whitespace-nowrap">{achievedModExps.length}/{totalModExps.length}</span>
                     </div>
                   )}
                 </button>
