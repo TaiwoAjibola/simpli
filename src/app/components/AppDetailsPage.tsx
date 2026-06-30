@@ -44,7 +44,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     status: 'planned' as Phase['status'],
     stage: 'pre-development' as Phase['stage'],
     startDate: '',
-    endDate: ''
+    endDate: '',
+    sprintCount: '',
+    techStack: '',
+    qaCriteria: '',
+    deploymentTarget: ''
   });
 
   const app = apps.find(a => a.id === appId);
@@ -57,6 +61,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     if (editingPhase) {
       await updatePhase(editingPhase.id, {
         ...formData,
+        sprintCount: formData.sprintCount ? parseInt(formData.sprintCount) : undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
@@ -66,12 +71,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         ...formData,
         appId,
         createdBy: currentUser.id,
+        sprintCount: formData.sprintCount ? parseInt(formData.sprintCount) : undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
     }
 
-    setFormData({ name: '', details: '', notes: '', status: 'planned', startDate: '', endDate: '' });
+    setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
     setShowAddPhase(false);
   };
 
@@ -84,7 +90,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       status: phase.status,
       stage: phase.stage,
       startDate: phase.startDate ? phase.startDate.toISOString().split('T')[0] : '',
-      endDate: phase.endDate ? phase.endDate.toISOString().split('T')[0] : ''
+      endDate: phase.endDate ? phase.endDate.toISOString().split('T')[0] : '',
+      sprintCount: phase.sprintCount ? String(phase.sprintCount) : '',
+      techStack: phase.techStack || '',
+      qaCriteria: phase.qaCriteria || '',
+      deploymentTarget: phase.deploymentTarget || ''
     });
     setShowAddPhase(true);
   };
@@ -167,6 +177,14 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         }`}>
           {app.status}
         </span>
+        <span className={`text-xs px-3 py-1 ${
+          app.currentStage === 'pre-development' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' :
+          app.currentStage === 'development' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' :
+          'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+        }`}>
+          {app.currentStage === 'pre-development' ? 'Pre-Development' :
+           app.currentStage === 'development' ? 'Development' : 'Post-Development'}
+        </span>
       </div>
 
       <div className="flex items-center justify-between mb-6">
@@ -176,7 +194,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             onClick={() => {
               setShowAddPhase(!showAddPhase);
               setEditingPhase(null);
-    setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '' });
+    setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
           >
@@ -228,6 +246,55 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 <option value="post-development">Post-Development</option>
               </select>
             </div>
+            {formData.stage === 'development' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Sprint Count</label>
+                  <input
+                    type="number"
+                    value={formData.sprintCount}
+                    onChange={(e) => setFormData({ ...formData, sprintCount: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    placeholder="e.g. 6"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tech Stack</label>
+                  <input
+                    type="text"
+                    value={formData.techStack}
+                    onChange={(e) => setFormData({ ...formData, techStack: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    placeholder="e.g. React, Node.js, PostgreSQL"
+                  />
+                </div>
+              </>
+            )}
+            {formData.stage === 'post-development' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">QA Criteria</label>
+                  <input
+                    type="text"
+                    value={formData.qaCriteria}
+                    onChange={(e) => setFormData({ ...formData, qaCriteria: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    placeholder="e.g. All critical bugs resolved, 95% test coverage"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Deployment Target</label>
+                  <input
+                    type="text"
+                    value={formData.deploymentTarget}
+                    onChange={(e) => setFormData({ ...formData, deploymentTarget: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    placeholder="e.g. Production v2.0, Staging v1.5"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
               <input
@@ -334,6 +401,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                   {phase.notes && !isExpanded && (
                     <p className="text-xs text-[#8b5cf6] mt-0.5 italic truncate">Note: {phase.notes}</p>
                   )}
+                  {!isExpanded && phase.stage === 'development' && (phase.sprintCount || phase.techStack) && (
+                    <p className="text-[10px] text-[#10b981] mt-0.5">
+                      {phase.sprintCount && `${phase.sprintCount} sprints`}
+                      {phase.sprintCount && phase.techStack && ' · '}
+                      {phase.techStack && phase.techStack}
+                    </p>
+                  )}
+                  {!isExpanded && phase.stage === 'post-development' && (phase.qaCriteria || phase.deploymentTarget) && (
+                    <p className="text-[10px] text-[#8b5cf6] mt-0.5">
+                      {phase.deploymentTarget || phase.qaCriteria}
+                    </p>
+                  )}
                 </div>
 
                 {hasPermission('create_app') && (
@@ -367,6 +446,38 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                       <div className="p-3 bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.1)]">
                         <h4 className="text-xs font-medium text-[#8b5cf6] mb-1">Notes</h4>
                         <p className="text-sm text-[#8b5cf6] whitespace-pre-wrap italic">{phase.notes}</p>
+                      </div>
+                    )}
+                    {phase.stage === 'development' && (phase.sprintCount || phase.techStack) && (
+                      <div className="grid grid-cols-2 gap-3 p-3 bg-[rgba(16,185,129,0.05)] border border-[rgba(16,185,129,0.1)]">
+                        {phase.sprintCount && (
+                          <div>
+                            <span className="text-[10px] font-medium text-[#10b981] uppercase">Sprints</span>
+                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.sprintCount}</p>
+                          </div>
+                        )}
+                        {phase.techStack && (
+                          <div>
+                            <span className="text-[10px] font-medium text-[#10b981] uppercase">Tech Stack</span>
+                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.techStack}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {phase.stage === 'post-development' && (phase.qaCriteria || phase.deploymentTarget) && (
+                      <div className="grid grid-cols-2 gap-3 p-3 bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.1)]">
+                        {phase.qaCriteria && (
+                          <div>
+                            <span className="text-[10px] font-medium text-[#8b5cf6] uppercase">QA Criteria</span>
+                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.qaCriteria}</p>
+                          </div>
+                        )}
+                        {phase.deploymentTarget && (
+                          <div>
+                            <span className="text-[10px] font-medium text-[#8b5cf6] uppercase">Deployment Target</span>
+                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.deploymentTarget}</p>
+                          </div>
+                        )}
                       </div>
                     )}
 

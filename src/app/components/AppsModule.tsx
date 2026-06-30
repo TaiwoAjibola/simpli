@@ -27,6 +27,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     name: '',
     description: '',
     status: 'active' as 'active' | 'completed' | 'on_hold',
+    currentStage: 'pre-development' as 'pre-development' | 'development' | 'post-development',
     color: '#00e5ff',
     cardStyle: 'default' as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal'
   });
@@ -55,6 +56,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
       name: app.name,
       description: app.description,
       status: app.status,
+      currentStage: app.currentStage || 'pre-development',
       color: app.color || '#00e5ff',
       cardStyle: app.cardStyle || 'default'
     });
@@ -87,7 +89,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
             onClick={() => {
               setShowForm(!showForm);
               setEditingApp(null);
-              setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
+              setFormData({ name: '', description: '', status: 'active', currentStage: 'pre-development', color: '#00e5ff', cardStyle: 'default' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
@@ -145,6 +147,24 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Current Stage</label>
+              <select
+                value={formData.currentStage}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    currentStage: e.target.value as 'pre-development' | 'development' | 'post-development'
+                  })
+                }
+                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+              >
+                <option value="pre-development">Pre-Development</option>
+                <option value="development">Development</option>
+                <option value="post-development">Post-Development</option>
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Color</label>
@@ -198,7 +218,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 onClick={() => {
                   setShowForm(false);
                   setEditingApp(null);
-                  setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
+    setFormData({ name: '', description: '', status: 'active', currentStage: 'pre-development', color: '#00e5ff', cardStyle: 'default' });
                 }}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
               >

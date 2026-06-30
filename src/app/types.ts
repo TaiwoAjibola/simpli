@@ -48,6 +48,7 @@ export type App = {
   createdAt: Date;
   createdBy: string;
   status: 'active' | 'completed' | 'on_hold';
+  currentStage: 'pre-development' | 'development' | 'post-development';
   color?: string;
   cardStyle?: 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
 };
@@ -60,6 +61,10 @@ export type Phase = {
   notes: string;
   status: 'planned' | 'in_progress' | 'completed' | 'on_hold';
   stage: 'pre-development' | 'development' | 'post-development';
+  sprintCount?: number;
+  techStack?: string;
+  qaCriteria?: string;
+  deploymentTarget?: string;
   startDate?: Date;
   endDate?: Date;
   createdAt: Date;
