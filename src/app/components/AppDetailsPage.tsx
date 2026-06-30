@@ -42,6 +42,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     details: '',
     notes: '',
     status: 'planned' as Phase['status'],
+    stage: 'pre-development' as Phase['stage'],
     startDate: '',
     endDate: ''
   });
@@ -81,6 +82,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       details: phase.details,
       notes: phase.notes,
       status: phase.status,
+      stage: phase.stage,
       startDate: phase.startDate ? phase.startDate.toISOString().split('T')[0] : '',
       endDate: phase.endDate ? phase.endDate.toISOString().split('T')[0] : ''
     });
@@ -120,6 +122,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     in_progress: Clock,
     completed: CheckCircle,
     on_hold: PauseCircle
+  };
+
+  const stageColors: Record<Phase['stage'], string> = {
+    'pre-development': 'bg-[#3b82f6]',
+    'development': 'bg-[#10b981]',
+    'post-development': 'bg-[#8b5cf6]'
+  };
+
+  const stageLabels: Record<Phase['stage'], string> = {
+    'pre-development': 'Pre-Dev',
+    'development': 'Dev',
+    'post-development': 'Post-Dev'
   };
 
   if (!app) {
@@ -162,7 +176,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             onClick={() => {
               setShowAddPhase(!showAddPhase);
               setEditingPhase(null);
-              setFormData({ name: '', details: '', notes: '', status: 'planned', startDate: '', endDate: '' });
+    setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
           >
@@ -200,6 +214,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
                 <option value="on_hold">On Hold</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Stage</label>
+              <select
+                value={formData.stage}
+                onChange={(e) => setFormData({ ...formData, stage: e.target.value as Phase['stage'] })}
+                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+              >
+                <option value="pre-development">Pre-Development</option>
+                <option value="development">Development</option>
+                <option value="post-development">Post-Development</option>
               </select>
             </div>
             <div>
@@ -287,6 +313,9 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                     <h3 className="text-lg font-semibold text-[#f0f0f5]">{phase.name}</h3>
                     <span className={`text-xs px-2 py-0.5 ${statusColors[phase.status]} text-white`}>
                       {phase.status.replace('_', ' ')}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 ${stageColors[phase.stage]} text-white`}>
+                      {stageLabels[phase.stage]}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 mt-1 text-sm text-[#6b6b80]">

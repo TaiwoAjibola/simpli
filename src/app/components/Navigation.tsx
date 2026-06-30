@@ -17,7 +17,8 @@ import {
   Bug,
   Menu,
   X,
-  ClipboardCheck
+  ClipboardCheck,
+  ShieldCheck
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 
@@ -45,7 +46,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
         { id: 'defects', label: 'Defects', icon: Bug, show: true },
         { id: 'action-points', label: 'Action Points', icon: CheckSquare, show: true },
-        { id: 'module-tracker', label: 'Module Tracker', icon: ClipboardCheck, show: true },
+        { id: 'gate-review', label: 'Gate Review', icon: ShieldCheck, show: true },
         { id: 'activities', label: 'Activities', icon: Activity, show: true }
       ]
     },

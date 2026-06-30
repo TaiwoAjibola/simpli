@@ -59,6 +59,7 @@ export type Phase = {
   details: string;
   notes: string;
   status: 'planned' | 'in_progress' | 'completed' | 'on_hold';
+  stage: 'pre-development' | 'development' | 'post-development';
   startDate?: Date;
   endDate?: Date;
   createdAt: Date;
@@ -70,6 +71,7 @@ export type Module = {
   appId: string;
   name: string;
   status: 'open' | 'closed';
+  targetDate?: Date;
   createdAt: Date;
   createdBy: string;
 };

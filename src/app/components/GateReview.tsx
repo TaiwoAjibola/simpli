@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  ClipboardCheck,
+  ShieldCheck,
   Plus,
   Edit2,
   Trash2,
@@ -16,7 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 
-export function ModuleTracker() {
+export function GateReview() {
   const { currentUser, hasPermission } = useAuth();
   const { apps, modules, goals, tasks, expectations, addModule, updateModule, deleteModule, getModulesForApp, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById } = useApp();
   const canManage = hasPermission('manage_modules');
@@ -24,6 +24,7 @@ export function ModuleTracker() {
   const [showForm, setShowForm] = useState(false);
   const [formAppId, setFormAppId] = useState('');
   const [formName, setFormName] = useState('');
+  const [formTargetDate, setFormTargetDate] = useState('');
   const [expandedApps, setExpandedApps] = useState<Set<string>>(new Set());
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [newExpText, setNewExpText] = useState<Record<string, string>>({});
@@ -33,8 +34,15 @@ export function ModuleTracker() {
 
   const handleAddModule = async () => {
     if (!formName.trim() || !formAppId || !currentUser) return;
-    await addModule({ appId: formAppId, name: formName.trim(), status: 'open', createdBy: currentUser.id });
+    await addModule({
+      appId: formAppId,
+      name: formName.trim(),
+      status: 'open',
+      createdBy: currentUser.id,
+      targetDate: formTargetDate ? new Date(formTargetDate) : undefined
+    });
     setFormName('');
+    setFormTargetDate('');
     setShowForm(false);
   };
 
@@ -65,10 +73,10 @@ export function ModuleTracker() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <ClipboardCheck className="w-8 h-8 text-[#00e5ff]" />
-            <h1 className="text-3xl font-bold text-[#f0f0f5]">Module Tracker</h1>
+            <ShieldCheck className="w-8 h-8 text-[#00e5ff]" />
+            <h1 className="text-3xl font-bold text-[#f0f0f5]">Gate Review</h1>
           </div>
-          <p className="text-[#6b6b80]">Track what was promised vs what was delivered for each module</p>
+          <p className="text-[#6b6b80]">Cross-check delivery promises against actual work across the building lifecycle</p>
         </div>
         {canManage && (
           <button
@@ -107,6 +115,15 @@ export function ModuleTracker() {
               onKeyDown={(e) => e.key === 'Enter' && handleAddModule()}
             />
           </div>
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-[#f0f0f5] mb-1">Target Date</label>
+            <input
+              type="date"
+              value={formTargetDate}
+              onChange={(e) => setFormTargetDate(e.target.value)}
+              className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+            />
+          </div>
           <button
             onClick={handleAddModule}
             disabled={!formAppId || !formName.trim()}
@@ -127,7 +144,7 @@ export function ModuleTracker() {
         <div className="text-center py-16 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
           <Layers className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
           <p className="text-[#6b6b80] text-lg mb-2">No active apps</p>
-          <p className="text-[#6b6b80] text-sm">Create an app first to start tracking modules</p>
+          <p className="text-[#6b6b80] text-sm">Create an app first to start gate reviews</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -186,6 +203,11 @@ export function ModuleTracker() {
                                   {mod.status}
                                 </span>
                               </div>
+                              {mod.targetDate && (
+                                <p className="text-[10px] text-[#6b6b80] mt-0.5">
+                                  Target: {mod.targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {modExps.length > 0 && (

@@ -20,7 +20,8 @@ import {
   Edit2,
   Eye,
   Mail,
-  Tag as TagIcon
+  Tag as TagIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ActionPointStatus } from '../types';
@@ -53,7 +54,8 @@ export function ActionPointsPage() {
     getEmployeeById,
     sendActionPointNotification,
     tags,
-    getTagsForApp
+    getTagsForApp,
+    expectations
   } = useApp();
 
   const canManage = hasPermission('manage_action_points');
@@ -895,6 +897,11 @@ export function ActionPointsPage() {
                             <Layers className="w-3 h-3" /> Linked to task
                           </p>
                         )}
+                        {ap.taskId && expectations.some(e => e.taskId === ap.taskId) && (
+                          <span className="text-[10px] text-[#8b5cf6] mt-0.5 inline-flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Gate Review
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1071,6 +1078,11 @@ export function ActionPointsPage() {
                             >
                               <Layers className="w-3 h-3" /> Linked to task
                             </a>
+                          )}
+                          {ap.taskId && expectations.some(e => e.taskId === ap.taskId) && (
+                            <span className="text-[10px] text-[#8b5cf6] mt-1 inline-flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3" /> Gate Review
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1329,6 +1341,11 @@ export function ActionPointsPage() {
               )}
               {viewingActionPoint.taskId && (
                 <p className="text-xs text-[#00e5ff]">Linked to task</p>
+              )}
+              {viewingActionPoint.taskId && expectations.some(e => e.taskId === viewingActionPoint.taskId) && (
+                <p className="text-xs text-[#8b5cf6] flex items-center gap-1 mt-1">
+                  <ShieldCheck className="w-3 h-3" /> Gate Review item
+                </p>
               )}
             </div>
           </div>

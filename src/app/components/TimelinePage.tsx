@@ -6,340 +6,331 @@ import {
   ChevronRight,
   Layers,
   Target,
-  CheckSquare,
   CheckCircle,
+  XCircle,
   Clock,
   AlertCircle,
-  XCircle,
-  Star,
-  Filter
+  Diamond
 } from 'lucide-react';
 import {
   format,
+  startOfQuarter,
+  endOfQuarter,
   startOfMonth,
   endOfMonth,
-  eachDayOfInterval,
+  eachMonthOfInterval,
   differenceInDays,
   addMonths,
   subMonths,
-  isSameDay,
-  isWithinInterval,
-  isToday,
   isPast,
-  isFuture
+  isWithinInterval,
+  max,
+  min
 } from 'date-fns';
 
-export function TimelinePage() {
-  const { apps, goals, tasks, employees } = useApp();
+const stageConfig = {
+  'pre-development': { label: 'Pre-Development', color: 'border-l-[#3b82f6]', headerBg: 'bg-[rgba(59,130,246,0.08)]', badge: 'bg-[#3b82f6]' },
+  'development': { label: 'Development', color: 'border-l-[#10b981]', headerBg: 'bg-[rgba(16,185,129,0.08)]', badge: 'bg-[#10b981]' },
+  'post-development': { label: 'Post-Development', color: 'border-l-[#8b5cf6]', headerBg: 'bg-[rgba(139,92,246,0.08)]', badge: 'bg-[#8b5cf6]' }
+};
+
+const statusColors: Record<string, string> = {
+  not_started: '#6b6b80',
+  in_progress: '#00e5ff',
+  blocked: '#ff3b5c',
+  completed: '#8b5cf6',
+  approved: '#10b981'
+};
+
+export function TimelinePage({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const { apps, phases, goals, tasks, modules, expectations } = useApp();
   const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || '');
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'month' | 'quarter'>('month');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
+
+  const qStart = startOfQuarter(currentDate);
+  const qEnd = endOfQuarter(currentDate);
+  const totalDays = differenceInDays(qEnd, qStart) + 1;
+
+  const months = eachMonthOfInterval({ start: qStart, end: qEnd });
 
   const selectedApp = apps.find(a => a.id === selectedAppId);
-  const appGoals = goals.filter(g => g.appId === selectedAppId);
-  const appGoalIds = appGoals.map(g => g.id);
-  let appTasks = tasks.filter(t => appGoalIds.includes(t.goalId));
 
-  if (filterStatus !== 'all') {
-    appTasks = appTasks.filter(t => t.status === filterStatus);
-  }
-
-  const startDate = viewMode === 'month' ? startOfMonth(currentMonth) : startOfMonth(subMonths(currentMonth, 2));
-  const endDate = viewMode === 'month' ? endOfMonth(currentMonth) : endOfMonth(addMonths(currentMonth, 0));
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-  const statusColors: Record<string, string> = {
-    not_started: 'bg-[#6b6b80]',
-    in_progress: 'bg-[#00e5ff]',
-    blocked: 'bg-[#ff3b5c]',
-    completed: 'bg-[#8b5cf6]',
-    approved: 'bg-[#10b981]'
-  };
-
-  const statusIcons: Record<string, any> = {
-    not_started: XCircle,
-    in_progress: Clock,
-    blocked: AlertCircle,
-    completed: CheckCircle,
-    approved: CheckCircle
-  };
-
-  const timelineItems = useMemo(() => {
-    const items: Array<{
-      id: string;
-      type: 'goal' | 'task';
-      name: string;
-      startDate: Date | null;
-      endDate: Date | null;
-      status: string;
-      priority: string;
-      assignedTo: string[];
-      goalName?: string;
-    }> = [];
-
-    appGoals.forEach(goal => {
-      if (goal.startDate || goal.endDate) {
-        items.push({
-          id: goal.id,
-          type: 'goal',
-          name: goal.name,
-          startDate: goal.startDate || null,
-          endDate: goal.endDate || null,
-          status: 'goal',
-          priority: '',
-          assignedTo: []
-        });
-      }
-    });
-
-    appTasks.forEach(task => {
-      const goal = goals.find(g => g.id === task.goalId);
-      const start = task.startDate || task.createdAt;
-      const end = task.endDate || task.dueDate || null;
-
-      items.push({
-        id: task.id,
-        type: 'task',
-        name: task.name,
-        startDate: start || null,
-        endDate: end,
-        status: task.status,
-        priority: task.priority,
-        assignedTo: task.assignedTo,
-        goalName: goal?.name
+  const appPhases = useMemo(() => {
+    if (!selectedAppId) return [];
+    return phases
+      .filter(p => p.appId === selectedAppId)
+      .sort((a, b) => {
+        const stageOrder = { 'pre-development': 0, 'development': 1, 'post-development': 2 };
+        const sa = stageOrder[a.stage], sb = stageOrder[b.stage];
+        if (sa !== sb) return sa - sb;
+        return (a.startDate?.getTime() || 0) - (b.startDate?.getTime() || 0);
       });
-    });
+  }, [phases, selectedAppId]);
 
-    return items.filter(item => item.startDate && isWithinInterval(item.startDate, { start: startDate, end: endDate }));
-  }, [appGoals, appTasks, startDate, endDate]);
+  const appModules = useMemo(() => {
+    if (!selectedAppId) return [];
+    return modules.filter(m => m.appId === selectedAppId && m.targetDate);
+  }, [modules, selectedAppId]);
 
-  const getBarPosition = (itemStart: Date | null, itemEnd: Date | null) => {
-    if (!itemStart) return { left: '0%', width: '0%' };
-    const totalDays = differenceInDays(endDate, startDate) + 1;
-    const startOffset = differenceInDays(itemStart, startDate);
-    const left = Math.max(0, (startOffset / totalDays) * 100);
-
-    let width: number;
-    if (itemEnd) {
-      const duration = differenceInDays(itemEnd, itemStart) + 1;
-      width = (duration / totalDays) * 100;
-    } else {
-      width = (1 / totalDays) * 100;
-    }
-
-    return { left: `${left}%`, width: `${Math.max(width, 1)}%` };
+  const getDateLeft = (d: Date) => {
+    const offset = differenceInDays(d, qStart);
+    return `${Math.max(0, (offset / totalDays) * 100)}%`;
   };
 
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, viewMode === 'month' ? 1 : 3));
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, viewMode === 'month' ? 1 : 3));
-  const goToToday = () => setCurrentMonth(new Date());
+  const getBarStyle = (start?: Date, end?: Date, fillPct?: number) => {
+    if (!start) return { left: '0%', width: '0%' };
+    const s = differenceInDays(start, qStart);
+    const e = end ? differenceInDays(end, qStart) : s + 14;
+    const left = Math.max(0, (s / totalDays) * 100);
+    const width = Math.max(1, ((e - s + 1) / totalDays) * 100);
+    return { left: `${left}%`, width: `${width}%` };
+  };
+
+  const prevQuarter = () => setCurrentDate(subMonths(currentDate, 3));
+  const nextQuarter = () => setCurrentDate(addMonths(currentDate, 3));
+  const goToToday = () => setCurrentDate(new Date());
+
+  if (!selectedApp) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Goal Timeline</h1>
+            <p className="text-[#6b6b80]">Phase-swimlane view of goals, milestones, and progress by quarter</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <select value={selectedAppId} onChange={(e) => setSelectedAppId(e.target.value)}
+              className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm">
+              <option value="">Select app...</option>
+              {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+          <Calendar className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
+          <p className="text-[#6b6b80]">Select an app to view the goal timeline</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Timeline</h1>
-          <p className="text-[#6b6b80]">Visualize project schedule and deadlines</p>
+          <div className="flex items-center gap-3 mb-2">
+            <Calendar className="w-8 h-8 text-[#00e5ff]" />
+            <h1 className="text-3xl font-bold text-[#f0f0f5]">Goal Timeline</h1>
+          </div>
+          <p className="text-[#6b6b80]">Phase-swimlane view of goals, milestones, and progress by quarter</p>
         </div>
         <div className="flex items-center gap-3">
-          <select
-            value={selectedAppId}
-            onChange={(e) => setSelectedAppId(e.target.value)}
-            className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
-          >
-            {apps.map(app => (
-              <option key={app.id} value={app.id}>{app.name}</option>
-            ))}
+          <select value={selectedAppId} onChange={(e) => setSelectedAppId(e.target.value)}
+            className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm">
+            {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-
-          <div className="flex items-center bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-            <button
-              onClick={() => setViewMode('month')}
-              className={`px-3 py-2 text-sm ${viewMode === 'month' ? 'text-[#00e5ff]' : 'text-[#6b6b80]'}`}
-            >
-              Month
-            </button>
-            <button
-              onClick={() => setViewMode('quarter')}
-              className={`px-3 py-2 text-sm ${viewMode === 'quarter' ? 'text-[#00e5ff]' : 'text-[#6b6b80]'}`}
-            >
-              Quarter
-            </button>
-          </div>
-
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+          <button
+            onClick={() => setShowMilestonesOnly(!showMilestonesOnly)}
+            className={`px-3 py-2 text-sm border ${showMilestonesOnly ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border-[#00e5ff]' : 'bg-[#12121a] text-[#6b6b80] border-[rgba(0,229,255,0.1)]'}`}
           >
-            <option value="all">All Status</option>
-            <option value="not_started">Not Started</option>
-            <option value="in_progress">In Progress</option>
-            <option value="blocked">Blocked</option>
-            <option value="completed">Completed</option>
-            <option value="approved">Approved</option>
-          </select>
+            <Diamond className="w-3.5 h-3.5 inline mr-1" />
+            Milestones
+          </button>
         </div>
       </div>
 
-      {!selectedApp && (
-        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <Calendar className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
-          <p className="text-[#6b6b80]">Select an app to view timeline</p>
-        </div>
-      )}
-
-      {selectedApp && (
-        <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <div className="flex items-center justify-between p-4 border-b border-[rgba(0,229,255,0.1)]">
-            <button onClick={prevMonth} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
-              <ChevronLeft className="w-5 h-5 text-[#f0f0f5]" />
-            </button>
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-[#f0f0f5]">
-                {format(startDate, 'MMMM yyyy')}
-                {viewMode === 'quarter' && ` - ${format(endDate, 'MMMM yyyy')}`}
-              </h2>
-              <button
-                onClick={goToToday}
-                className="px-3 py-1 text-sm bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)] hover:bg-[rgba(0,229,255,0.2)]"
-              >
-                Today
-              </button>
-            </div>
-            <button onClick={nextMonth} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
-              <ChevronRight className="w-5 h-5 text-[#f0f0f5]" />
+      <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+        <div className="flex items-center justify-between p-4 border-b border-[rgba(0,229,255,0.1)]">
+          <button onClick={prevQuarter} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
+            <ChevronLeft className="w-5 h-5 text-[#f0f0f5]" />
+          </button>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-[#f0f0f5]">
+              {format(qStart, 'MMM yyyy')} - {format(qEnd, 'MMM yyyy')}
+            </h2>
+            <button onClick={goToToday}
+              className="px-3 py-1 text-sm bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)] hover:bg-[rgba(0,229,255,0.2)]">
+              Today
             </button>
           </div>
+          <button onClick={nextQuarter} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
+            <ChevronRight className="w-5 h-5 text-[#f0f0f5]" />
+          </button>
+        </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
-              <div className="flex border-b border-[rgba(0,229,255,0.1)]">
-                <div className="w-64 flex-shrink-0 p-3 bg-[#1a1a2e] border-r border-[rgba(0,229,255,0.1)]">
-                  <span className="text-sm font-medium text-[#f0f0f5]">Item</span>
-                </div>
-                <div className="flex-1 flex">
-                  {days.map((day, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex-1 min-w-[40px] p-2 text-center text-xs border-r border-[rgba(0,229,255,0.05)] ${
-                        isToday(day) ? 'bg-[rgba(0,229,255,0.05)]' : ''
-                      }`}
-                    >
-                      <span className={`font-medium ${isToday(day) ? 'text-[#00e5ff]' : 'text-[#6b6b80]'}`}>
-                        {format(day, 'd')}
-                      </span>
-                      <span className="block text-[#6b6b80] opacity-50">{format(day, 'EEE')}</span>
+        <div className="flex">
+          <div className="w-56 flex-shrink-0 border-r border-[rgba(0,229,255,0.1)]">
+            <div className="h-10 border-b border-[rgba(0,229,255,0.1)]" />
+            {months.map(m => (
+              <div key={m.toISOString()} className="h-10 border-b border-[rgba(0,229,255,0.05)] flex items-center px-3">
+                <span className="text-xs font-medium text-[#6b6b80]">{format(m, 'MMMM')}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-x-auto">
+            <div className="min-w-[600px]">
+              <div className="flex h-10 border-b border-[rgba(0,229,255,0.1)] relative">
+                {months.map(m => {
+                  const mStart = startOfMonth(m);
+                  const mEnd = endOfMonth(m);
+                  const left = getDateLeft(mStart);
+                  const width = getDateLeft(mEnd);
+                  return (
+                    <div key={m.toISOString()} className="absolute top-0 bottom-0 border-r border-[rgba(0,229,255,0.1)]"
+                      style={{ left, width }}>
+                      <span className="text-[10px] text-[#6b6b80] px-1">{format(m, 'MMM')}</span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
 
-              <div className="max-h-[600px] overflow-y-auto">
-                {timelineItems.length === 0 && (
+              <div className="divide-y divide-[rgba(0,229,255,0.05)]">
+                {appPhases.length === 0 && (
                   <div className="p-12 text-center">
-                    <Calendar className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-                    <p className="text-[#6b6b80]">No items with dates in this period</p>
+                    <Layers className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
+                    <p className="text-[#6b6b80]">No phases defined for this app</p>
                   </div>
                 )}
+                {appPhases.map(phase => {
+                  const phaseGoals = goals.filter(g => g.phaseId === phase.id);
+                  const goalIds = new Set(phaseGoals.map(g => g.id));
+                  const phaseTasks = tasks.filter(t => t.goalId && goalIds.has(t.goalId));
+                  const totalTasks = phaseTasks.length;
+                  const doneTasks = phaseTasks.filter(t => t.status === 'approved' || t.status === 'completed').length;
+                  const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-                {timelineItems.map(item => {
-                  const pos = getBarPosition(item.startDate, item.endDate);
-                  const Icon = item.type === 'goal' ? Target : (statusIcons[item.status] || CheckSquare);
-                  const color = item.type === 'goal' ? 'bg-[#8b5cf6]' : statusColors[item.status];
-                  const isOverdue = item.endDate && isPast(item.endDate) && item.status !== 'approved' && item.status !== 'completed';
+                  if (showMilestonesOnly && !appModules.some(m => isWithinInterval(m.targetDate!, { start: qStart, end: qEnd }))) {
+                    return null;
+                  }
 
                   return (
-                    <div key={item.id} className="flex border-b border-[rgba(0,229,255,0.05)] hover:bg-[rgba(255,255,255,0.02)]">
-                      <div className="w-64 flex-shrink-0 p-3 border-r border-[rgba(0,229,255,0.1)]">
-                        <div className="flex items-center gap-2">
-                          <Icon className={`w-4 h-4 ${item.type === 'goal' ? 'text-[#8b5cf6]' : color.replace('bg-', 'text-')}`} />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-[#f0f0f5] truncate">{item.name}</p>
-                            {item.goalName && (
-                              <p className="text-xs text-[#6b6b80] truncate">{item.goalName}</p>
-                            )}
+                    <div key={phase.id} className={`${stageConfig[phase.stage].headerBg}`}>
+                      <div className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(0,229,255,0.05)]">
+                        <div className={`w-1 h-8 ${stageConfig[phase.stage].color}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-[#f0f0f5]">{phase.name}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 text-white ${stageConfig[phase.stage].badge}`}>
+                              {stageConfig[phase.stage].label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] text-[#6b6b80] mt-0.5">
+                            <span>{phaseGoals.length} goals</span>
+                            <span>{totalTasks} tasks</span>
+                            {phase.startDate && <span>{format(phase.startDate, 'MMM d')} → {phase.endDate ? format(phase.endDate, 'MMM d') : '-'}</span>}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          {item.priority && (
-                            <span className={`text-xs px-1.5 py-0.5 ${
-                              item.priority === 'urgent' ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
-                              item.priority === 'high' ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
-                              item.priority === 'medium' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' :
-                              'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
-                            }`}>
-                              {item.priority}
-                            </span>
-                          )}
-                          {isOverdue && (
-                            <span className="text-xs px-1.5 py-0.5 bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]">Overdue</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1 relative">
-                        <div className="absolute inset-0 flex">
-                          {days.map((day, idx) => (
-                            <div
-                              key={idx}
-                              className={`flex-1 min-w-[40px] border-r border-[rgba(0,229,255,0.03)] ${
-                                isToday(day) ? 'bg-[rgba(0,229,255,0.03)]' : ''
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        {item.startDate && (
-                          <div
-                            className={`absolute top-2 bottom-2 rounded ${color} ${isOverdue ? 'opacity-60' : 'opacity-80'} hover:opacity-100 transition cursor-pointer`}
-                            style={{ left: pos.left, width: pos.width }}
-                            title={`${item.name}: ${item.startDate ? format(item.startDate, 'MMM d') : ''} - ${item.endDate ? format(item.endDate, 'MMM d') : 'No end date'}`}
-                          >
-                            <div className="px-2 py-1 h-full flex items-center">
-                              <span className="text-xs text-white font-medium truncate block">
-                                {item.startDate && format(item.startDate, 'MMM d')}
-                                {item.endDate && ` - ${format(item.endDate, 'MMM d')}`}
-                              </span>
+                        {totalTasks > 0 && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-1.5 bg-[#1a1a2e] rounded-full overflow-hidden">
+                              <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${pct}%` }} />
                             </div>
+                            <span className="text-xs text-[#6b6b80]">{pct}%</span>
                           </div>
                         )}
                       </div>
+
+                      {!showMilestonesOnly && phaseGoals.map(goal => {
+                        const goalTasks = tasks.filter(t => t.goalId === goal.id);
+                        const gDone = goalTasks.filter(t => t.status === 'approved' || t.status === 'completed').length;
+                        const gPct = goalTasks.length > 0 ? Math.round((gDone / goalTasks.length) * 100) : 0;
+                        const bar = getBarStyle(goal.startDate, goal.endDate, gPct);
+                        const isOverdue = goal.endDate && isPast(goal.endDate);
+
+                        return (
+                          <div key={goal.id} className="flex items-center ml-8 border-t border-[rgba(0,229,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
+                            <div className="w-48 flex-shrink-0 px-3 py-2">
+                              <div className="flex items-center gap-1.5">
+                                <Target className="w-3 h-3 text-[#8b5cf6] flex-shrink-0" />
+                                <span className="text-xs text-[#f0f0f5] truncate">{goal.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-[#6b6b80]">{gDone}/{goalTasks.length} tasks</span>
+                                {isOverdue && <span className="text-[10px] text-[#ff3b5c]">Overdue</span>}
+                              </div>
+                            </div>
+                            <div className="flex-1 relative h-8">
+                              {goal.startDate && (
+                                <div className="absolute top-1 bottom-1 rounded flex items-center overflow-hidden cursor-pointer"
+                                  style={{ left: bar.left, width: bar.width, backgroundColor: `${statusColors.approved}30` }}>
+                                  <div className="h-full bg-[#10b981] rounded-l"
+                                    style={{ width: `${gPct}%` }} />
+                                  <span className="absolute inset-0 flex items-center px-1.5 text-[10px] text-[#f0f0f5] truncate">
+                                    {goal.name} {gPct}%
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {appModules.filter(m => m.targetDate).map(mod => {
+                        if (!isWithinInterval(mod.targetDate!, { start: qStart, end: qEnd })) return null;
+                        const modExps = expectations.filter(e => e.moduleId === mod.id);
+                        const achieved = modExps.filter(e => e.status === 'achieved').length;
+                        const diamondColor = modExps.length > 0 && achieved === modExps.length ? '#10b981' :
+                          modExps.some(e => e.status === 'missed') ? '#ff3b5c' : '#f59e0b';
+                        return (
+                          <div key={mod.id} className="flex items-center ml-8 border-t border-[rgba(0,229,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
+                            <div className="w-48 flex-shrink-0 px-3 py-2">
+                              <div className="flex items-center gap-1.5">
+                                <Diamond className="w-3 h-3 flex-shrink-0" style={{ color: diamondColor }} />
+                                <span className="text-xs text-[#f0f0f5] truncate">{mod.name}</span>
+                              </div>
+                              <span className="text-[10px] text-[#6b6b80]">{achieved}/{modExps.length} achieved</span>
+                            </div>
+                            <div className="flex-1 relative h-8">
+                              <button className="absolute top-2" style={{ left: getDateLeft(mod.targetDate!) }}
+                                onClick={() => onNavigate?.('gate-review')}
+                                title={`${mod.name} - ${achieved}/${modExps.length} achieved. Click to open Gate Review`}>
+                                <div className="flex flex-col items-center">
+                                  <Diamond className="w-4 h-4" style={{ color: diamondColor }} fill={diamondColor} />
+                                  <span className="text-[9px] text-[#6b6b80] whitespace-nowrap">{format(mod.targetDate!, 'MMM d')}</span>
+                                </div>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })}
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="p-4 border-t border-[rgba(0,229,255,0.1)] flex items-center gap-4 text-xs text-[#6b6b80]">
-            <span className="font-medium">Legend:</span>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#6b6b80] rounded" />
-              <span>Not Started</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#00e5ff] rounded" />
-              <span>In Progress</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#ff3b5c] rounded" />
-              <span>Blocked</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#8b5cf6] rounded" />
-              <span>Completed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#10b981] rounded" />
-              <span>Approved</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-[#8b5cf6] rounded" />
-              <span>Goal</span>
-            </div>
+        <div className="p-4 border-t border-[rgba(0,229,255,0.1)] flex items-center gap-4 text-xs text-[#6b6b80]">
+          <span className="font-medium">Legend:</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-[#3b82f6] rounded" />
+            <span>Pre-Dev</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-[#10b981] rounded" />
+            <span>Dev</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 bg-[#8b5cf6] rounded" />
+            <span>Post-Dev</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Diamond className="w-3 h-3 text-[#10b981]" />
+            <span>Achieved</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Diamond className="w-3 h-3 text-[#f59e0b]" />
+            <span>Pending</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Diamond className="w-3 h-3 text-[#ff3b5c]" />
+            <span>Missed</span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

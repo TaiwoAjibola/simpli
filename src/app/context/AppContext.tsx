@@ -264,6 +264,7 @@ function docToModule(doc: any): Module {
     appId: data.appId || '',
     name: data.name || '',
     status: data.status || 'open',
+    targetDate: safeDate(data.targetDate),
     createdBy: data.createdBy || '',
     createdAt: safeDate(data.createdAt) || new Date()
   };
