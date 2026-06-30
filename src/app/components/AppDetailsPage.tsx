@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -28,7 +28,7 @@ type AppDetailsPageProps = {
 };
 
 export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
-  const { apps, phases, goals, tasks, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById } = useApp();
+  const { apps, phases, goals, tasks, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
@@ -50,9 +50,17 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     qaCriteria: '',
     deploymentTarget: ''
   });
+  const [planningNotesText, setPlanningNotesText] = useState('');
 
   const app = apps.find(a => a.id === appId);
   const appPhases = phases.filter(p => p.appId === appId);
+  const currentStagePhases = appPhases.filter(p => p.stage === app?.currentStage);
+
+  useEffect(() => {
+    if (app) {
+      setPlanningNotesText(app.planningNotes || '');
+    }
+  }, [app]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,175 +195,190 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         </span>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#f0f0f5]">Phases ({appPhases.length})</h2>
-        {hasPermission('create_app') && (
-          <button
-            onClick={() => {
-              setShowAddPhase(!showAddPhase);
-              setEditingPhase(null);
-    setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
-          >
-            <Plus className="w-4 h-4" />
-            Add Phase
-          </button>
-        )}
-      </div>
-
-      {(showAddPhase || editingPhase) && (
-        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
-          <h3 className="text-lg font-medium text-[#f0f0f5]">
-            {editingPhase ? 'Edit Phase' : 'New Phase'}
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-                placeholder="e.g. MVP1, Phase 2, Beta"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Status</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as Phase['status'] })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+      {app.currentStage === 'pre-development' ? (
+        <>
+          <div className="flex items-center gap-2 mb-6">
+            <ClipboardCheck className="w-5 h-5 text-[#3b82f6]" />
+            <h2 className="text-xl font-bold text-[#f0f0f5]">Planning Notes</h2>
+          </div>
+          <div className="p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+            <textarea
+              value={planningNotesText}
+              onChange={(e) => setPlanningNotesText(e.target.value)}
+              className="w-full bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] p-4 h-48 resize-none outline-none"
+              placeholder="Record meeting notes, requirements discussions, research findings, and planning decisions..."
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => updateApp(appId, { planningNotes: planningNotesText })}
+                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
               >
-                <option value="planned">Planned</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="on_hold">On Hold</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Stage</label>
-              <select
-                value={formData.stage}
-                onChange={(e) => setFormData({ ...formData, stage: e.target.value as Phase['stage'] })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-              >
-                <option value="pre-development">Pre-Development</option>
-                <option value="development">Development</option>
-                <option value="post-development">Post-Development</option>
-              </select>
-            </div>
-            {formData.stage === 'development' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Sprint Count</label>
-                  <input
-                    type="number"
-                    value={formData.sprintCount}
-                    onChange={(e) => setFormData({ ...formData, sprintCount: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-                    placeholder="e.g. 6"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tech Stack</label>
-                  <input
-                    type="text"
-                    value={formData.techStack}
-                    onChange={(e) => setFormData({ ...formData, techStack: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-                    placeholder="e.g. React, Node.js, PostgreSQL"
-                  />
-                </div>
-              </>
-            )}
-            {formData.stage === 'post-development' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">QA Criteria</label>
-                  <input
-                    type="text"
-                    value={formData.qaCriteria}
-                    onChange={(e) => setFormData({ ...formData, qaCriteria: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-                    placeholder="e.g. All critical bugs resolved, 95% test coverage"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Deployment Target</label>
-                  <input
-                    type="text"
-                    value={formData.deploymentTarget}
-                    onChange={(e) => setFormData({ ...formData, deploymentTarget: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-                    placeholder="e.g. Production v2.0, Staging v1.5"
-                  />
-                </div>
-              </>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</label>
-              <textarea
-                value={formData.details}
-                onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-24 resize-none"
-                placeholder="Describe the scope, objectives, and key deliverables of this phase..."
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-16 resize-none"
-                placeholder="Additional notes, reminders, or observations..."
-              />
+                Save Notes
+              </button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]">
-              {editingPhase ? 'Update' : 'Create'} Phase
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowAddPhase(false); setEditingPhase(null); }}
-              className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)]"
-            >
-              Cancel
-            </button>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-[#f0f0f5]">
+              {app.currentStage === 'development' ? 'Development Phases' : 'Post-Development Phases'} ({currentStagePhases.length})
+            </h2>
+            {hasPermission('create_app') && (
+              <button
+                onClick={() => {
+                  setShowAddPhase(!showAddPhase);
+                  setEditingPhase(null);
+                  setFormData({ name: '', details: '', notes: '', status: 'planned', stage: app.currentStage, startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+              >
+                <Plus className="w-4 h-4" />
+                {app.currentStage === 'development' ? 'Add Dev Phase' : 'Add Post-Dev Phase'}
+              </button>
+            )}
           </div>
-        </form>
-      )}
 
-      {appPhases.length === 0 && !showAddPhase && (
-        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <Clock className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-          <p className="text-[#6b6b80]">No phases yet. Add your first phase to get started.</p>
-        </div>
-      )}
+          {(showAddPhase || editingPhase) && (
+            <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
+              <h3 className="text-lg font-medium text-[#f0f0f5]">
+                {editingPhase ? 'Edit Phase' : 'New Phase'}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    placeholder="e.g. MVP1, Phase 2, Beta"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as Phase['status'] })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                  >
+                    <option value="planned">Planned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="on_hold">On Hold</option>
+                  </select>
+                </div>
+                {app.currentStage === 'development' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Sprint Count</label>
+                      <input
+                        type="number"
+                        value={formData.sprintCount}
+                        onChange={(e) => setFormData({ ...formData, sprintCount: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        placeholder="e.g. 6"
+                        min="1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tech Stack</label>
+                      <input
+                        type="text"
+                        value={formData.techStack}
+                        onChange={(e) => setFormData({ ...formData, techStack: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        placeholder="e.g. React, Node.js, PostgreSQL"
+                      />
+                    </div>
+                  </>
+                )}
+                {app.currentStage === 'post-development' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">QA Criteria</label>
+                      <input
+                        type="text"
+                        value={formData.qaCriteria}
+                        onChange={(e) => setFormData({ ...formData, qaCriteria: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        placeholder="e.g. All critical bugs resolved, 95% test coverage"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Deployment Target</label>
+                      <input
+                        type="text"
+                        value={formData.deploymentTarget}
+                        onChange={(e) => setFormData({ ...formData, deploymentTarget: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        placeholder="e.g. Production v2.0, Staging v1.5"
+                      />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</label>
+                  <textarea
+                    value={formData.details}
+                    onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-24 resize-none"
+                    placeholder="Describe the scope, objectives, and key deliverables of this phase..."
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-16 resize-none"
+                    placeholder="Additional notes, reminders, or observations..."
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]">
+                  {editingPhase ? 'Update' : 'Create'} Phase
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowAddPhase(false); setEditingPhase(null); }}
+                  className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
 
-      <div className="space-y-4">
-        {appPhases.map(phase => {
+          {currentStagePhases.length === 0 && !showAddPhase && (
+            <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+              <Clock className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
+              <p className="text-[#6b6b80]">No phases yet. Add your first phase to get started.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {currentStagePhases.map(phase => {
           const phaseGoals = goals.filter(g => g.phaseId === phase.id);
           const isExpanded = expandedPhases.has(phase.id);
           const StatusIcon = statusIcons[phase.status];
@@ -554,7 +577,9 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             </div>
           );
         })}
-      </div>
+          </div>
+        </>
+      )}
 
       <div className="mt-8 border-t border-[rgba(0,229,255,0.1)] pt-6">
         <div className="flex items-center justify-between mb-4">

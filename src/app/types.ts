@@ -51,6 +51,7 @@ export type App = {
   currentStage: 'pre-development' | 'development' | 'post-development';
   color?: string;
   cardStyle?: 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
+  planningNotes?: string;
 };
 
 export type Phase = {
