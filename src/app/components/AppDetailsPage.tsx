@@ -54,8 +54,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
   const app = apps.find(a => a.id === appId);
   const appPhases = phases.filter(p => p.appId === appId);
-  const currentStagePhases = appPhases.filter(p => p.stage === app?.currentStage);
-
   useEffect(() => {
     if (app) {
       setPlanningNotesText(app.planningNotes || '');
@@ -83,6 +81,9 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
+      if (formData.stage !== app?.currentStage) {
+        await updateApp(appId, { currentStage: formData.stage as 'pre-development' | 'development' | 'post-development' });
+      }
     }
 
     setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
@@ -185,59 +186,70 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         }`}>
           {app.status}
         </span>
-        <span className={`text-xs px-3 py-1 ${
-          app.currentStage === 'pre-development' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' :
-          app.currentStage === 'development' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' :
-          'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
-        }`}>
-          {app.currentStage === 'pre-development' ? 'Pre-Development' :
-           app.currentStage === 'development' ? 'Development' : 'Post-Development'}
-        </span>
+        <select
+          value={app.currentStage}
+          onChange={(e) => updateApp(appId, { currentStage: e.target.value as 'pre-development' | 'development' | 'post-development' })}
+          className="text-xs px-3 py-1 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none cursor-pointer"
+        >
+          <option value="pre-development">Pre-Development</option>
+          <option value="development">Development</option>
+          <option value="post-development">Post-Development</option>
+        </select>
       </div>
 
-      {app.currentStage === 'pre-development' ? (
-        <>
-          <div className="flex items-center gap-2 mb-6">
-            <ClipboardCheck className="w-5 h-5 text-[#3b82f6]" />
-            <h2 className="text-xl font-bold text-[#f0f0f5]">Planning Notes</h2>
+      {/* Phases */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-[#f0f0f5]">Phases ({appPhases.length})</h2>
+          <select
+            value={app.currentStage}
+            onChange={(e) => updateApp(appId, { currentStage: e.target.value as 'pre-development' | 'development' | 'post-development' })}
+            className={`text-xs px-2 py-1 outline-none cursor-pointer ${
+              app.currentStage === 'pre-development' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' :
+              app.currentStage === 'development' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' :
+              'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+            }`}
+          >
+            <option value="pre-development">Pre-Development</option>
+            <option value="development">Development</option>
+            <option value="post-development">Post-Development</option>
+          </select>
+        </div>
+        {hasPermission('create_app') && (
+          <button
+            onClick={() => {
+              setShowAddPhase(!showAddPhase);
+              setEditingPhase(null);
+              setFormData({ name: '', details: '', notes: '', status: 'planned', stage: app.currentStage, startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+          >
+            <Plus className="w-4 h-4" />
+            Add Phase
+          </button>
+        )}
+      </div>
+
+      {/* Planning Notes - shown when in pre-development */}
+      {app.currentStage === 'pre-development' && (
+        <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+          <h3 className="text-lg font-medium text-[#f0f0f5] mb-4">Planning Notes</h3>
+          <textarea
+            value={planningNotesText}
+            onChange={(e) => setPlanningNotesText(e.target.value)}
+            className="w-full bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] p-4 h-48 resize-none outline-none"
+            placeholder="Record meeting notes, requirements discussions, research findings, and planning decisions..."
+          />
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={() => updateApp(appId, { planningNotes: planningNotesText })}
+              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+            >
+              Save Notes
+            </button>
           </div>
-          <div className="p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-            <textarea
-              value={planningNotesText}
-              onChange={(e) => setPlanningNotesText(e.target.value)}
-              className="w-full bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] p-4 h-48 resize-none outline-none"
-              placeholder="Record meeting notes, requirements discussions, research findings, and planning decisions..."
-            />
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => updateApp(appId, { planningNotes: planningNotesText })}
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
-              >
-                Save Notes
-              </button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#f0f0f5]">
-              {app.currentStage === 'development' ? 'Development Phases' : 'Post-Development Phases'} ({currentStagePhases.length})
-            </h2>
-            {hasPermission('create_app') && (
-              <button
-                onClick={() => {
-                  setShowAddPhase(!showAddPhase);
-                  setEditingPhase(null);
-                  setFormData({ name: '', details: '', notes: '', status: 'planned', stage: app.currentStage, startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
-              >
-                <Plus className="w-4 h-4" />
-                {app.currentStage === 'development' ? 'Add Dev Phase' : 'Add Post-Dev Phase'}
-              </button>
-            )}
-          </div>
+        </div>
+      )}
 
           {(showAddPhase || editingPhase) && (
             <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
@@ -269,7 +281,19 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                     <option value="on_hold">On Hold</option>
                   </select>
                 </div>
-                {app.currentStage === 'development' && (
+                <div>
+                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Stage</label>
+                  <select
+                    value={formData.stage}
+                    onChange={(e) => setFormData({ ...formData, stage: e.target.value as Phase['stage'] })}
+                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                  >
+                    <option value="pre-development">Pre-Development</option>
+                    <option value="development">Development</option>
+                    <option value="post-development">Post-Development</option>
+                  </select>
+                </div>
+                {formData.stage === 'development' && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Sprint Count</label>
@@ -294,7 +318,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                     </div>
                   </>
                 )}
-                {app.currentStage === 'post-development' && (
+                {formData.stage === 'post-development' && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-[#f0f0f5] mb-2">QA Criteria</label>
@@ -370,15 +394,15 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             </form>
           )}
 
-          {currentStagePhases.length === 0 && !showAddPhase && (
-            <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-              <Clock className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-              <p className="text-[#6b6b80]">No phases yet. Add your first phase to get started.</p>
-            </div>
-          )}
+      {appPhases.length === 0 && !showAddPhase && (
+        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+          <Clock className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
+          <p className="text-[#6b6b80]">No phases yet. Add your first phase to get started.</p>
+        </div>
+      )}
 
-          <div className="space-y-4">
-            {currentStagePhases.map(phase => {
+      <div className="space-y-4">
+        {appPhases.map(phase => {
           const phaseGoals = goals.filter(g => g.phaseId === phase.id);
           const isExpanded = expandedPhases.has(phase.id);
           const StatusIcon = statusIcons[phase.status];
@@ -577,9 +601,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             </div>
           );
         })}
-          </div>
-        </>
-      )}
+      </div>
 
       <div className="mt-8 border-t border-[rgba(0,229,255,0.1)] pt-6">
         <div className="flex items-center justify-between mb-4">
