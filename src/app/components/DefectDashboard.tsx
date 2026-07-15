@@ -23,12 +23,14 @@ import { useToast } from '../context/ToastContext';
 import { Defect, DefectSeverity, DefectStatus } from '../types';
 import { DefectDetailModal } from './DefectDetailModal';
 import { DefectCreateModal } from './DefectCreateModal';
+import { DefectBulkCreateModal } from './DefectBulkCreateModal';
 
 export function DefectDashboard() {
   const { apps, defects, employees, deleteDefect, sendDefectNotification } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBulkCreateModal, setShowBulkCreateModal] = useState(false);
   const [editDefect, setEditDefect] = useState<Defect | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || '');
@@ -129,13 +131,22 @@ export function DefectDashboard() {
             ))}
           </select>
           {hasPermission('report_defects') && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
-            >
-              <Plus className="w-4 h-4" />
-              Report Defect
-            </button>
+            <>
+              <button
+                onClick={() => setShowBulkCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#00e5ff] text-sm font-medium hover:bg-[rgba(0,229,255,0.05)]"
+              >
+                <Plus className="w-4 h-4" />
+                Bulk Add
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+              >
+                <Plus className="w-4 h-4" />
+                Report Defect
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -451,6 +462,13 @@ export function DefectDashboard() {
         <DefectDetailModal
           defect={selectedDefect}
           onClose={() => setSelectedDefect(null)}
+        />
+      )}
+
+      {showBulkCreateModal && (
+        <DefectBulkCreateModal
+          onClose={() => setShowBulkCreateModal(false)}
+          appId={selectedAppId}
         />
       )}
 
