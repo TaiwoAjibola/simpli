@@ -52,6 +52,9 @@ export type App = {
   color?: string;
   cardStyle?: 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
   planningNotes?: string;
+  softwareEngineeringProfile?: SoftwareEngineeringProfile;
+  operationsProfile?: OperationsProfile;
+  productProfile?: ProductProfile;
 };
 
 export type Phase = {
@@ -306,4 +309,200 @@ export type Defect = {
   updatedAt: Date;
   closedAt?: Date;
   lastEmailSentAt?: Date;
+};
+
+export type TechStackEntry = {
+  language: string;
+  version: string;
+  runtime: string;
+  framework: string;
+  database: string;
+  cache: string;
+  queue: string;
+};
+
+export type ArchitectureComponent = {
+  component: string;
+  responsibility: string;
+  language: string;
+};
+
+export type EngineeringDecision = {
+  decision: string;
+  date: string;
+  rationale: string;
+};
+
+export type KnownLimitation = {
+  issue: string;
+  impact: string;
+  workaround: string;
+  plannedFix: string;
+};
+
+export type SoftwareEngineeringProfile = {
+  projectCode: string;
+  repository: string;
+  version: string;
+  techStack: TechStackEntry[];
+  architecturePattern: string;
+  components: ArchitectureComponent[];
+  designPatterns: string;
+  apiType: string;
+  apiProtocol: string;
+  apiAuthMethod: string;
+  apiDocLocation: string;
+  cicdPlatform: string;
+  pipelineStages: string;
+  artifactRepo: string;
+  deploymentStrategy: string;
+  testing: { testType: string; tool: string; coverageTarget: string; ciStage: string }[];
+  authProvider: string;
+  secretsManager: string;
+  scanningTools: string;
+  complianceFrameworks: string;
+  engineeringDecisions: EngineeringDecision[];
+  knownLimitations: KnownLimitation[];
+  owner: string;
+  engineeringLead: string;
+  reviewDate: string;
+  approvedBy: string;
+};
+
+export type InfrastructureEntry = {
+  resource: string;
+  provider: string;
+  spec: string;
+  quantity: string;
+  autoScaling: string;
+};
+
+export type MonitorEntry = {
+  monitorType: string;
+  tool: string;
+  dashboard: string;
+  alertChannel: string;
+};
+
+export type AccessEntry = {
+  accessType: string;
+  method: string;
+  auth: string;
+  reviewCycle: string;
+};
+
+export type RunbookEntry = {
+  name: string;
+  purpose: string;
+  location: string;
+};
+
+export type OperationsProfile = {
+  environment: string;
+  region: string;
+  deployedVersion: string;
+  infrastructure: InfrastructureEntry[];
+  deploymentMethod: string;
+  cicdPlatform: string;
+  rollbackStrategy: string;
+  releaseCadence: string;
+  configMgmtTool: string;
+  secretsStorage: string;
+  featureFlagSystem: string;
+  envVarsLocation: string;
+  monitoring: MonitorEntry[];
+  logAggregationTool: string;
+  logRetentionPeriod: string;
+  auditLogging: string;
+  backupMethod: string;
+  backupSchedule: string;
+  rto: string;
+  rpo: string;
+  drTestSchedule: string;
+  onCallSchedule: string;
+  severityLevels: string;
+  incidentDocLink: string;
+  pagerDuty: string;
+  accessManagement: AccessEntry[];
+  maintenanceWindow: string;
+  upcomingMaintenance: string;
+  certExpiryDates: string;
+  runbooks: RunbookEntry[];
+  operationsLead: string;
+  reviewDate: string;
+  approvedBy: string;
+};
+
+export type FeatureEntry = {
+  feature: string;
+  category: string;
+  priority: string;
+  status: string;
+  users: string;
+};
+
+export type BusinessRule = {
+  rule: string;
+  domain: string;
+  description: string;
+  whereEnforced: string;
+};
+
+export type UserRoleEntry = {
+  role: string;
+  description: string;
+  scope: string;
+  permissions: string;
+};
+
+export type IntegrationEntry = {
+  integration: string;
+  direction: string;
+  protocol: string;
+  dataExchanged: string;
+  slaDependency: string;
+};
+
+export type ThirdPartyService = {
+  service: string;
+  purpose: string;
+  contractEnd: string;
+  accountOwner: string;
+};
+
+export type KeyContact = {
+  role: string;
+  name: string;
+  email: string;
+  availability: string;
+};
+
+export type ProductProfile = {
+  productOwner: string;
+  targetAudience: string;
+  launchDate: string;
+  productVision: string;
+  valueProposition: string;
+  differentiators: string;
+  targetMarket: string;
+  features: FeatureEntry[];
+  businessRules: BusinessRule[];
+  userRoles: UserRoleEntry[];
+  primaryFlows: string;
+  workflowDiagramsLocation: string;
+  integrations: IntegrationEntry[];
+  thirdPartyServices: ThirdPartyService[];
+  supportTierModel: string;
+  commonIssuesKbLink: string;
+  escalationPath: string;
+  knownIssues: string;
+  configChangeProcess: string;
+  keyContacts: KeyContact[];
+  outstandingItems: string;
+  keyDocsLocation: string;
+  trainingMaterials: string;
+  productOwnerName: string;
+  engineeringLeadName: string;
+  reviewDate: string;
+  approvedBy: string;
 };

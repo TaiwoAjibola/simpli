@@ -18,9 +18,15 @@ import {
   Link,
   Unlink,
   Flag,
-  ClipboardCheck
+  ClipboardCheck,
+  Code2,
+  Server,
+  FileText
 } from 'lucide-react';
 import { Phase } from '../types';
+import { SoftwareEngineeringProfileForm } from './SoftwareEngineeringProfileForm';
+import { OperationsProfileForm } from './OperationsProfileForm';
+import { ProductProfileForm } from './ProductProfileForm';
 
 type AppDetailsPageProps = {
   appId: string;
@@ -51,6 +57,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     deploymentTarget: ''
   });
   const [planningNotesText, setPlanningNotesText] = useState('');
+  const [activeProfileTab, setActiveProfileTab] = useState<'overview' | 'engineering' | 'operations' | 'product'>('overview');
+
+  const handleSaveProfile = async (field: string, data: any) => {
+    await updateApp(appId, { [field]: data });
+  };
 
   const app = apps.find(a => a.id === appId);
   const appPhases = phases.filter(p => p.appId === appId);
@@ -197,6 +208,29 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         </select>
       </div>
 
+      {/* Tab navigation */}
+      <div className="flex gap-1 mb-6 border-b border-[rgba(0,229,255,0.1)]">
+        {(['overview', 'engineering', 'operations', 'product'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveProfileTab(tab)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeProfileTab === tab
+                ? 'border-[#00e5ff] text-[#00e5ff]'
+                : 'border-transparent text-[#6b6b80] hover:text-[#f0f0f5]'
+            }`}
+          >
+            {tab === 'overview' && <ClipboardCheck className="w-4 h-4" />}
+            {tab === 'engineering' && <Code2 className="w-4 h-4" />}
+            {tab === 'operations' && <Server className="w-4 h-4" />}
+            {tab === 'product' && <FileText className="w-4 h-4" />}
+            {tab === 'overview' ? 'Overview' : tab === 'engineering' ? 'Engineering' : tab === 'operations' ? 'Operations' : 'Product'}
+          </button>
+        ))}
+      </div>
+
+      {activeProfileTab === 'overview' ? (
+        <>
       {/* Phases */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -799,6 +833,14 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           );
         })()}
       </div>
+        </>
+      ) : activeProfileTab === 'engineering' ? (
+        <SoftwareEngineeringProfileForm app={app} onSave={(data) => handleSaveProfile('softwareEngineeringProfile', data)} />
+      ) : activeProfileTab === 'operations' ? (
+        <OperationsProfileForm app={app} onSave={(data) => handleSaveProfile('operationsProfile', data)} />
+      ) : (
+        <ProductProfileForm app={app} onSave={(data) => handleSaveProfile('productProfile', data)} />
+      )}
     </div>
   );
 }
