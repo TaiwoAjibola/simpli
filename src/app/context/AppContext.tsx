@@ -38,7 +38,8 @@ import {
   ActionPoint,
   Tag,
   Module,
-  ModuleExpectation
+  ModuleExpectation,
+  AppDocument
 } from '../types';
 
 type AppContextType = {
@@ -104,6 +105,10 @@ type AppContextType = {
   deletePhase: (phaseId: string) => Promise<void>;
   getPhasesForApp: (appId: string) => Phase[];
   getPhaseById: (phaseId: string) => Phase | undefined;
+  appDocuments: AppDocument[];
+  addAppDocument: (doc: Omit<AppDocument, 'id' | 'createdAt'>) => Promise<void>;
+  deleteAppDocument: (docId: string) => Promise<void>;
+  getDocumentsForApp: (appId: string) => AppDocument[];
   modules: Module[];
   addModule: (m: Omit<Module, 'id' | 'createdAt'>) => Promise<void>;
   updateModule: (moduleId: string, updates: Partial<Module>) => Promise<void>;
@@ -257,6 +262,15 @@ function docToPhase(doc: any): Phase {
   };
 }
 
+function docToAppDocument(doc: any): AppDocument {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
 function docToModule(doc: any): Module {
   const data = doc.data() || doc;
   return {
@@ -320,6 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [defects, setDefects] = useState<Defect[]>([]);
   const [phases, setPhases] = useState<Phase[]>([]);
+  const [appDocuments, setAppDocuments] = useState<AppDocument[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [expectations, setExpectations] = useState<ModuleExpectation[]>([]);
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
@@ -344,6 +359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'modules'), setter: setModules, transformer: docToModule },
       { ref: collection(db, 'moduleExpectations'), setter: setExpectations, transformer: docToModuleExpectation },
       { ref: collection(db, 'tags'), setter: setTags, transformer: docToTag },
+      { ref: collection(db, 'appDocuments'), setter: setAppDocuments, transformer: docToAppDocument },
       { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint }
     ];
 
@@ -1223,6 +1239,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return phases.find(p => p.id === phaseId);
   }, [phases]);
 
+  const addAppDocument = useCallback(async (docData: Omit<AppDocument, 'id' | 'createdAt'>) => {
+    const docId = `appdoc-${Date.now()}`;
+    await setDoc(doc(db, 'appDocuments', docId), {
+      ...docData,
+      id: docId,
+      createdAt: new Date()
+    });
+  }, []);
+
+  const deleteAppDocument = useCallback(async (docId: string) => {
+    await deleteDoc(doc(db, 'appDocuments', docId));
+  }, []);
+
+  const getDocumentsForApp = useCallback((appId: string) => {
+    return appDocuments.filter(d => d.appId === appId);
+  }, [appDocuments]);
+
   const addModule = useCallback(async (m: Omit<Module, 'id' | 'createdAt'>) => {
     const moduleId = `mod-${Date.now()}`;
     await setDoc(doc(db, 'modules', moduleId), {
@@ -1399,6 +1432,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deletePhase,
         getPhasesForApp,
         getPhaseById,
+        appDocuments,
+        addAppDocument,
+        deleteAppDocument,
+        getDocumentsForApp,
         modules,
         addModule,
         updateModule,

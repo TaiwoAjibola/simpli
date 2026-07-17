@@ -24,7 +24,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Phase } from '../types';
-import { SoftwareEngineeringProfileForm } from './SoftwareEngineeringProfileForm';
+import { EngineeringDocsSection } from './EngineeringDocsSection';
 import { OperationsProfileForm } from './OperationsProfileForm';
 import { ProductProfileForm } from './ProductProfileForm';
 
@@ -835,7 +835,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       </div>
         </>
       ) : activeProfileTab === 'engineering' ? (
-        <SoftwareEngineeringProfileForm app={app} onSave={(data) => handleSaveProfile('softwareEngineeringProfile', data)} />
+        <EngineeringDocsSection appId={appId} />
       ) : activeProfileTab === 'operations' ? (
         <OperationsProfileForm app={app} onSave={(data) => handleSaveProfile('operationsProfile', data)} />
       ) : (

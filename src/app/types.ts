@@ -21,7 +21,8 @@ export type Permission =
   | 'handle_defects'
   | 'verify_defects'
   | 'manage_action_points'
-  | 'manage_modules';
+  | 'manage_modules'
+  | 'manage_documents';
 
 export type Employee = {
   id: string;
@@ -55,6 +56,20 @@ export type App = {
   softwareEngineeringProfile?: SoftwareEngineeringProfile;
   operationsProfile?: OperationsProfile;
   productProfile?: ProductProfile;
+};
+
+export type AppDocument = {
+  id: string;
+  appId: string;
+  name: string;
+  version: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+  uploadedBy: string;
+  uploadedByName: string;
+  createdAt: Date;
 };
 
 export type Phase = {
