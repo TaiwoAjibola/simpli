@@ -82,7 +82,9 @@ export function ActionPointsPage() {
     date: '',
     linkType: 'new' as 'new' | 'existing',
     existingTaskId: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    workType: 'non-development' as 'development' | 'non-development',
+    source: 'manual' as 'meeting' | 'review' | 'discussion' | 'activity' | 'manual'
   });
 
   const [multiGoalId, setMultiGoalId] = useState('');
@@ -101,7 +103,9 @@ export function ActionPointsPage() {
   const resetForm = () => {
     setFormData({
       title: '', description: '', goalId: '', assignedTo: [], priority: 'medium', notes: '',
-      date: '', linkType: 'new', existingTaskId: '', tags: [] as string[]
+      date: '', linkType: 'new', existingTaskId: '', tags: [] as string[],
+      workType: 'non-development' as 'development' | 'non-development',
+      source: 'manual' as 'meeting' | 'review' | 'discussion' | 'activity' | 'manual'
     });
     setMultiRows([]);
     setMultiGoalId('');
@@ -215,7 +219,9 @@ export function ActionPointsPage() {
           notes: row.notes,
           tags: row.tags,
           taskId: row.existingTaskId || undefined,
-          date: multiDate ? new Date(multiDate) : new Date()
+          date: multiDate ? new Date(multiDate) : new Date(),
+          workType: formData.workType,
+          source: formData.source
         });
       }
     } else {
@@ -230,7 +236,9 @@ export function ActionPointsPage() {
           notes: formData.notes,
           tags: formData.tags,
         taskId: formData.linkType === 'existing' ? formData.existingTaskId : undefined,
-        date: formData.date ? new Date(formData.date) : new Date()
+        date: formData.date ? new Date(formData.date) : new Date(),
+        workType: formData.workType,
+        source: formData.source
       });
     }
     resetForm();
@@ -388,6 +396,55 @@ export function ActionPointsPage() {
                     rows={2}
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Work Type</label>
+                    <div className="flex items-center gap-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] w-fit">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, workType: 'development' })}
+                        className={`px-3 py-2 text-sm font-medium transition ${
+                          formData.workType === 'development'
+                            ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                            : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                        }`}
+                      >
+                        Development
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, workType: 'non-development' })}
+                        className={`px-3 py-2 text-sm font-medium transition ${
+                          formData.workType === 'non-development'
+                            ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                            : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                        }`}
+                      >
+                        Non-Development
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Origin</label>
+                    <select
+                      value={formData.source}
+                      onChange={(e) => setFormData({ ...formData, source: e.target.value as any })}
+                      className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] outline-none"
+                    >
+                      <option value="meeting">Meeting</option>
+                      <option value="review">Review</option>
+                      <option value="discussion">Discussion</option>
+                      <option value="activity">Project Activity</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                  </div>
+                </div>
+                {formData.workType === 'development' && (
+                  <p className="text-xs text-[#6b6b80]">
+                    This action point will create or link to a development task.
+                  </p>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

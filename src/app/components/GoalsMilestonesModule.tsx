@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { Plus, Target, CheckSquare, Edit2, Trash2, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import { Goal } from '../types';
+import { Goal, WorkType } from '../types';
+import { deriveGoalStatus, DerivedGoalStatus } from '../../utils/goalStatus';
 
 export function GoalsModule() {
   const { hasPermission } = useAuth();
@@ -23,6 +24,8 @@ export function GoalsModule() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [filterAppId, setFilterAppId] = useState<string>('all');
   const [filterPhaseId, setFilterPhaseId] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | DerivedGoalStatus>('all');
+  const [filterWorkType, setFilterWorkType] = useState<'all' | WorkType>('all');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -75,7 +78,14 @@ export function GoalsModule() {
     if (filterAppId !== 'all' && g.appId !== filterAppId) return false;
     if (filterPhaseId !== 'all') {
       if (filterPhaseId === 'no-phase') return !g.phaseId;
-      return g.phaseId !== filterPhaseId;
+      return g.phaseId === filterPhaseId;
+    }
+    const goalTasks = getTasksForGoal(g.id);
+    if (filterStatus !== 'all' && deriveGoalStatus(g, goalTasks) !== filterStatus) return false;
+    if (filterWorkType !== 'all') {
+      const hasWork = goalTasks.length > 0;
+      const matchesWorkType = goalTasks.some(t => (t.workType || 'non-development') === filterWorkType);
+      if (!hasWork || !matchesWorkType) return false;
     }
     return true;
   });
@@ -131,6 +141,26 @@ export function GoalsModule() {
           {filteredPhases.map(phase => (
             <option key={phase.id} value={phase.id}>{phase.name}</option>
           ))}
+        </select>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as 'all' | DerivedGoalStatus)}
+          className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+        >
+          <option value="all">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="on_hold">On Hold</option>
+        </select>
+        <select
+          value={filterWorkType}
+          onChange={(e) => setFilterWorkType(e.target.value as 'all' | WorkType)}
+          className="px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+        >
+          <option value="all">All Work Types</option>
+          <option value="development">Development</option>
+          <option value="non-development">Non-development</option>
         </select>
       </div>
 
@@ -262,6 +292,17 @@ export function GoalsModule() {
                   <div>
                     <h3 className="font-bold text-[#f0f0f5] text-lg">{goal.name}</h3>
                     <p className="text-sm text-[#6b6b80] mt-1">{app?.name}{phase && ` • ${phase.name}`}</p>
+                    <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 ${
+                      deriveGoalStatus(goal, goalTasks) === 'completed'
+                        ? 'text-[#10b981] bg-[rgba(16,185,129,0.1)]'
+                        : deriveGoalStatus(goal, goalTasks) === 'in_progress'
+                        ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                        : deriveGoalStatus(goal, goalTasks) === 'on_hold'
+                        ? 'text-[#ff3b5c] bg-[rgba(255,59,92,0.1)]'
+                        : 'text-[#6b6b80] bg-[rgba(107,107,128,0.1)]'
+                    }`}>
+                      {deriveGoalStatus(goal, goalTasks).replace(/_/g, ' ')}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">

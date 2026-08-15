@@ -18,9 +18,13 @@ import {
   Menu,
   X,
   ClipboardCheck,
-  ShieldCheck
+  ShieldCheck,
+  Rocket,
+  LayoutTemplate,
+  Plug
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
+import { NotificationInbox } from './NotificationInbox';
 
 type NavigationProps = {
   currentPage: string;
@@ -32,7 +36,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const { notifications } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.read && (!n.recipientId || n.recipientId === currentUser?.id)).length;
 
   const navSections = [
     {
@@ -40,12 +44,16 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
         { id: 'my-work', label: 'My Work', icon: Briefcase, show: true },
-        { id: 'kanban', label: 'Kanban Board', icon: Kanban, show: true },
-        { id: 'analytics', label: 'Analytics', icon: BarChart3, show: hasPermission('view_all_apps') },
-        { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
-        { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
+        { id: 'kanban', label: 'Board', icon: Kanban, show: true },
         { id: 'defects', label: 'Defects', icon: Bug, show: true },
         { id: 'action-points', label: 'Action Points', icon: CheckSquare, show: true },
+        { id: 'sprints', label: 'Sprints', icon: Rocket, show: hasPermission('view_all_apps') },
+        { id: 'portfolio', label: 'Portfolio', icon: BarChart3, show: hasPermission('view_all_apps') },
+        { id: 'repositories', label: 'Repositories', icon: Layers, show: hasPermission('view_all_apps') },
+        { id: 'integrations', label: 'Integrations', icon: Plug, show: hasPermission('view_all_apps') },
+        { id: 'analytics', label: 'Analytics', icon: Activity, show: hasPermission('view_all_apps') },
+        { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
+        { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
         { id: 'gate-review', label: 'Gate Review', icon: ShieldCheck, show: true },
         { id: 'activities', label: 'Activities', icon: Activity, show: true }
       ]
@@ -53,9 +61,11 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     {
       label: 'Management',
       items: [
-        { id: 'apps', label: 'Apps', icon: Layers, show: hasPermission('view_all_apps') },
+        { id: 'apps', label: 'Applications', icon: Layers, show: hasPermission('view_all_apps') },
         { id: 'goals', label: 'Goals', icon: Target, show: hasPermission('view_all_apps') },
-        { id: 'tasks', label: 'Tasks', icon: CheckSquare, show: hasPermission('view_all_apps') }
+        { id: 'tasks', label: 'Tasks', icon: CheckSquare, show: hasPermission('view_all_apps') },
+        { id: 'templates', label: 'Work Templates', icon: LayoutTemplate, show: hasPermission('view_all_apps') },
+        { id: 'automations', label: 'Automations', icon: Zap, show: hasPermission('view_all_apps') }
       ]
     },
     {
@@ -139,7 +149,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
       </nav>
 
       <div className="p-4 border-t border-[rgba(0,229,255,0.1)]">
-        <div className="flex items-center gap-3 mb-3 px-2">
+        <div className="flex items-center gap-3 mb-1 px-2">
           <div className="w-10 h-10 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] flex items-center justify-center text-[#0a0a0f] font-bold">
             {currentUser?.name.charAt(0)}
           </div>
@@ -147,6 +157,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             <p className="font-medium text-sm text-[#f0f0f5] truncate">{currentUser?.name}</p>
             <p className="text-xs text-[#6b6b80] truncate">{currentUser?.email}</p>
           </div>
+          <NotificationInbox />
         </div>
         <button
           onClick={logout}

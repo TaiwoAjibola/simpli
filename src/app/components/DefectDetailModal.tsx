@@ -22,6 +22,10 @@ import {
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { Defect, DefectStatus, DefectResolution } from '../types';
+import { getAllowedDefectStatuses } from '../../utils/defectPermissions';
+import { QaWorkPanel } from './QaWorkPanel';
+import { DependenciesPanel } from './DependenciesPanel';
+import { GitHubPanel } from './GitHubPanel';
 
 type DefectDetailModalProps = {
   defect: Defect;
@@ -29,11 +33,11 @@ type DefectDetailModalProps = {
 };
 
 export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
-  const { employees, apps, updateDefect, addDefectComment, sendDefectNotification } = useApp();
+  const { employees, apps, defects, tasks, actionPoints, updateDefect, addDefectComment, sendDefectNotification } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'reproduction' | 'attachments' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'reproduction' | 'attachments' | 'activity' | 'qa' | 'deps' | 'github'>('overview');
   const [commentText, setCommentText] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -41,11 +45,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown';
   const getAppName = (id: string) => apps.find(a => a.id === id)?.name || 'Unknown';
 
-  const allowedStatuses = (() => {
-    if (hasPermission('manage_defects')) return ['open', 'in_progress', 'pending_qa', 'resolved', 'closed'] as DefectStatus[];
-    if (hasPermission('handle_defects')) return ['open', 'in_progress', 'pending_qa'] as DefectStatus[];
-    return [];
-  })();
+  const allowedStatuses = getAllowedDefectStatuses(hasPermission);
 
   const statusColors: Record<DefectStatus, string> = {
     open: 'bg-[#dc2626]',
@@ -179,7 +179,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
         </div>
 
         <div className="flex border-b border-[rgba(0,229,255,0.1)]">
-          {(['overview', 'reproduction', 'attachments', 'activity'] as const).map(tab => (
+          {(['overview', 'reproduction', 'attachments', 'activity', 'qa', 'deps', 'github'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -229,6 +229,14 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                 <div>
                   <label className="text-xs text-[#6b6b80] uppercase tracking-wider">Test Cycle</label>
                   <p className="text-[#f0f0f5] mt-1">{defect.testCycle || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-xs text-[#6b6b80] uppercase tracking-wider">Followers</label>
+                  <p className="text-[#f0f0f5] mt-1">
+                    {(defect.followers || []).length > 0
+                      ? defect.followers!.map(f => getEmployeeName(f)).join(', ')
+                      : '-'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-xs text-[#6b6b80] uppercase tracking-wider">Reported By</label>
@@ -403,6 +411,30 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                 </div>
               </form>
             </div>
+          )}
+
+          {activeTab === 'qa' && (
+            <QaWorkPanel
+              workKind="defect"
+              workId={defect.id}
+              qualifies={['pending_qa', 'resolved', 'open', 'in_progress'].includes(defect.status)}
+            />
+          )}
+
+          {activeTab === 'deps' && (
+            <DependenciesPanel
+              workKind="defect"
+              workId={defect.id}
+              workRefs={[
+                ...defects.map(d => ({ kind: 'defect' as const, id: d.id, label: `${d.defectCode} - ${d.title}` })),
+                ...tasks.map(t => ({ kind: 'task' as const, id: t.id, label: t.name })),
+                ...actionPoints.map(a => ({ kind: 'action_point' as const, id: a.id, label: a.text }))
+              ]}
+            />
+          )}
+
+          {activeTab === 'github' && (
+            <GitHubPanel workKind="defect" workId={defect.id} github={defect.github} />
           )}
         </div>
       </div>

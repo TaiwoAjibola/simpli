@@ -29,6 +29,20 @@ import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
 import { TagBadges } from './TagBadges';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
+import { getWorkTargetStates, PermissionCheck } from '../../utils/workflow';
+
+function availableTaskStatuses(task: Task): TaskStatus[] {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { hasPermission } = useAuth();
+  const targets = getWorkTargetStates({
+    kind: 'task',
+    currentStatus: task.status,
+    workType: task.workType || 'non-development',
+    can: hasPermission
+  });
+  const result = [task.status, ...targets] as TaskStatus[];
+  return [...new Set(result)];
+}
 
 export function TasksModule() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -70,7 +84,8 @@ export function TasksModule() {
     priority: 'medium' as const,
     startDate: '',
     endDate: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    workType: 'non-development' as 'development' | 'non-development'
   });
   const [multiGoalId, setMultiGoalId] = useState('');
   const [multiTasks, setMultiTasks] = useState<{
@@ -141,7 +156,8 @@ export function TasksModule() {
           goalId: formData.goalId || undefined,
           startDate: formData.startDate ? new Date(formData.startDate) : undefined,
           endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-          status: 'not_started'
+          status: 'not_started',
+          workType: formData.workType
         });
         if (newTask && subtasks.length > 0) {
           for (const st of subtasks) {
@@ -195,7 +211,8 @@ export function TasksModule() {
       priority: task.priority,
       startDate: task.startDate ? format(task.startDate, 'yyyy-MM-dd') : '',
       endDate: task.endDate ? format(task.endDate, 'yyyy-MM-dd') : '',
-      tags: [...(task.tags || [])]
+      tags: [...(task.tags || [])],
+      workType: task.workType || 'non-development'
     });
     setEditingTask(task);
     setShowAddForm(true);
@@ -280,7 +297,8 @@ export function TasksModule() {
       priority: 'medium',
       startDate: '',
       endDate: '',
-      tags: []
+      tags: [],
+      workType: 'non-development'
     });
     setMultiTasks([]);
     setMultiGoalId('');
@@ -394,6 +412,43 @@ export function TasksModule() {
                   rows={3}
                   required
                 />
+              </div>
+            )}
+
+            {taskMode === 'single' && (
+              <div>
+                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
+                  Work Type
+                </label>
+                <div className="flex items-center gap-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, workType: 'development' })}
+                    className={`px-4 py-2 text-sm font-medium transition ${
+                      formData.workType === 'development'
+                        ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                        : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                    }`}
+                  >
+                    Development
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, workType: 'non-development' })}
+                    className={`px-4 py-2 text-sm font-medium transition ${
+                      formData.workType === 'non-development'
+                        ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]'
+                        : 'text-[#6b6b80] hover:text-[#f0f0f5]'
+                    }`}
+                  >
+                    Non-Development
+                  </button>
+                </div>
+                {formData.workType === 'development' && (
+                  <p className="text-xs text-[#6b6b80] mt-1">
+                    Development tasks can be linked to a repository, branch and pull request.
+                  </p>
+                )}
               </div>
             )}
 
@@ -1036,6 +1091,7 @@ function TaskCard({
   getEmployeeById,
   allTags
 }: TaskCardProps) {
+  const { hasPermission } = useAuth();
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
   const appColor = app?.color || '#00e5ff';
@@ -1060,6 +1116,8 @@ function TaskCard({
 
   const config = statusConfig[task.status];
   const Icon = config.icon;
+
+  const availableStatuses = availableTaskStatuses(task);
 
   return (
     <div
@@ -1139,6 +1197,14 @@ function TaskCard({
               {task.priority.toUpperCase()}
             </span>
 
+            <span className={`text-xs font-medium px-2 py-1 ${
+              (task.workType || 'non-development') === 'development'
+                ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+                : 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
+            }`}>
+              {(task.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
+            </span>
+
             <select
               value={task.status}
               onChange={(e) => {
@@ -1149,13 +1215,9 @@ function TaskCard({
               className="text-xs bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] px-2 py-1"
               disabled={task.status === 'approved'}
             >
-              <option value="not_started">Not Started</option>
-              <option value="in_progress">In Progress</option>
-              <option value="blocked">Blocked</option>
-              <option value="completed">Completed</option>
-              <option value="approved" disabled>
-                Approved
-              </option>
+              {availableStatuses.map(s => (
+                <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>
+              ))}
             </select>
 
             {assignees.length > 0 && (

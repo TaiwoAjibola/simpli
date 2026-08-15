@@ -4,12 +4,14 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
-import { Task, TaskStatus, DefectStatus, Defect } from '../types';
-import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon } from 'lucide-react';
+import { Task, TaskStatus, DefectStatus, Defect, ActionPoint, ActionPointStatus, WorkType } from '../types';
+import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon, FileText } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 import { TagBadges } from './TagBadges';
+import { canTransitionDefect } from '../../utils/defectPermissions';
+import { canTransitionWork } from '../../utils/workflow';
 
 const TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'not_started', title: 'Not Started', color: '#6b6b80' },
@@ -27,6 +29,12 @@ const DEFECT_COLUMNS: { id: DefectStatus; title: string; color: string }[] = [
   { id: 'closed', title: 'Closed', color: '#10b981' }
 ];
 
+const ACTION_POINT_COLUMNS: { id: ActionPointStatus; title: string; color: string }[] = [
+  { id: 'pending', title: 'Pending', color: '#6b6b80' },
+  { id: 'carried_over', title: 'Carried Over', color: '#f59e0b' },
+  { id: 'completed', title: 'Completed', color: '#10b981' }
+];
+
 type SortOption = 'default' | 'priority' | 'dueDate' | 'name';
 
 export function KanbanBoard() {
@@ -39,23 +47,26 @@ export function KanbanBoard() {
 
 function KanbanContent() {
   const { currentUser, hasPermission } = useAuth();
-  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, getAppById, apps, tags } = useApp();
+  const { tasks, actionPoints, defects, updateTask, updateActionPoint, updateDefect, getEmployeeById, getGoalById, getAppById, getTasksForEmployee, apps, tags } = useApp();
+  const { showToast } = useToast();
 
   const canViewAll = hasPermission('view_all_apps');
   const displayTasks = canViewAll ? tasks : getTasksForEmployee(currentUser!.id);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
-  const [viewMode, setViewMode] = useState<'both' | 'tasks' | 'defects'>('both');
+  const [viewMode, setViewMode] = useState<'all' | 'tasks' | 'defects' | 'actionPoints'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [filterApp, setFilterApp] = useState<string>('all');
   const [filterTag, setFilterTag] = useState<string>('all');
+  const [filterWorkType, setFilterWorkType] = useState<'all' | WorkType>('all');
 
   const filteredDefects = useMemo(() => {
     let result = canViewAll ? defects : defects.filter(d => d.assignedTo === currentUser!.id);
     if (filterApp !== 'all') result = result.filter(d => d.applicationId === filterApp);
+    if (filterWorkType !== 'all') result = result.filter(d => (d.workType || 'development') === filterWorkType);
     return sortItems(result, sortBy);
-  }, [defects, filterApp, sortBy, canViewAll, currentUser]);
+  }, [defects, filterApp, filterTag, filterWorkType, sortBy, canViewAll, currentUser]);
 
   const filteredTasks = useMemo(() => {
     let result = displayTasks;
@@ -68,32 +79,86 @@ function KanbanContent() {
     if (filterTag !== 'all') {
       result = result.filter(t => t.tags?.includes(filterTag));
     }
+    if (filterWorkType !== 'all') {
+      result = result.filter(t => (t.workType || 'non-development') === filterWorkType);
+    }
     return sortItems(result, sortBy);
-  }, [displayTasks, filterApp, filterTag, sortBy]);
+  }, [displayTasks, filterApp, filterTag, filterWorkType, sortBy]);
+
+  const filteredActionPoints = useMemo(() => {
+    let result = canViewAll ? actionPoints : actionPoints.filter(ap => ap.assignedTo.includes(currentUser!.id));
+    if (filterApp !== 'all') {
+      result = result.filter(ap => {
+        const goal = ap.goalId ? getGoalById(ap.goalId) : null;
+        return ap.appId === filterApp || goal?.appId === filterApp;
+      });
+    }
+    if (filterWorkType !== 'all') {
+      result = result.filter(ap => (ap.workType || 'non-development') === filterWorkType);
+    }
+    return sortItems(result, sortBy);
+  }, [actionPoints, filterApp, filterWorkType, sortBy, canViewAll, currentUser]);
 
   const handleTaskDrop = (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const allowed = canTransitionWork({
+      kind: 'task',
+      currentStatus: task.status,
+      nextStatus: newStatus,
+      workType: task.workType || 'non-development',
+      can: hasPermission
+    });
+    if (!allowed) {
+      showToast({
+        type: 'error',
+        title: 'Action not permitted',
+        message: `You don't have permission to move this task to "${newStatus.replace(/_/g, ' ')}".`
+      });
+      return;
+    }
     updateTask(taskId, { status: newStatus });
   };
 
   const handleDefectDrop = (defectId: string, newStatus: DefectStatus) => {
-    if (currentUser) {
-      updateDefect(defectId, { status: newStatus }, currentUser.id, currentUser.name);
+    if (!currentUser) return;
+    if (!canTransitionDefect(newStatus, hasPermission)) {
+      showToast({
+        type: 'error',
+        title: 'Action not permitted',
+        message: `You don't have permission to move defects to "${newStatus.replace(/_/g, ' ')}".`
+      });
+      return;
     }
+    updateDefect(defectId, { status: newStatus }, currentUser.id, currentUser.name);
   };
+
+  const handleActionPointDrop = (apId: string, newStatus: ActionPointStatus) => {
+    updateActionPoint(apId, {
+      status: newStatus,
+      completedAt: newStatus === 'completed' ? new Date() : undefined,
+      completedBy: newStatus === 'completed' ? currentUser?.id : undefined
+    });
+  };
+
+  const showTasks = viewMode === 'all' || viewMode === 'tasks';
+  const showDefects = viewMode === 'all' || viewMode === 'defects';
+  const showActionPoints = viewMode === 'all' || viewMode === 'actionPoints';
 
   return (
     <div className="h-full flex flex-col p-4 lg:p-8">
       <div className="mb-4 lg:mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#f0f0f5] mb-1">Kanban Board</h1>
-            <p className="text-sm text-[#6b6b80]">Drag cards to update status</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-[#f0f0f5] mb-1">Work Board</h1>
+            <p className="text-sm text-[#6b6b80]">Unified board across tasks, action points and defects — drag cards to update status</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-              <button onClick={() => setViewMode('both')} className={`px-3 py-1.5 text-xs ${viewMode === 'both' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>All</button>
+              <button onClick={() => setViewMode('all')} className={`px-3 py-1.5 text-xs ${viewMode === 'all' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>All</button>
               <button onClick={() => setViewMode('tasks')} className={`px-3 py-1.5 text-xs ${viewMode === 'tasks' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Tasks</button>
               <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Bugs</button>
+              <button onClick={() => setViewMode('actionPoints')} className={`px-3 py-1.5 text-xs ${viewMode === 'actionPoints' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Action Points</button>
             </div>
             <select
               value={sortBy}
@@ -113,6 +178,15 @@ function KanbanContent() {
               <option value="all">All Apps</option>
               {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
             </select>
+            <select
+              value={filterWorkType}
+              onChange={(e) => setFilterWorkType(e.target.value as 'all' | WorkType)}
+              className="px-3 py-1.5 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs"
+            >
+              <option value="all">All Work Types</option>
+              <option value="development">Development</option>
+              <option value="non-development">Non-development</option>
+            </select>
             <div className="flex items-center gap-1">
               <TagIcon className="w-3 h-3 text-[#6b6b80]" />
               <select
@@ -129,7 +203,7 @@ function KanbanContent() {
       </div>
 
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4">
-        {(viewMode === 'both' || viewMode === 'tasks') && TASK_COLUMNS.map((column) => {
+        {showTasks && TASK_COLUMNS.map((column) => {
           const columnTasks = filteredTasks.filter(task => task.status === column.id);
           return (
             <KanbanColumn
@@ -146,7 +220,7 @@ function KanbanContent() {
             />
           );
         })}
-        {(viewMode === 'both' || viewMode === 'defects') && DEFECT_COLUMNS.map((column) => {
+        {showDefects && DEFECT_COLUMNS.map((column) => {
           const columnDefects = filteredDefects.filter(d => d.status === column.id);
           return (
             <KanbanColumn
@@ -159,6 +233,23 @@ function KanbanContent() {
               getGoalById={getGoalById}
               getAppById={getAppById}
               type="defect"
+              allTags={tags}
+            />
+          );
+        })}
+        {showActionPoints && ACTION_POINT_COLUMNS.map((column) => {
+          const columnAPs = filteredActionPoints.filter(ap => ap.status === column.id);
+          return (
+            <KanbanColumn
+              key={`ap-${column.id}`}
+              column={column}
+              tasks={columnAPs}
+              onDrop={(id) => handleActionPointDrop(id, column.id)}
+              onCardClick={(ap) => {}}
+              getEmployeeById={getEmployeeById}
+              getGoalById={getGoalById}
+              getAppById={getAppById}
+              type="actionPoint"
               allTags={tags}
             />
           );
@@ -196,13 +287,13 @@ type KanbanColumnProps = {
   getEmployeeById: (id: string) => any;
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
-  type: 'task' | 'defect';
+  type: 'task' | 'defect' | 'actionPoint';
   allTags: any[];
 };
 
 function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type, allTags }: KanbanColumnProps) {
-  const [{ isOver }, drop] = useDrop({
-    accept: type === 'task' ? 'TASK' : 'DEFECT',
+  const [, drop] = useDrop({
+    accept: type === 'task' ? 'TASK' : type === 'defect' ? 'DEFECT' : 'ACTION_POINT',
     drop: (item: { taskId: string }) => {
       onDrop(item.taskId);
     },
@@ -211,8 +302,8 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
     })
   });
 
-  const borderColor = type === 'defect' ? 'rgba(220,38,38,0.3)' : 'rgba(0,229,255,0.1)';
-  const hoverBorder = type === 'defect' ? 'rgba(220,38,38,0.5)' : 'rgba(0,229,255,0.3)';
+  const borderColor = type === 'defect' ? 'rgba(220,38,38,0.3)' : type === 'actionPoint' ? 'rgba(245,158,11,0.3)' : 'rgba(0,229,255,0.1)';
+  const hoverBorder = type === 'defect' ? 'rgba(220,38,38,0.5)' : type === 'actionPoint' ? 'rgba(245,158,11,0.5)' : 'rgba(0,229,255,0.3)';
 
   return (
     <div
@@ -226,6 +317,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {type === 'defect' && <Bug className="w-4 h-4 text-[#dc2626]" />}
+            {type === 'actionPoint' && <FileText className="w-4 h-4 text-[#f59e0b]" />}
             <h3 className="font-semibold text-[#f0f0f5] text-sm">{column.title}</h3>
           </div>
           <span className="bg-[#1a1a2e] text-[#f0f0f5] text-xs font-medium px-2 py-1">
@@ -245,6 +337,16 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
               getAppById={getAppById}
               allTags={allTags}
             />
+          ) : type === 'actionPoint' ? (
+            <ActionPointCard
+              key={item.id}
+              ap={item}
+              onClick={onCardClick}
+              getEmployeeById={getEmployeeById}
+              getGoalById={getGoalById}
+              getAppById={getAppById}
+              allTags={allTags}
+            />
           ) : (
             <TaskCard
               key={item.id}
@@ -259,7 +361,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
         ))}
         {tasks.length === 0 && (
           <div className="text-center py-6">
-            <p className="text-xs text-[#6b6b80]">No {type === 'defect' ? 'bugs' : 'tasks'}</p>
+            <p className="text-xs text-[#6b6b80]">No {type === 'defect' ? 'bugs' : type === 'actionPoint' ? 'action points' : 'tasks'}</p>
           </div>
         )}
       </div>
@@ -343,9 +445,87 @@ type DefectCardProps = {
   allTags: any[];
 };
 
-function DefectCard({ defect, onClick, getEmployeeById, getAppById, allTags }: DefectCardProps) {
+type ActionPointCardProps = {
+  ap: ActionPoint;
+  onClick: (ap: ActionPoint) => void;
+  getEmployeeById: (id: string) => any;
+  getGoalById: (id: string) => any;
+  getAppById: (id: string) => any;
+  allTags: any[];
+};
+
+function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById, allTags }: ActionPointCardProps) {
   const [{ isDragging }, drag] = useDrag({
-    type: 'TASK',
+    type: 'ACTION_POINT',
+    item: { taskId: ap.id },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging()
+    })
+  });
+
+  const assignees = ap.assignedTo.map(getEmployeeById).filter(Boolean);
+  const goal = ap.goalId ? getGoalById(ap.goalId) : null;
+  const app = goal ? getAppById(goal.appId) : ap.appId ? getAppById(ap.appId) : null;
+  const appColor = app?.color || '#f59e0b';
+  const cardStyle = app?.cardStyle || 'default';
+
+  const priorityColors: Record<string, string> = {
+    low: 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]',
+    medium: 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]',
+    high: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]',
+    urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]'
+  };
+
+  return (
+    <div
+      ref={drag}
+      onClick={() => onClick(ap)}
+      className={`${getCardClasses(cardStyle, appColor, true)} cursor-pointer transition ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+      style={getCardInlineStyle(cardStyle, appColor)}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <h4 className="font-medium text-[#f0f0f5] text-sm line-clamp-2">{ap.title}</h4>
+        {ap.priority === 'urgent' && <Star className="w-4 h-4 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />}
+      </div>
+      {ap.description && <p className="text-xs text-[#6b6b80] mb-3 line-clamp-2">{ap.description}</p>}
+      <div className="mb-2">
+        <TagBadges tagIds={ap.tags} allTags={allTags} />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-medium px-2 py-1 ${priorityColors[ap.priority]}`}>
+            {ap.priority.toUpperCase()}
+          </span>
+          <span className={`text-xs font-medium px-2 py-1 ${
+            (ap.workType || 'non-development') === 'development'
+              ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+              : 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]'
+          }`}>
+            {(ap.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
+          </span>
+        </div>
+        {assignees.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <User className="w-3 h-3 text-[#6b6b80]" />
+            <span className="text-xs text-[#6b6b80]">{assignees[0].name.split(' ')[0]}</span>
+          </div>
+        )}
+      </div>
+      {(goal || app) && (
+        <div className="mt-2 pt-2 border-t border-[rgba(0,229,255,0.1)]">
+          <p className="text-xs text-[#6b6b80] truncate">
+            {app?.name}{goal ? ` → ${goal.name}` : ''}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+  function DefectCard({ defect, onClick, getEmployeeById, getAppById, allTags }: DefectCardProps) {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'DEFECT',
     item: { taskId: defect.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging()

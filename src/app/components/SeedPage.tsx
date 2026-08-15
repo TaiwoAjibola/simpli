@@ -18,17 +18,32 @@ const roles = [
   {
     id: 'role-admin',
     name: 'Admin',
-    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules']
+    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules', 'manage_documents', 'develop_work', 'review_code', 'run_qa', 'manage_repositories', 'manage_sprints', 'manage_templates', 'manage_automations', 'manage_workflow', 'view_portfolio']
   },
   {
     id: 'role-ceo',
     name: 'CEO',
-    permissions: ['create_app', 'create_goal', 'approve_tasks', 'view_all_apps', 'report_defects']
+    permissions: ['create_app', 'create_goal', 'approve_tasks', 'view_all_apps', 'report_defects', 'view_portfolio']
   },
   {
     id: 'role-manager',
     name: 'Manager',
-    permissions: ['create_goal', 'assign_tasks', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects']
+    permissions: ['create_goal', 'assign_tasks', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'verify_defects', 'manage_sprints', 'manage_templates', 'manage_workflow', 'view_portfolio']
+  },
+  {
+    id: 'role-developer',
+    name: 'Developer',
+    permissions: ['view_assigned_only', 'report_defects', 'handle_defects', 'develop_work', 'review_code']
+  },
+  {
+    id: 'role-reviewer',
+    name: 'Reviewer',
+    permissions: ['view_assigned_only', 'report_defects', 'review_code']
+  },
+  {
+    id: 'role-qa',
+    name: 'QA',
+    permissions: ['view_assigned_only', 'report_defects', 'run_qa', 'verify_defects', 'handle_defects']
   },
   {
     id: 'role-employee',

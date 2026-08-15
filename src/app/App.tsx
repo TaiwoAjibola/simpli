@@ -22,6 +22,12 @@ const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m
 const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
 const GateReview = lazy(() => import('./components/GateReview').then(m => ({ default: m.GateReview })));
+const SprintsPage = lazy(() => import('./components/SprintsPage').then(m => ({ default: m.SprintsPage })));
+const WorkTemplatesPage = lazy(() => import('./components/WorkTemplatesPage').then(m => ({ default: m.WorkTemplatesPage })));
+const AutomationsPage = lazy(() => import('./components/AutomationsPage').then(m => ({ default: m.AutomationsPage })));
+const PortfolioPage = lazy(() => import('./components/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const RepositoriesPage = lazy(() => import('./components/RepositoriesPage').then(m => ({ default: m.RepositoriesPage })));
+const IntegrationsPage = lazy(() => import('./components/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -60,6 +66,12 @@ function AppContent() {
           {currentPage === 'goals' && <GoalsModule />}
           {currentPage === 'tasks' && <TasksModule />}
           {currentPage === 'action-points' && <ActionPointsPage />}
+          {currentPage === 'sprints' && <SprintsPage />}
+          {currentPage === 'templates' && <WorkTemplatesPage />}
+          {currentPage === 'automations' && <AutomationsPage />}
+          {currentPage === 'portfolio' && <PortfolioPage onNavigate={handleNavigate} />}
+          {currentPage === 'repositories' && <RepositoriesPage />}
+          {currentPage === 'integrations' && <IntegrationsPage />}
           {currentPage === 'gate-review' && <GateReview />}
           {currentPage === 'admin' && <AdminPanel />}
         </Suspense>

@@ -1,4 +1,47 @@
-export type TaskStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed' | 'approved';
+export type TaskStatus = 'not_started' | 'in_progress' | 'blocked' | 'pending_qa' | 'completed' | 'approved';
+export type WorkType = 'development' | 'non-development';
+
+export type Repository = {
+  id: string;
+  appId: string;
+  provider: 'github';
+  owner: string;
+  name: string;
+  url: string;
+  defaultBranch: string;
+  connectionStatus: 'connected' | 'not_connected';
+  lastSyncedAt?: Date;
+  integrationStatus?: string;
+  createdAt: Date;
+};
+
+export type GithubCommit = {
+  sha: string;
+  message: string;
+  author: string;
+  date: Date;
+  url?: string;
+};
+
+export type GithubPullRequest = {
+  prNumber: number;
+  url: string;
+  state: 'open' | 'closed' | 'merged';
+  title: string;
+  reviewers: string[];
+  reviewState?: 'approved' | 'changes_requested' | 'pending';
+  checkStatus?: 'pending' | 'success' | 'failure';
+};
+
+export type GithubSubDoc = {
+  repositoryId?: string;
+  branchName?: string;
+  branchUrl?: string;
+  commits?: GithubCommit[];
+  pullRequest?: GithubPullRequest;
+  status: 'not_started' | 'branch_created' | 'commits_pushed' | 'pr_open' | 'review' | 'qa' | 'approved' | 'merged' | 'closed';
+};
+export type DefectStatus = 'open' | 'in_progress' | 'pending_qa' | 'resolved' | 'closed' | 'reopened';
 export type ExpectationStatus = 'pending' | 'achieved' | 'missed';
 
 export type Role = {
@@ -22,7 +65,16 @@ export type Permission =
   | 'verify_defects'
   | 'manage_action_points'
   | 'manage_modules'
-  | 'manage_documents';
+  | 'manage_documents'
+  | 'develop_work'
+  | 'review_code'
+  | 'run_qa'
+  | 'manage_repositories'
+  | 'manage_sprints'
+  | 'manage_templates'
+  | 'manage_automations'
+  | 'manage_workflow'
+  | 'view_portfolio';
 
 export type Employee = {
   id: string;
@@ -40,6 +92,21 @@ export type Tag = {
   name: string;
   color: string;
   createdAt: Date;
+};
+
+export type SprintStatus = 'planned' | 'active' | 'completed';
+
+export type Sprint = {
+  id: string;
+  appId: string;
+  name: string;
+  goal?: string;
+  startDate?: Date;
+  endDate?: Date;
+  status: SprintStatus;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt?: Date;
 };
 
 export type App = {
@@ -120,11 +187,23 @@ export type Goal = {
   createdAt: Date;
   startDate?: Date;
   endDate?: Date;
+  status?: 'pending' | 'in_progress' | 'completed' | 'on_hold';
 };
+
+export type TaskOrigin =
+  | { source: 'manual' }
+  | { source: 'action_point'; actionPointId: string }
+  | { source: 'meeting' }
+  | { source: 'review' }
+  | { source: 'template'; templateId: string }
+  | { source: 'recurrence' }
+  | { source: 'form' };
 
 export type Task = {
   id: string;
   goalId?: string;
+  appId?: string;
+  phaseId?: string;
   name: string;
   description: string;
   assignedTo: string[];
@@ -147,6 +226,15 @@ export type Task = {
     uploadedAt: Date;
     uploadedBy: string;
   }[];
+  workType?: WorkType;
+  code?: string;
+  sprintId?: string;
+  followers?: string[];
+  effortHours?: number;
+  approvedRequired?: boolean;
+  origin?: TaskOrigin;
+  recurrence?: { frequency: 'daily' | 'weekly' | 'monthly'; interval: number; endDate?: Date };
+  github?: GithubSubDoc;
 };
 
 export type SubtaskStatus = 'pending' | 'in_progress' | 'completed';
@@ -200,13 +288,34 @@ export type Notification = {
     | 'task_blocked'
     | 'subtask_completed'
     | 'task_assigned'
-    | 'subtask_assigned';
+    | 'subtask_assigned'
+    | 'work_assigned'
+    | 'work_started'
+    | 'work_ready_for_qa'
+    | 'work_qa_failed'
+    | 'work_qa_passed'
+    | 'work_approved'
+    | 'work_merged'
+    | 'work_blocked'
+    | 'branch_created'
+    | 'pr_open'
+    | 'review_approved'
+    | 'review_changes_requested'
+    | 'ci_failed'
+    | 'ci_passed'
+    | 'due_soon'
+    | 'dependency_blocked'
+    | 'expectation_linked'
+    | 'action_point_assigned'
+    | 'defect_assigned'
+    | 'mention';
   title: string;
   message: string;
   createdAt: Date;
   read: boolean;
+  recipientId?: string;
   relatedTo?: {
-    type: 'task' | 'subtask' | 'app';
+    type: 'task' | 'subtask' | 'app' | 'defect' | 'action_point' | 'work' | 'goal';
     id: string;
   };
 };
@@ -229,6 +338,9 @@ export type Comment = {
   id: string;
   taskId?: string;
   subtaskId?: string;
+  defectId?: string;
+  actionPointId?: string;
+  qaCycleId?: string;
   userId: string;
   userName: string;
   content: string;
@@ -250,6 +362,8 @@ export type ActionPoint = {
   title: string;
   description?: string;
   goalId?: string;
+  appId?: string;
+  phaseId?: string;
   assignedTo: string[];
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: ActionPointStatus;
@@ -264,6 +378,10 @@ export type ActionPoint = {
   lastEmailSentAt?: Date;
   carriedFrom?: Date;
   tags?: string[];
+  workType?: WorkType;
+  sprintId?: string;
+  followers?: string[];
+  source?: 'meeting' | 'review' | 'discussion' | 'activity' | 'manual';
 };
 export type DefectSeverity = 'blocker' | 'critical' | 'major' | 'minor';
 export type DefectPriority = 'high' | 'medium' | 'low';
@@ -272,7 +390,6 @@ export type DefectReproducibility = 'always' | 'sometimes' | 'rare';
 export type DefectFrequency = '100' | 'intermittent' | 'one_time';
 export type DefectResolution = 'fixed' | 'cannot_reproduce' | 'duplicate' | 'wont_fix' | 'deferred';
 export type DefectRootCause = 'backend' | 'frontend' | 'database' | 'infrastructure' | 'ui_ux' | 'api' | 'security' | 'other';
-
 export type Defect = {
   id: string;
   defectCode: string;
@@ -324,6 +441,100 @@ export type Defect = {
   updatedAt: Date;
   closedAt?: Date;
   lastEmailSentAt?: Date;
+  workType?: WorkType;
+  phaseId?: string;
+  goalId?: string;
+  sprintId?: string;
+  followers?: string[];
+  tags?: string[];
+  github?: GithubSubDoc;
+};
+
+export type QaCycleResult = 'pass' | 'fail';
+
+export type QaCycle = {
+  id: string;
+  workKind: 'task' | 'defect' | 'action_point';
+  workId: string;
+  cycleNumber: number;
+  testerId: string;
+  testedAt: Date;
+  environment: 'dev' | 'staging' | 'production' | 'uat';
+  result: QaCycleResult;
+  notes: string;
+  defectsDiscovered: string[];
+  createdAt: Date;
+};
+
+export type WorkDependencyType = 'blocks' | 'blocked_by' | 'related_to';
+
+export type WorkDependency = {
+  id: string;
+  fromKind: 'task' | 'defect' | 'action_point';
+  fromId: string;
+  toKind: 'task' | 'defect' | 'action_point';
+  toId: string;
+  type: WorkDependencyType;
+  createdBy: string;
+  createdAt: Date;
+};
+
+export type WorkTemplate = {
+  id: string;
+  name: string;
+  description?: string;
+  appId?: string;
+  workKind: 'task' | 'action_point' | 'defect';
+  fields: {
+    title: string;
+    description?: string;
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    workType?: WorkType;
+    subtasks?: string[];
+    expectations?: string[];
+    severity?: DefectSeverity;
+    issueType?: DefectIssueType;
+  };
+  createdBy: string;
+  createdAt: Date;
+};
+
+export type AutomationTriggerEvent =
+  | 'task_created'
+  | 'task_status_changed'
+  | 'defect_created'
+  | 'defect_status_changed'
+  | 'pr_opened'
+  | 'review_approved'
+  | 'review_changes_requested'
+  | 'ci_failed'
+  | 'ci_passed'
+  | 'pr_merged';
+
+export type Automation = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  trigger: {
+    event: AutomationTriggerEvent;
+    filter?: { workKind?: 'task' | 'defect' | 'action_point'; status?: string; workType?: WorkType };
+  };
+  action: {
+    setStatus?: string;
+    notify?: { role?: string; userIds?: string[]; message?: string };
+    addTag?: string;
+  };
+  runHistory: {
+    runId: string;
+    runAt: Date;
+    workKind?: string;
+    workId?: string;
+    event: string;
+    outcome: 'applied' | 'skipped';
+    note?: string;
+  }[];
+  createdAt: Date;
+  updatedAt?: Date;
 };
 
 export type TechStackEntry = {

@@ -16,6 +16,7 @@ import {
   FileText
 } from 'lucide-react';
 import { format, differenceInDays, isPast } from 'date-fns';
+import { deriveGoalStatus, isGoalDone, isTaskDone } from '../../utils/goalStatus';
 
 export function ArchivePage() {
   const { apps, goals, tasks, employees } = useApp();
@@ -29,8 +30,13 @@ export function ArchivePage() {
   const appGoalIds = appGoals.map(g => g.id);
   const appTasks = tasks.filter(t => appGoalIds.includes(t.goalId));
 
-  const completedGoals = appGoals.filter(g => g.status === 'approved' || g.status === 'completed');
-  const completedTasks = appTasks.filter(t => t.status === 'approved' || t.status === 'completed');
+  const goalsWithStatus = appGoals.map(goal => ({
+    goal,
+    status: deriveGoalStatus(goal, appTasks),
+    completedAt: goal.endDate
+  }));
+  const completedGoals = goalsWithStatus.filter(g => g.status === 'completed');
+  const completedTasks = appTasks.filter(isTaskDone);
 
   const filteredItems = useMemo(() => {
     const items: Array<{
@@ -49,17 +55,17 @@ export function ArchivePage() {
     }> = [];
 
     if (filterType === 'all' || filterType === 'goal') {
-      completedGoals.forEach(goal => {
+      completedGoals.forEach(({ goal, status, completedAt }) => {
         items.push({
           id: goal.id,
           type: 'goal',
           name: goal.name,
-          status: goal.status,
+          status,
           startDate: goal.startDate,
           endDate: goal.endDate,
           assignedTo: [],
           description: goal.description,
-          completedAt: goal.updatedAt
+          completedAt
         });
       });
     }
@@ -78,7 +84,7 @@ export function ArchivePage() {
           priority: task.priority,
           description: task.description,
           subtasks: task.subtasks,
-          completedAt: task.updatedAt
+          completedAt: task.completedAt || task.endDate || task.dueDate
         });
       });
     }
@@ -91,8 +97,8 @@ export function ArchivePage() {
     }
 
     return items.sort((a, b) => {
-      const dateA = a.completedAt?.seconds || 0;
-      const dateB = b.completedAt?.seconds || 0;
+      const dateA = toMillis(a.completedAt);
+      const dateB = toMillis(b.completedAt);
       return dateB - dateA;
     });
   }, [completedGoals, completedTasks, filterType, searchQuery, goals]);
@@ -110,6 +116,15 @@ export function ArchivePage() {
   const getEmployeeName = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
     return emp?.name || 'Unknown';
+  };
+
+  const toMillis = (value: any) => {
+    if (!value) return 0;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'string' || typeof value === 'number') return new Date(value).getTime();
+    if (value.seconds) return value.seconds * 1000;
+    return 0;
   };
 
   const formatDate = (timestamp: any) => {

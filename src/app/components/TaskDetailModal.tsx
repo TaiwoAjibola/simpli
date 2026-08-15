@@ -22,10 +22,15 @@ import {
   Edit2,
   ChevronDown,
   ChevronRight,
-  Mail
+  Mail,
+  Link2,
+  Github
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { TagBadges } from './TagBadges';
+import { QaWorkPanel } from './QaWorkPanel';
+import { DependenciesPanel } from './DependenciesPanel';
+import { GitHubPanel } from './GitHubPanel';
 
 type TaskDetailModalProps = {
   task: Task;
@@ -37,6 +42,8 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   const { showToast } = useToast();
   const {
     tasks,
+    defects,
+    actionPoints,
     updateTask,
     approveTask,
     getEmployeeById,
@@ -53,7 +60,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     tags
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'subtasks' | 'comments' | 'activity' | 'qa' | 'deps' | 'github'>('details');
   const [commentText, setCommentText] = useState('');
   const [showAddSubtask, setShowAddSubtask] = useState(false);
   const [newSubtask, setNewSubtask] = useState({
@@ -237,6 +244,24 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               icon={Activity}
               label="Activity"
             />
+            <TabButton
+              active={activeTab === 'qa'}
+              onClick={() => setActiveTab('qa')}
+              icon={CheckCircle}
+              label="QA"
+            />
+            <TabButton
+              active={activeTab === 'deps'}
+              onClick={() => setActiveTab('deps')}
+              icon={Link2}
+              label="Deps"
+            />
+            <TabButton
+              active={activeTab === 'github'}
+              onClick={() => setActiveTab('github')}
+              icon={Github}
+              label="GitHub"
+            />
           </div>
         </div>
 
@@ -299,6 +324,30 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
           {activeTab === 'activity' && (
             <ActivityTab task={task} assignees={assignees} approver={approver} />
           )}
+
+          {activeTab === 'qa' && (
+            <QaWorkPanel
+              workKind="task"
+              workId={task.id}
+              qualifies={task.status === 'pending_qa' || task.status === 'in_progress' || task.status === 'completed'}
+            />
+          )}
+
+          {activeTab === 'deps' && (
+            <DependenciesPanel
+              workKind="task"
+              workId={task.id}
+              workRefs={[
+                ...tasks.map(t => ({ kind: 'task' as const, id: t.id, label: t.name })),
+                ...defects.map(d => ({ kind: 'defect' as const, id: d.id, label: `${d.defectCode} - ${d.title}` })),
+                ...actionPoints.map(a => ({ kind: 'action_point' as const, id: a.id, label: a.text }))
+              ]}
+            />
+          )}
+
+          {activeTab === 'github' && (
+            <GitHubPanel workKind="task" workId={task.id} github={task.github} />
+          )}
         </div>
       </div>
     </div>
@@ -354,7 +403,12 @@ function DetailsTab({
   priorityColors,
   statusColors
 }: any) {
-  const { tags } = useApp();
+  const { tags, employees, updateTask } = useApp();
+  const [effortInput, setEffortInput] = useState<string>(task.effortHours != null ? String(task.effortHours) : '');
+  const [showFollowerPicker, setShowFollowerPicker] = useState(false);
+  const [showRecurrence, setShowRecurrence] = useState(false);
+  const [recFreq, setRecFreq] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [recInterval, setRecInterval] = useState('1');
   return (
     <div className="space-y-6">
       <div>
@@ -418,6 +472,145 @@ function DetailsTab({
             Approved
           </option>
         </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-sm font-semibold text-[#f0f0f5] mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Effort (hours)
+          </h3>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="0"
+              value={effortInput}
+              onChange={e => setEffortInput(e.target.value)}
+              placeholder="Estimated hours"
+              className="flex-1 px-4 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] w-24"
+            />
+            <button
+              onClick={() => {
+                const v = parseFloat(effortInput);
+                if (!isNaN(v) && v >= 0) updateTask(task.id, { effortHours: v });
+              }}
+              className="px-3 py-2 bg-[rgba(0,229,255,0.1)] text-[#00e5ff] text-sm hover:bg-[rgba(0,229,255,0.2)]"
+            >
+              Save
+            </button>
+          </div>
+          {task.effortHours != null && (
+            <p className="text-xs text-[#6b6b80] mt-1">Current estimate: {task.effortHours} h</p>
+          )}
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-[#f0f0f5] mb-3 flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            Followers
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {(task.followers || []).map(fid => {
+              const emp = employees.find(e => e.id === fid);
+              return (
+                <span key={fid} className="inline-flex items-center gap-1 px-2 py-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-sm text-[#f0f0f5]">
+                  {emp?.name || fid}
+                  <button
+                    onClick={() => updateTask(task.id, { followers: (task.followers || []).filter(x => x !== fid) })}
+                    className="text-[#6b6b80] hover:text-[#ef4444]"
+                  >
+                    ×
+                  </button>
+                </span>
+              );
+            })}
+            <button
+              onClick={() => setShowFollowerPicker(!showFollowerPicker)}
+              className="px-2 py-1 text-sm bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]"
+            >
+              + Add
+            </button>
+          </div>
+          {showFollowerPicker && (
+            <select
+              value=""
+              onChange={e => {
+                const fid = e.target.value;
+                if (fid) updateTask(task.id, { followers: [...new Set([...(task.followers || []), fid])] });
+                setShowFollowerPicker(false);
+              }}
+              className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+            >
+              <option value="">Select employee...</option>
+              {employees.filter(e => !(task.followers || []).includes(e.id)).map(e => (
+                <option key={e.id} value={e.id}>{e.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-[#f0f0f5] mb-3 flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          Recurrence
+        </h3>
+        {task.recurrence ? (
+          <div className="flex items-center gap-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] p-3">
+            <span className="text-sm text-[#f0f0f5] capitalize">
+              Every {task.recurrence.interval} {task.recurrence.frequency}{task.recurrence.interval > 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={() => updateTask(task.id, { recurrence: undefined })}
+              className="text-xs text-[#ef4444] hover:underline"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowRecurrence(!showRecurrence)}
+            className="px-3 py-2 text-sm bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)]"
+          >
+            + Set Recurrence
+          </button>
+        )}
+        {showRecurrence && (
+          <div className="mt-2 flex gap-2 items-end">
+            <div>
+              <label className="block text-xs text-[#6b6b80] mb-1">Frequency</label>
+              <select
+                value={recFreq}
+                onChange={e => setRecFreq(e.target.value as any)}
+                className="px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-[#6b6b80] mb-1">Interval</label>
+              <input
+                type="number"
+                min="1"
+                value={recInterval}
+                onChange={e => setRecInterval(e.target.value)}
+                className="px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm w-20"
+              />
+            </div>
+            <button
+              onClick={() => {
+                const i = parseInt(recInterval) || 1;
+                updateTask(task.id, { recurrence: { frequency: recFreq, interval: Math.max(1, i) } });
+                setShowRecurrence(false);
+              }}
+              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+            >
+              Apply
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-6">

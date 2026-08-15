@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate:work-fields": "node scripts/migrate-work-fields.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -74,6 +77,7 @@
     "@vercel/node": "^5.7.15",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "vitest": "^4.1.10"
   }
 }

@@ -381,7 +381,16 @@ function RolesTab() {
     'verify_defects',
     'manage_action_points',
     'manage_modules',
-    'manage_documents'
+    'manage_documents',
+    'develop_work',
+    'review_code',
+    'run_qa',
+    'manage_repositories',
+    'manage_sprints',
+    'manage_templates',
+    'manage_automations',
+    'manage_workflow',
+    'view_portfolio'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {

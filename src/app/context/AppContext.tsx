@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import {
   collection,
   doc,
@@ -14,6 +14,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { sendEmail } from '../../utils/sendEmail';
+import { useAuth } from './AuthContext';
+import { canTransitionWork } from '../../utils/workflow';
+import { getQaTransition, nextQaCycleNumber } from '../../utils/qa';
+import { evaluateAutomation, nextRunId } from '../../utils/automations';
+import { taskWorkType } from '../../utils/work';
 import {
   createFirebaseUser,
   updateFirebaseUserPassword,
@@ -39,7 +44,15 @@ import {
   Tag,
   Module,
   ModuleExpectation,
-  AppDocument
+  AppDocument,
+  Sprint,
+  QaCycle,
+  WorkDependency,
+  WorkTemplate,
+  Automation,
+  AutomationTriggerEvent,
+  Repository,
+  GithubSubDoc
 } from '../types';
 
 type AppContextType = {
@@ -59,6 +72,9 @@ type AppContextType = {
   expectations: ModuleExpectation[];
   actionPoints: ActionPoint[];
   tags: Tag[];
+  sprints: Sprint[];
+  qaCycles: QaCycle[];
+  workDependencies: WorkDependency[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -83,6 +99,8 @@ type AppContextType = {
   updateNotificationRule: (ruleId: string, updates: Partial<NotificationRule>) => Promise<void>;
   deleteNotificationRule: (ruleId: string) => Promise<void>;
   markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: (userId: string) => Promise<void>;
+  notifyWork: (type: Notification['type'], title: string, message: string, recipientIds: string[], relatedTo?: Notification['relatedTo']) => Promise<void>;
   addComment: (params: { taskId?: string; subtaskId?: string; userId: string; content: string }) => Promise<void>;
   getCommentsForTask: (taskId: string) => Comment[];
   getCommentsForSubtask: (subtaskId: string) => Comment[];
@@ -127,6 +145,11 @@ type AppContextType = {
   updateTag: (tagId: string, updates: Partial<Tag>) => Promise<void>;
   deleteTag: (tagId: string) => Promise<void>;
   getTagsForApp: (appId: string) => Tag[];
+  addSprint: (sprint: Omit<Sprint, 'id' | 'createdAt'>) => Promise<void>;
+  updateSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
+  deleteSprint: (sprintId: string) => Promise<void>;
+  getSprintsForApp: (appId: string) => Sprint[];
+  getSprintById: (sprintId: string) => Sprint | undefined;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -208,6 +231,16 @@ function docToNotificationRule(doc: any): NotificationRule {
   return {
     id: doc.id,
     ...data
+  };
+}
+
+function docToNotification(doc: any): Notification {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date(),
+    read: data.read ?? false
   };
 }
 
@@ -307,6 +340,67 @@ function docToTag(doc: any): Tag {
   };
 }
 
+function docToSprint(doc: any): Sprint {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    startDate: safeDate(data.startDate),
+    endDate: safeDate(data.endDate),
+    createdAt: safeDate(data.createdAt) || new Date(),
+    updatedAt: safeDate(data.updatedAt)
+  };
+}
+
+function docToQaCycle(doc: any): QaCycle {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    testedAt: safeDate(data.testedAt) || new Date(),
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
+function docToWorkDependency(doc: any): WorkDependency {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
+function docToWorkTemplate(doc: any): WorkTemplate {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
+function docToAutomation(doc: any): Automation {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    runHistory: Array.isArray(data.runHistory) ? data.runHistory.map((r: any) => ({ ...r, runAt: safeDate(r.runAt) || new Date() })) : [],
+    createdAt: safeDate(data.createdAt) || new Date(),
+    updatedAt: safeDate(data.updatedAt)
+  };
+}
+
+function docToRepository(doc: any): Repository {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    lastSyncedAt: safeDate(data.lastSyncedAt),
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
 function docToActionPoint(doc: any): ActionPoint {
   const data = doc.data();
   return {
@@ -322,6 +416,7 @@ function docToActionPoint(doc: any): ActionPoint {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { currentUser, hasPermission } = useAuth();
   const [apps, setApps] = useState<App[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -339,6 +434,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [expectations, setExpectations] = useState<ModuleExpectation[]>([]);
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [qaCycles, setQaCycles] = useState<QaCycle[]>([]);
+  const [workDependencies, setWorkDependencies] = useState<WorkDependency[]>([]);
+  const [workTemplates, setWorkTemplates] = useState<WorkTemplate[]>([]);
+  const [automations, setAutomations] = useState<Automation[]>([]);
+  const [repositories, setRepositories] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -360,7 +461,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'moduleExpectations'), setter: setExpectations, transformer: docToModuleExpectation },
       { ref: collection(db, 'tags'), setter: setTags, transformer: docToTag },
       { ref: collection(db, 'appDocuments'), setter: setAppDocuments, transformer: docToAppDocument },
-      { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint }
+      { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint },
+      { ref: query(collection(db, 'notifications'), orderBy('createdAt', 'desc')), setter: setNotifications, transformer: docToNotification },
+      { ref: collection(db, 'sprints'), setter: setSprints, transformer: docToSprint },
+      { ref: query(collection(db, 'qaCycles'), orderBy('testedAt', 'desc')), setter: setQaCycles, transformer: docToQaCycle },
+      { ref: collection(db, 'workDependencies'), setter: setWorkDependencies, transformer: docToWorkDependency },
+      { ref: collection(db, 'workTemplates'), setter: setWorkTemplates, transformer: docToWorkTemplate },
+      { ref: collection(db, 'automations'), setter: setAutomations, transformer: docToAutomation },
+      { ref: collection(db, 'repositories'), setter: setRepositories, transformer: docToRepository }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -384,11 +492,115 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const resolveRelatedEmails = useCallback((
+    relatedTo: Notification['relatedTo'],
+    primaryRecipients: { type: string; id?: string }[],
+    ccRecipients: { type: 'role' | 'user'; id: string }[]
+  ): { toEmails: string[]; ccEmails: string[] } => {
+    const toEmails: string[] = [];
+    const ccEmails: string[] = [];
+
+    const addTo = (id?: string) => {
+      if (!id) return;
+      const u = employees.find(e => e.id === id);
+      if (u?.email && !toEmails.includes(u.email)) toEmails.push(u.email);
+    };
+    const addRole = (roleId?: string, to: string[] = toEmails) => {
+      if (!roleId) return;
+      employees.filter(e => e.roleId === roleId).forEach(u => {
+        if (u.email && !to.includes(u.email)) to.push(u.email);
+      });
+    };
+
+    switch (relatedTo?.type) {
+      case 'task': {
+        const task = tasks.find(t => t.id === relatedTo.id);
+        if (task) {
+          for (const r of primaryRecipients) {
+            if (r.type === 'assigned_user') task.assignedTo.forEach(addTo);
+            else if (r.type === 'approver' && task.approvedBy) addTo(task.approvedBy);
+            else if (r.type === 'creator') addTo(task.assignedTo[0]);
+            else if (r.type === 'role') addRole(r.id);
+            else if (r.type === 'user') addTo(r.id);
+          }
+          for (const r of ccRecipients) {
+            if (r.type === 'role') addRole(r.id, ccEmails);
+            else if (r.type === 'user') {
+              const u = employees.find(e => e.id === r.id);
+              if (u?.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+            }
+          }
+        }
+        break;
+      }
+      case 'subtask': {
+        const subtask = subtasks.find(s => s.id === relatedTo.id);
+        if (subtask) {
+          for (const r of primaryRecipients) {
+            if (r.type === 'assigned_user') subtask.assignedTo.forEach(addTo);
+            else if (r.type === 'role') addRole(r.id);
+            else if (r.type === 'user') addTo(r.id);
+          }
+          for (const r of ccRecipients) {
+            if (r.type === 'role') addRole(r.id, ccEmails);
+            else if (r.type === 'user') {
+              const u = employees.find(e => e.id === r.id);
+              if (u?.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+            }
+          }
+        }
+        break;
+      }
+      case 'defect': {
+        const defect = defects.find(d => d.id === relatedTo.id);
+        if (defect) {
+          for (const r of primaryRecipients) {
+            if (r.type === 'assigned_user') addTo(defect.assignedTo);
+            else if (r.type === 'creator') addTo(defect.reportedBy);
+            else if (r.type === 'role') addRole(r.id);
+            else if (r.type === 'user') addTo(r.id);
+          }
+          for (const r of ccRecipients) {
+            if (r.type === 'role') addRole(r.id, ccEmails);
+            else if (r.type === 'user') {
+              const u = employees.find(e => e.id === r.id);
+              if (u?.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+            }
+          }
+        }
+        break;
+      }
+      case 'action_point': {
+        const ap = actionPoints.find(a => a.id === relatedTo.id);
+        if (ap) {
+          for (const r of primaryRecipients) {
+            if (r.type === 'assigned_user') ap.assignedTo.forEach(addTo);
+            else if (r.type === 'role') addRole(r.id);
+            else if (r.type === 'user') addTo(r.id);
+          }
+          for (const r of ccRecipients) {
+            if (r.type === 'role') addRole(r.id, ccEmails);
+            else if (r.type === 'user') {
+              const u = employees.find(e => e.id === r.id);
+              if (u?.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
+            }
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    return { toEmails, ccEmails };
+  }, [employees, tasks, subtasks, defects, actionPoints]);
+
   const createNotification = useCallback(async (
     type: Notification['type'],
     title: string,
     message: string,
-    relatedTo?: Notification['relatedTo']
+    relatedTo?: Notification['relatedTo'],
+    recipientIds?: string[]
   ) => {
     await addDoc(collection(db, 'notifications'), {
       type,
@@ -396,7 +608,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       message,
       createdAt: serverTimestamp(),
       read: false,
-      relatedTo
+      relatedTo,
+      recipientId: recipientIds && recipientIds.length === 1 ? recipientIds[0] : undefined
     });
 
     const matchingRules = notificationRules.filter(
@@ -411,81 +624,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const primaryRecipients = rule.primaryRecipients || [];
       const ccRecipients = rule.ccRecipients || [];
 
-      const toEmails: string[] = [];
-      const ccEmails: string[] = [];
-
-      if (relatedTo?.type === 'task') {
-        const task = tasks.find(t => t.id === relatedTo.id);
-        if (task) {
-          for (const recipient of primaryRecipients) {
-            if (recipient.type === 'assigned_user') {
-              task.assignedTo.forEach(uid => {
-                const user = employees.find(e => e.id === uid);
-                if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
-              });
-            } else if (recipient.type === 'approver' && task.approvedBy) {
-              const approver = employees.find(e => e.id === task.approvedBy);
-              if (approver?.email && !toEmails.includes(approver.email)) toEmails.push(approver.email);
-            } else if (recipient.type === 'creator') {
-              const creator = employees.find(e => e.id === task.assignedTo[0]);
-              if (creator?.email && !toEmails.includes(creator.email)) toEmails.push(creator.email);
-            } else if (recipient.type === 'role' && recipient.id) {
-              employees.filter(e => e.roleId === recipient.id).forEach(u => {
-                if (u.email && !toEmails.includes(u.email)) toEmails.push(u.email);
-              });
-            } else if (recipient.type === 'user' && recipient.id) {
-              const user = employees.find(e => e.id === recipient.id);
-              if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
-            }
-          }
-
-          for (const recipient of ccRecipients) {
-            if (recipient.type === 'role') {
-              employees.filter(e => e.roleId === recipient.id).forEach(u => {
-                if (u.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
-              });
-            } else if (recipient.type === 'user') {
-              const user = employees.find(e => e.id === recipient.id);
-              if (user?.email && !ccEmails.includes(user.email)) ccEmails.push(user.email);
-            }
-          }
-        }
-      } else if (relatedTo?.type === 'subtask') {
-        const subtask = subtasks.find(s => s.id === relatedTo.id);
-        if (subtask) {
-          for (const recipient of primaryRecipients) {
-            if (recipient.type === 'assigned_user') {
-              subtask.assignedTo.forEach(uid => {
-                const user = employees.find(e => e.id === uid);
-                if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
-              });
-            } else if (recipient.type === 'role' && recipient.id) {
-              employees.filter(e => e.roleId === recipient.id).forEach(u => {
-                if (u.email && !toEmails.includes(u.email)) toEmails.push(u.email);
-              });
-            } else if (recipient.type === 'user' && recipient.id) {
-              const user = employees.find(e => e.id === recipient.id);
-              if (user?.email && !toEmails.includes(user.email)) toEmails.push(user.email);
-            }
-          }
-
-          for (const recipient of ccRecipients) {
-            if (recipient.type === 'role') {
-              employees.filter(e => e.roleId === recipient.id).forEach(u => {
-                if (u.email && !ccEmails.includes(u.email)) ccEmails.push(u.email);
-              });
-            } else if (recipient.type === 'user') {
-              const user = employees.find(e => e.id === recipient.id);
-              if (user?.email && !ccEmails.includes(user.email)) ccEmails.push(user.email);
-            }
-          }
-        }
-      }
+      const { toEmails, ccEmails } = relatedTo
+        ? resolveRelatedEmails(relatedTo, primaryRecipients, ccRecipients)
+        : { toEmails: [] as string[], ccEmails: [] as string[] };
 
       const allRecipients = [...toEmails, ...ccEmails];
       const uniqueRecipients = [...new Set(allRecipients)];
 
-      if (uniqueRecipients.length > 0) {
+      if (recipientIds && recipientIds.length > 0) {
+        recipientIds.forEach(id => {
+          const u = employees.find(e => e.id === id);
+          if (u?.email && !toEmails.includes(u.email)) toEmails.push(u.email);
+        });
+      }
+
+      if (uniqueRecipients.length > 0 || toEmails.length > 0) {
         let variables: Record<string, string> = {};
 
         if (relatedTo?.type === 'task') {
@@ -524,6 +677,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
               assigned_user: assignee?.name || ''
             };
           }
+        } else if (relatedTo?.type === 'defect') {
+          const defect = defects.find(d => d.id === relatedTo.id);
+          if (defect) {
+            const assignee = employees.find(e => e.id === defect.assignedTo);
+            const app = defect.applicationId ? apps.find(a => a.id === defect.applicationId) : null;
+            variables = {
+              defect_code: defect.defectCode,
+              defect_title: defect.title,
+              defect_status: defect.status,
+              defect_severity: defect.severity,
+              defect_priority: defect.priority,
+              assigned_user: assignee?.name || '',
+              user_name: assignee?.name || '',
+              app_name: app?.name || ''
+            };
+          }
+        } else if (relatedTo?.type === 'action_point') {
+          const ap = actionPoints.find(a => a.id === relatedTo.id);
+          if (ap) {
+            const assignee = ap.assignedTo.length > 0 ? employees.find(e => e.id === ap.assignedTo[0]) : null;
+            variables = {
+              action_point_title: ap.title,
+              action_point_status: ap.status,
+              assigned_user: assignee?.name || '',
+              user_name: assignee?.name || ''
+            };
+          }
         }
 
         let emailSubject = rule.subject;
@@ -540,7 +720,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[Email] No recipients resolved for rule:`, rule.event);
       }
     }
-  }, [notificationRules, employees, tasks, goals, apps, subtasks]);
+  }, [notificationRules, employees, tasks, goals, apps, subtasks, defects, actionPoints, resolveRelatedEmails]);
 
   const sendTaskNotification = useCallback(async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -555,20 +735,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     const event = statusToEvent[task.status] || 'task_assigned';
+
     await createNotification(
       event as any,
       `Task: ${task.name}`,
       `Notification for "${task.name}" (${task.status.replace(/_/g, ' ')})`,
-      { type: 'task', id: task.id }
+      { type: 'task', id: task.id },
+      task.assignedTo
     );
 
     await updateDoc(doc(db, 'tasks', taskId), {
       lastEmailSentAt: serverTimestamp()
     });
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, lastEmailSentAt: new Date() } : t));
-  }, [tasks, createNotification]);
+}, [tasks, createNotification]);
 
-  const sendActionPointNotification = useCallback(async (apId: string) => {
+  const notifyWork = useCallback(async (
+    type: Notification['type'],
+    title: string,
+    message: string,
+    recipientIds: string[],
+    relatedTo?: Notification['relatedTo']
+  ) => {
+    if (!recipientIds || recipientIds.length === 0) return;
+    const uniqueIds = [...new Set(recipientIds)];
+    await Promise.all(uniqueIds.map(id =>
+      addDoc(collection(db, 'notifications'), {
+        type,
+        title,
+        message,
+        createdAt: serverTimestamp(),
+        read: false,
+        relatedTo,
+        recipientId: id
+      })
+    ));
+  }, []);
+
+const sendActionPointNotification = useCallback(async (apId: string) => {
     const ap = actionPoints.find(a => a.id === apId);
     if (!ap) return;
 
@@ -712,12 +916,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
     const taskId = `task-${Date.now()}`;
+    const goal = task.goalId ? goals.find(g => g.id === task.goalId) : null;
+    const appId = task.appId || goal?.appId;
+    const phaseId = task.phaseId || goal?.phaseId;
     await setDoc(doc(db, 'tasks', taskId), sanitizeForFirestore({
       ...task,
       id: taskId,
+      appId,
+      phaseId,
+      workType: task.workType || 'non-development',
       createdAt: serverTimestamp()
     }));
-    setTasks(prev => [{ ...task, id: taskId, createdAt: new Date() } as Task, ...prev]);
+    setTasks(prev => [{ ...task, id: taskId, appId, phaseId, workType: task.workType || 'non-development', createdAt: new Date() } as Task, ...prev]);
     const assigneeNames = task.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
     await addActivity({
       type: 'task_created',
@@ -726,14 +936,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       description: `was assigned task "${task.name}"`,
       relatedTo: { type: 'task', id: taskId, name: task.name }
     });
-    await createNotification(
-      'task_assigned',
+    await notifyWork(
+      'work_assigned',
       'New Task Assigned',
       `You have been assigned: ${task.name}`,
+      task.assignedTo,
       { type: 'task', id: taskId }
     );
-    return { id: taskId, ...task, createdAt: new Date() };
-  }, [employees, addActivity, createNotification]);
+    return { id: taskId, ...task, appId, phaseId, workType: task.workType || 'non-development', createdAt: new Date() };
+  }, [employees, goals, addActivity, createNotification, notifyWork]);
 
   const deleteTask = useCallback(async (taskId: string) => {
     const taskSubtasks = subtasks.filter(s => s.taskId === taskId);
@@ -743,9 +954,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'tasks', taskId));
   }, [subtasks]);
 
-  const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
+const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
+
+    const statusChanged = !!updates.status && updates.status !== task.status;
+
+    if (updates.status && updates.status !== task.status) {
+      const allowed = canTransitionWork({
+        kind: 'task',
+        currentStatus: task.status,
+        nextStatus: updates.status,
+        workType: taskWorkType(task),
+        can: hasPermission
+      });
+      if (!allowed) {
+        console.warn(`[Workflow] Task ${taskId} transition ${task.status} -> ${updates.status} blocked for current role.`);
+        return;
+      }
+      const doneStates = ['completed', 'approved'];
+      if (doneStates.includes(updates.status)) {
+        const blockers = workDependencies.filter(d =>
+          d.toKind === 'task' && d.toId === taskId && d.type === 'blocked_by'
+        );
+        if (blockers.length > 0) {
+          console.warn(`[Workflow] Task ${taskId} blocked by ${blockers.length} dependency(ies); cannot complete.`);
+          return;
+        }
+      }
+    }
 
     const updateData: any = { ...updates };
     if (updates.status === 'in_progress' && task.status === 'not_started') {
@@ -828,7 +1065,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     await updateDoc(doc(db, 'tasks', taskId), updateData);
-  }, [tasks, employees, addActivity, createNotification]);
+
+    if (statusChanged) {
+      await runAutomationForEvent('task_status_changed', {
+        workKind: 'task',
+        workId: taskId,
+        workStatus: updates.status || task.status,
+        workType: task.workType || 'non-development'
+      });
+    }
+  }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies, runAutomationForEvent]);
 
   const approveTask = useCallback(async (taskId: string, approverId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -1027,13 +1273,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const markNotificationRead = useCallback(async (notificationId: string) => {
     await updateDoc(doc(db, 'notifications', notificationId), { read: true });
+    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
   }, []);
 
-  const addComment = useCallback(async ({ taskId, subtaskId, userId, content }: { taskId?: string; subtaskId?: string; userId: string; content: string }) => {
+  const markAllNotificationsRead = useCallback(async (userId: string) => {
+    const mine = notifications.filter(n => !n.read && (!n.recipientId || n.recipientId === userId));
+    await Promise.all(mine.map(n => updateDoc(doc(db, 'notifications', n.id), { read: true })));
+    setNotifications(prev => prev.map(n => (!n.read && (!n.recipientId || n.recipientId === userId)) ? { ...n, read: true } : n));
+  }, [notifications]);
+
+  const addComment = useCallback(async ({ taskId, subtaskId, userId, content, defectId, actionPointId, qaCycleId }: {
+    taskId?: string;
+    subtaskId?: string;
+    userId: string;
+    content: string;
+    defectId?: string;
+    actionPointId?: string;
+    qaCycleId?: string;
+  }) => {
     const user = employees.find(e => e.id === userId);
     await addDoc(collection(db, 'comments'), {
       taskId: taskId || null,
       subtaskId: subtaskId || null,
+      defectId: defectId || null,
+      actionPointId: actionPointId || null,
+      qaCycleId: qaCycleId || null,
       userId,
       userName: user?.name || 'Unknown',
       content,
@@ -1047,6 +1311,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getCommentsForSubtask = useCallback((subtaskId: string) => {
     return comments.filter(comment => comment.subtaskId === subtaskId);
+  }, [comments]);
+
+  const getCommentsForDefect = useCallback((defectId: string) => {
+    return comments.filter(comment => comment.defectId === defectId);
+  }, [comments]);
+
+  const getCommentsForActionPoint = useCallback((apId: string) => {
+    return comments.filter(comment => comment.actionPointId === apId);
   }, [comments]);
 
   const getSubtasksForTask = useCallback((taskId: string) => {
@@ -1120,12 +1392,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       relatedTo: { type: 'task', id: defectId, name: defectData.title }
     });
 
+    if (defectData.assignedTo) {
+      await notifyWork(
+        'defect_assigned',
+        `Defect Assigned: ${defectData.title}`,
+        `You have been assigned defect ${defectCode}: ${defectData.title}`,
+        [defectData.assignedTo],
+        { type: 'defect', id: defectId }
+      );
+    }
+
     return newDefect;
-  }, [employees, generateDefectCode, addActivity]);
+  }, [employees, generateDefectCode, addActivity, notifyWork]);
 
   const updateDefect = useCallback(async (defectId: string, updates: Partial<Defect>, userId?: string, userName?: string) => {
     const defect = defects.find(d => d.id === defectId);
     if (!defect) return;
+
+    const statusChanged = !!updates.status && updates.status !== defect.status;
+
+    if (updates.status && updates.status !== defect.status) {
+      const allowed = canTransitionWork({
+        kind: 'defect',
+        currentStatus: defect.status,
+        nextStatus: updates.status,
+        workType: defect.workType || 'development',
+        can: hasPermission
+      });
+      if (!allowed) {
+        console.warn(`[Workflow] Defect ${defectId} transition ${defect.status} -> ${updates.status} blocked for current role.`);
+        return;
+      }
+      if (updates.status === 'closed') {
+        const blockers = workDependencies.filter(d =>
+          d.toKind === 'defect' && d.toId === defectId && d.type === 'blocked_by'
+        );
+        if (blockers.length > 0) {
+          console.warn(`[Workflow] Defect ${defectId} blocked by ${blockers.length} dependency(ies); cannot close.`);
+          return;
+        }
+      }
+    }
 
     const updateData: any = { ...updates, updatedAt: new Date() };
 
@@ -1147,6 +1454,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateData.verificationDate = new Date();
       updateData.status = 'closed';
       updateData.closedAt = new Date();
+      if (userId) updateData.testedBy = userId;
+      updateData.testCycle = `QA-${String((defect.reopenedCount || 0) + 1).padStart(2, '0')}`;
     }
 
     if (userId && userName) {
@@ -1166,7 +1475,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     await updateDoc(doc(db, 'defects', defectId), sanitizeForFirestore(updateData));
-  }, [defects]);
+
+    if (statusChanged) {
+      await runAutomationForEvent('defect_status_changed', {
+        workKind: 'defect',
+        workId: defectId,
+        workStatus: updates.status || defect.status,
+        workType: defect.workType || 'development'
+      });
+    }
+  }, [defects, hasPermission, workDependencies, runAutomationForEvent]);
 
   const deleteDefect = useCallback(async (defectId: string) => {
     await deleteDoc(doc(db, 'defects', defectId));
@@ -1306,6 +1624,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const apId = `ap-${Date.now()}`;
     const now = new Date();
 
+    const goal = ap.goalId ? goals.find(g => g.id === ap.goalId) : null;
+    const appId = ap.appId || goal?.appId;
+    const phaseId = ap.phaseId || goal?.phaseId;
+
     let linkedTaskId = ap.taskId;
 
     if (!linkedTaskId && ap.goalId) {
@@ -1313,9 +1635,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         name: ap.title,
         description: ap.description || '',
         goalId: ap.goalId,
+        appId,
+        phaseId,
         assignedTo: ap.assignedTo,
         priority: ap.priority,
-        status: 'not_started'
+        status: 'not_started',
+        workType: ap.workType
       });
       linkedTaskId = (task as any)?.id;
     }
@@ -1325,6 +1650,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       title: ap.title,
       description: ap.description || '',
       goalId: ap.goalId || null,
+      appId: appId || null,
+      phaseId: phaseId || null,
       assignedTo: ap.assignedTo,
       priority: ap.priority,
       status: 'pending',
@@ -1333,9 +1660,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       taskId: linkedTaskId || null,
       createdBy: ap.createdBy,
       createdAt: now,
-      notes: ap.notes || ''
+      notes: ap.notes || '',
+      workType: ap.workType || 'non-development',
+      source: ap.source || 'manual'
     }));
-  }, [addTask]);
+
+    await notifyWork(
+      'action_point_assigned',
+      'New Action Point',
+      `You have been assigned action point: ${ap.title}`,
+      ap.assignedTo,
+      { type: 'action_point', id: apId }
+    );
+  }, [addTask, goals, notifyWork]);
 
   const updateActionPoint = useCallback(async (apId: string, updates: Partial<ActionPoint>) => {
     await updateDoc(doc(db, 'actionPoints', apId), sanitizeForFirestore(updates));
@@ -1371,6 +1708,404 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getTagsForApp = useCallback((appId: string) => {
     return tags.filter(t => t.appId === appId);
   }, [tags]);
+
+  const addSprint = useCallback(async (sprint: Omit<Sprint, 'id' | 'createdAt'>) => {
+    const sprintId = `sprint-${Date.now()}`;
+    await setDoc(doc(db, 'sprints', sprintId), {
+      ...sprint,
+      id: sprintId,
+      createdAt: serverTimestamp()
+    });
+    setSprints(prev => [{ ...sprint, id: sprintId, createdAt: new Date() }, ...prev]);
+  }, []);
+
+  const updateSprint = useCallback(async (sprintId: string, updates: Partial<Sprint>) => {
+    await updateDoc(doc(db, 'sprints', sprintId), {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+  }, []);
+
+  const deleteSprint = useCallback(async (sprintId: string) => {
+    await deleteDoc(doc(db, 'sprints', sprintId));
+    setSprints(prev => prev.filter(s => s.id !== sprintId));
+  }, []);
+
+  const getSprintsForApp = useCallback((appId: string) => {
+    return sprints.filter(s => s.appId === appId);
+  }, [sprints]);
+
+  const getSprintById = useCallback((sprintId: string) => {
+    return sprints.find(s => s.id === sprintId);
+  }, [sprints]);
+
+  const addQaCycle = useCallback(async (cycle: Omit<QaCycle, 'id' | 'createdAt' | 'cycleNumber'>) => {
+    const cycleId = `qa-cycle-${Date.now()}`;
+    const existing = qaCycles.filter(c => c.workKind === cycle.workKind && c.workId === cycle.workId);
+    const cycleNumber = existing.length > 0 ? Math.max(...existing.map(c => c.cycleNumber)) + 1 : 1;
+    await setDoc(doc(db, 'qaCycles', cycleId), {
+      ...cycle,
+      id: cycleId,
+      cycleNumber,
+      createdAt: serverTimestamp(),
+      testedAt: serverTimestamp()
+    });
+    setQaCycles(prev => [{ ...cycle, id: cycleId, cycleNumber, createdAt: new Date(), testedAt: new Date() }, ...prev]);
+    return cycleId;
+  }, [qaCycles]);
+
+  const getQaCyclesForWork = useCallback((workKind: string, workId: string) => {
+    return qaCycles
+      .filter(c => c.workKind === workKind && c.workId === workId)
+      .sort((a, b) => b.cycleNumber - a.cycleNumber || b.testedAt.getTime() - a.testedAt.getTime());
+  }, [qaCycles]);
+
+  const recordQaResult = useCallback(async (args: {
+    workKind: 'task' | 'defect' | 'action_point';
+    workId: string;
+    environment: QaCycle['environment'];
+    result: QaCycleResult;
+    notes: string;
+    defectsDiscovered: string[];
+  }) => {
+    const { workKind, workId, environment, result, notes, defectsDiscovered } = args;
+    if (!currentUser) return null;
+
+    const existing = qaCycles.filter(c => c.workKind === workKind && c.workId === workId);
+    const cycleNumber = nextQaCycleNumber(existing, workKind, workId);
+
+    const transition = getQaTransition({
+      kind: workKind,
+      currentStatus: workKind === 'defect' ? (defects.find(d => d.id === workId)?.status || 'open')
+        : workKind === 'task' ? (tasks.find(t => t.id === workId)?.status || 'not_started')
+        : 'pending',
+      result,
+      can: hasPermission
+    });
+
+    if (!transition) {
+      console.warn('[QA] Transition not permitted for current role.');
+      return null;
+    }
+
+    if (workKind === 'defect') {
+      await updateDefect(workId, {
+        status: transition.status as DefectStatus,
+        fixVerified: transition.fixVerified,
+        ...(transition.reopen ? { status: 'in_progress' as DefectStatus, reopenedCount: (defects.find(d => d.id === workId)?.reopenedCount || 0) + 1 } : {})
+      }, currentUser.id, currentUser.name);
+    } else if (workKind === 'task') {
+      await updateTask(workId, { status: transition.status as TaskStatus });
+    }
+
+    const cycleId = await addQaCycle({
+      workKind,
+      workId,
+      testerId: currentUser.id,
+      environment,
+      result,
+      notes,
+      defectsDiscovered
+    });
+
+    return cycleId;
+  }, [qaCycles, defects, tasks, currentUser, hasPermission, updateDefect, updateTask, addQaCycle]);
+
+  const addWorkDependency = useCallback(async (dep: Omit<WorkDependency, 'id' | 'createdAt'>) => {
+    const depId = `dep-${Date.now()}`;
+    await setDoc(doc(db, 'workDependencies', depId), {
+      ...dep,
+      id: depId,
+      createdAt: serverTimestamp()
+    });
+    setWorkDependencies(prev => [{ ...dep, id: depId, createdAt: new Date() }, ...prev]);
+    return depId;
+  }, []);
+
+  const deleteWorkDependency = useCallback(async (depId: string) => {
+    await deleteDoc(doc(db, 'workDependencies', depId));
+    setWorkDependencies(prev => prev.filter(d => d.id !== depId));
+  }, []);
+
+  const getDependenciesForWork = useCallback((kind: string, id: string) => {
+    return workDependencies.filter(d => (d.fromKind === kind && d.fromId === id) || (d.toKind === kind && d.toId === id));
+  }, [workDependencies]);
+
+  const isWorkBlocked = useCallback((kind: string, id: string) => {
+    return workDependencies.some(d =>
+      (d.toKind === kind && d.toId === id && d.type === 'blocked_by') ||
+      (d.fromKind === kind && d.fromId === id && d.type === 'blocks' && false)
+    );
+  }, [workDependencies]);
+
+  const addWorkTemplate = useCallback(async (template: Omit<WorkTemplate, 'id' | 'createdAt'>) => {
+    const templateId = `wt-${Date.now()}`;
+    await setDoc(doc(db, 'workTemplates', templateId), {
+      ...template,
+      id: templateId,
+      createdAt: serverTimestamp()
+    });
+    setWorkTemplates(prev => [{ ...template, id: templateId, createdAt: new Date() }, ...prev]);
+    return templateId;
+  }, []);
+
+  const deleteWorkTemplate = useCallback(async (templateId: string) => {
+    await deleteDoc(doc(db, 'workTemplates', templateId));
+    setWorkTemplates(prev => prev.filter(t => t.id !== templateId));
+  }, []);
+
+  const createWorkFromTemplate = useCallback(async (templateId: string, overrides?: { appId?: string; goalId?: string; assignedTo?: string[] }) => {
+    const template = workTemplates.find(t => t.id === templateId);
+    if (!template) return null;
+    const appId = overrides?.appId || template.appId;
+    const assignedTo = overrides?.assignedTo || [];
+    if (template.workKind === 'task') {
+      const taskId = `task-${Date.now()}`;
+      await setDoc(doc(db, 'tasks', taskId), {
+        id: taskId,
+        goalId: overrides?.goalId,
+        appId,
+        name: template.fields.title,
+        description: template.fields.description || '',
+        assignedTo,
+        status: 'not_started',
+        priority: template.fields.priority || 'medium',
+        workType: template.fields.workType || 'non-development',
+        tags: [],
+        createdAt: serverTimestamp(),
+        origin: { source: 'template', templateId }
+      });
+      for (const sub of template.fields.subtasks || []) {
+        await setDoc(doc(db, 'subtasks', `st-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`), {
+          id: `st-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          taskId,
+          name: sub,
+          assignedTo,
+          status: 'pending',
+          priority: 'medium',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+      return taskId;
+    }
+    if (template.workKind === 'action_point') {
+      const apId = `ap-${Date.now()}`;
+      await setDoc(doc(db, 'actionPoints', apId), {
+        id: apId,
+        title: template.fields.title,
+        description: template.fields.description || '',
+        assignedTo,
+        priority: template.fields.priority || 'medium',
+        status: 'pending',
+        weekStart: new Date(),
+        date: new Date(),
+        createdBy: currentUser?.id || '',
+        createdAt: new Date(),
+        notes: '',
+        workType: template.fields.workType || 'non-development',
+        source: 'manual'
+      });
+      return apId;
+    }
+    if (template.workKind === 'defect') {
+      const defectId = `defect-${Date.now()}`;
+      await setDoc(doc(db, 'defects', defectId), {
+        id: defectId,
+        defectCode: `DEF-${Date.now().toString().slice(-4)}`,
+        title: template.fields.title,
+        description: template.fields.description || '',
+        applicationId: appId || '',
+        module: '',
+        environment: 'staging',
+        reportedBy: currentUser?.id || '',
+        assignedTo: assignedTo[0] || '',
+        dateReported: new Date(),
+        issueType: template.fields.issueType || 'functional',
+        severity: template.fields.severity || 'minor',
+        priority: template.fields.priority || 'medium',
+        reproducibility: 'sometimes',
+        frequency: 'sometimes',
+        status: 'open',
+        fixVerified: false,
+        reopenedCount: 0,
+        stepsToReproduce: '',
+        expectedResult: '',
+        actualResult: '',
+        qaComments: '',
+        developerNotes: '',
+        activityLogs: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        workType: 'development',
+        origin: { source: 'template', templateId }
+      });
+      return defectId;
+    }
+    return null;
+  }, [workTemplates, currentUser]);
+
+  const addAutomation = useCallback(async (automation: Omit<Automation, 'id' | 'runHistory' | 'createdAt' | 'updatedAt'>) => {
+    const automationId = `auto-${Date.now()}`;
+    await setDoc(doc(db, 'automations', automationId), {
+      ...automation,
+      id: automationId,
+      runHistory: [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    setAutomations(prev => [{ ...automation, id: automationId, runHistory: [], createdAt: new Date() }, ...prev]);
+    return automationId;
+  }, []);
+
+  const updateAutomation = useCallback(async (automationId: string, updates: Partial<Automation>) => {
+    await updateDoc(doc(db, 'automations', automationId), sanitizeForFirestore({ ...updates, updatedAt: serverTimestamp() }));
+    setAutomations(prev => prev.map(a => (a.id === automationId ? { ...a, ...updates, updatedAt: new Date() } : a)));
+  }, []);
+
+  const deleteAutomation = useCallback(async (automationId: string) => {
+    await deleteDoc(doc(db, 'automations', automationId));
+    setAutomations(prev => prev.filter(a => a.id !== automationId));
+  }, []);
+
+  const automationLockRef = useRef<Map<string, number>>(new Map());
+  const automationRunsRef = useRef(0);
+  const automationWindowRef = useRef(Date.now());
+
+  /**
+   * Evaluate all enabled rules for an event and apply matching actions.
+   * Idempotency: dedupe by (event, workId, ruleId) with a 30s window;
+   * rate cap: max 20 executions / 10s; never re-enters for same key.
+   */
+  const runAutomationForEvent = useCallback(async (evt: AutomationTriggerEvent, payload: {
+    workKind: string;
+    workId: string;
+    workStatus: string;
+    workType?: string;
+  }) => {
+    const now = Date.now();
+    if (now - automationWindowRef.current > 10000) {
+      automationWindowRef.current = now;
+      automationRunsRef.current = 0;
+    }
+    if (automationRunsRef.current >= 20) {
+      console.warn('[Automation] Rate cap reached (20 runs / 10s); skipping.');
+      return;
+    }
+
+    for (const rule of automations) {
+      const key = `${evt}|${payload.workId}|${rule.id}`;
+      const last = automationLockRef.current.get(key);
+      if (last && now - last < 30000) continue;
+
+      const verdict = evaluateAutomation(rule, {
+        event: evt,
+        workKind: payload.workKind,
+        workId: payload.workId,
+        workStatus: payload.workStatus,
+        workType: payload.workType
+      }, { event: evt, workId: payload.workId, ruleId: rule.id, timestamp: last || 0 });
+
+      if (!verdict.applies) continue;
+
+      automationLockRef.current.set(key, now);
+      automationRunsRef.current += 1;
+
+      const runId = nextRunId();
+      const outcome: Automation['runHistory'][number] = {
+        runId,
+        runAt: new Date(),
+        workKind: payload.workKind,
+        workId: payload.workId,
+        event: evt,
+        outcome: 'applied',
+        note: verdict.reason
+      };
+
+      try {
+        if (rule.action.setStatus) {
+          if (payload.workKind === 'task') {
+            await updateTask(payload.workId, { status: rule.action.setStatus as TaskStatus });
+          } else if (payload.workKind === 'defect') {
+            await updateDefect(payload.workId, { status: rule.action.setStatus as DefectStatus });
+          } else if (payload.workKind === 'action_point') {
+            await updateActionPoint(payload.workId, { status: rule.action.setStatus as ActionPointStatus });
+          }
+        }
+        if (rule.action.addTag && payload.workKind === 'task') {
+          const task = tasks.find(t => t.id === payload.workId);
+          if (task) {
+            await updateTask(payload.workId, { tags: [...new Set([...(task.tags || []), rule.action.addTag])] });
+          }
+        }
+        if (rule.action.notify) {
+          const { role, userIds, message } = rule.action.notify;
+          const targets = userIds?.length
+            ? userIds
+            : role ? employees.filter(e => roles.find(r => r.id === e.roleId)?.permissions.includes(role)).map(e => e.id)
+            : [];
+          if (targets.length > 0) {
+            await notifyWork(
+              'work_status_changed',
+              rule.name,
+              message || `Automation "${rule.name}" applied to ${payload.workKind}.`,
+              targets,
+              { type: payload.workKind === 'defect' ? 'defect' : payload.workKind === 'action_point' ? 'action_point' : 'work', id: payload.workId }
+            );
+          }
+        }
+        outcome.outcome = 'applied';
+      } catch (e) {
+        console.error('[Automation] Action failed:', e);
+        outcome.outcome = 'skipped';
+        outcome.note = String(e);
+      }
+
+      const updatedHistory = [...(rule.runHistory || []), outcome];
+      await updateDoc(doc(db, 'automations', rule.id), sanitizeForFirestore({
+        runHistory: updatedHistory,
+        updatedAt: serverTimestamp()
+      }));
+      setAutomations(prev => prev.map(a => (a.id === rule.id ? { ...a, runHistory: updatedHistory, updatedAt: new Date() } : a)));
+    }
+  }, [automations, tasks, employees, roles, updateTask, updateDefect, updateActionPoint, notifyWork]);
+
+  const addRepository = useCallback(async (repo: Omit<Repository, 'id' | 'createdAt'>) => {
+    const repoId = `repo-${Date.now()}`;
+    await setDoc(doc(db, 'repositories', repoId), {
+      ...repo,
+      id: repoId,
+      createdAt: serverTimestamp()
+    });
+    setRepositories(prev => [{ ...repo, id: repoId, createdAt: new Date() }, ...prev]);
+    return repoId;
+  }, []);
+
+  const updateRepository = useCallback(async (repoId: string, updates: Partial<Repository>) => {
+    await updateDoc(doc(db, 'repositories', repoId), sanitizeForFirestore({ ...updates, updatedAt: serverTimestamp() }));
+  }, []);
+
+  const deleteRepository = useCallback(async (repoId: string) => {
+    await deleteDoc(doc(db, 'repositories', repoId));
+    setRepositories(prev => prev.filter(r => r.id !== repoId));
+  }, []);
+
+  const getRepositoriesForApp = useCallback((appId: string) => {
+    return repositories.filter(r => r.appId === appId);
+  }, [repositories]);
+
+  /** Attach/refresh the GitHub sub-doc on a task or defect (additive). */
+  const updateWorkGithub = useCallback(async (kind: 'task' | 'defect', workId: string, github: Partial<GithubSubDoc>) => {
+    if (kind === 'task') {
+      const task = tasks.find(t => t.id === workId);
+      if (!task) return;
+      await updateTask(workId, { github: { status: 'not_started', ...(task.github || {}), ...github } });
+    } else {
+      const defect = defects.find(d => d.id === workId);
+      if (!defect) return;
+      await updateDefect(workId, { github: { status: 'not_started', ...(defect.github || {}), ...github } });
+    }
+  }, [tasks, defects, updateTask, updateDefect]);
 
   return (
     <AppContext.Provider
@@ -1411,9 +2146,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateNotificationRule,
         deleteNotificationRule,
         markNotificationRead,
+        markAllNotificationsRead,
+        notifyWork,
         addComment,
         getCommentsForTask,
         getCommentsForSubtask,
+        getCommentsForDefect,
+        getCommentsForActionPoint,
         getSubtasksForTask,
         getTasksForEmployee,
         getGoalsForApp,
@@ -1457,7 +2196,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addTag,
         updateTag,
         deleteTag,
-        getTagsForApp
+        getTagsForApp,
+        sprints,
+        addSprint,
+        updateSprint,
+        deleteSprint,
+        getSprintsForApp,
+        getSprintById,
+        qaCycles,
+        addQaCycle,
+        getQaCyclesForWork,
+        recordQaResult,
+        workDependencies,
+        addWorkDependency,
+        deleteWorkDependency,
+        getDependenciesForWork,
+        isWorkBlocked,
+        workTemplates,
+        addWorkTemplate,
+        deleteWorkTemplate,
+        createWorkFromTemplate,
+        automations,
+        addAutomation,
+        updateAutomation,
+        deleteAutomation,
+        runAutomationForEvent,
+        repositories,
+        addRepository,
+        updateRepository,
+        deleteRepository,
+        getRepositoriesForApp,
+        updateWorkGithub
       }}
     >
       {children}
