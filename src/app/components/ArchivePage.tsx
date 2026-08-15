@@ -38,6 +38,15 @@ export function ArchivePage() {
   const completedGoals = goalsWithStatus.filter(g => g.status === 'completed');
   const completedTasks = appTasks.filter(isTaskDone);
 
+  const toMillis = (value: any) => {
+    if (!value) return 0;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'string' || typeof value === 'number') return new Date(value).getTime();
+    if (value.seconds) return value.seconds * 1000;
+    return 0;
+  };
+
   const filteredItems = useMemo(() => {
     const items: Array<{
       id: string;
@@ -116,15 +125,6 @@ export function ArchivePage() {
   const getEmployeeName = (employeeId: string) => {
     const emp = employees.find(e => e.id === employeeId);
     return emp?.name || 'Unknown';
-  };
-
-  const toMillis = (value: any) => {
-    if (!value) return 0;
-    if (typeof value.toMillis === 'function') return value.toMillis();
-    if (value instanceof Date) return value.getTime();
-    if (typeof value === 'string' || typeof value === 'number') return new Date(value).getTime();
-    if (value.seconds) return value.seconds * 1000;
-    return 0;
   };
 
   const formatDate = (timestamp: any) => {

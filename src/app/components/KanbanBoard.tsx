@@ -292,7 +292,7 @@ type KanbanColumnProps = {
 };
 
 function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type, allTags }: KanbanColumnProps) {
-  const [, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop({
     accept: type === 'task' ? 'TASK' : type === 'defect' ? 'DEFECT' : 'ACTION_POINT',
     drop: (item: { taskId: string }) => {
       onDrop(item.taskId);
