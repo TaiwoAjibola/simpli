@@ -92,9 +92,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
-      if (formData.stage !== app?.currentStage) {
-        await updateApp(appId, { currentStage: formData.stage as 'pre-development' | 'development' | 'post-development' });
-      }
     }
 
     setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
@@ -197,15 +194,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         }`}>
           {app.status}
         </span>
-        <select
-          value={app.currentStage}
-          onChange={(e) => updateApp(appId, { currentStage: e.target.value as 'pre-development' | 'development' | 'post-development' })}
-          className="text-xs px-3 py-1 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] outline-none cursor-pointer"
-        >
-          <option value="pre-development">Pre-Development</option>
-          <option value="development">Development</option>
-          <option value="post-development">Post-Development</option>
-        </select>
       </div>
 
       {/* Tab navigation */}
@@ -235,26 +223,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-[#f0f0f5]">Phases ({appPhases.length})</h2>
-          <select
-            value={app.currentStage}
-            onChange={(e) => updateApp(appId, { currentStage: e.target.value as 'pre-development' | 'development' | 'post-development' })}
-            className={`text-xs px-2 py-1 outline-none cursor-pointer ${
-              app.currentStage === 'pre-development' ? 'bg-[rgba(59,130,246,0.1)] text-[#3b82f6]' :
-              app.currentStage === 'development' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' :
-              'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
-            }`}
-          >
-            <option value="pre-development">Pre-Development</option>
-            <option value="development">Development</option>
-            <option value="post-development">Post-Development</option>
-          </select>
         </div>
         {hasPermission('create_app') && (
           <button
             onClick={() => {
               setShowAddPhase(!showAddPhase);
               setEditingPhase(null);
-              setFormData({ name: '', details: '', notes: '', status: 'planned', stage: app.currentStage, startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
+              setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
           >
@@ -264,9 +239,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         )}
       </div>
 
-      {/* Planning Notes - shown when in pre-development */}
-      {app.currentStage === 'pre-development' && (
-        <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+      {/* Planning Notes */}
+      <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
           <h3 className="text-lg font-medium text-[#f0f0f5] mb-4">Planning Notes</h3>
           <textarea
             value={planningNotesText}
@@ -283,7 +257,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             </button>
           </div>
         </div>
-      )}
 
           {(showAddPhase || editingPhase) && (
             <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">

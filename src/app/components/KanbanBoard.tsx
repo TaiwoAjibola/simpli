@@ -4,7 +4,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
-import { Task, TaskStatus, DefectStatus, Defect, ActionPoint, ActionPointStatus, WorkType } from '../types';
+import { Task, TaskStatus, DefectStatus, Defect, WorkType } from '../types';
 import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon, FileText } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
@@ -29,12 +29,6 @@ const DEFECT_COLUMNS: { id: DefectStatus; title: string; color: string }[] = [
   { id: 'closed', title: 'Closed', color: '#10b981' }
 ];
 
-const ACTION_POINT_COLUMNS: { id: ActionPointStatus; title: string; color: string }[] = [
-  { id: 'pending', title: 'Pending', color: '#6b6b80' },
-  { id: 'carried_over', title: 'Carried Over', color: '#f59e0b' },
-  { id: 'completed', title: 'Completed', color: '#10b981' }
-];
-
 type SortOption = 'default' | 'priority' | 'dueDate' | 'name';
 
 export function KanbanBoard() {
@@ -47,7 +41,7 @@ export function KanbanBoard() {
 
 function KanbanContent() {
   const { currentUser, hasPermission } = useAuth();
-  const { tasks, actionPoints, defects, updateTask, updateActionPoint, updateDefect, getEmployeeById, getGoalById, getAppById, getTasksForEmployee, apps, tags } = useApp();
+  const { tasks, defects, updateTask, updateDefect, getEmployeeById, getGoalById, getAppById, getTasksForEmployee, apps, tags } = useApp();
   const { showToast } = useToast();
 
   const canViewAll = hasPermission('view_all_apps');
@@ -55,7 +49,7 @@ function KanbanContent() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
-  const [viewMode, setViewMode] = useState<'all' | 'tasks' | 'defects' | 'actionPoints'>('all');
+  const [viewMode, setViewMode] = useState<'tasks' | 'defects'>('tasks');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [filterApp, setFilterApp] = useState<string>('all');
   const [filterTag, setFilterTag] = useState<string>('all');
@@ -84,20 +78,6 @@ function KanbanContent() {
     }
     return sortItems(result, sortBy);
   }, [displayTasks, filterApp, filterTag, filterWorkType, sortBy]);
-
-  const filteredActionPoints = useMemo(() => {
-    let result = canViewAll ? actionPoints : actionPoints.filter(ap => ap.assignedTo.includes(currentUser!.id));
-    if (filterApp !== 'all') {
-      result = result.filter(ap => {
-        const goal = ap.goalId ? getGoalById(ap.goalId) : null;
-        return ap.appId === filterApp || goal?.appId === filterApp;
-      });
-    }
-    if (filterWorkType !== 'all') {
-      result = result.filter(ap => (ap.workType || 'non-development') === filterWorkType);
-    }
-    return sortItems(result, sortBy);
-  }, [actionPoints, filterApp, filterWorkType, sortBy, canViewAll, currentUser]);
 
   const handleTaskDrop = (taskId: string, newStatus: TaskStatus) => {
     const task = tasks.find(t => t.id === taskId);
@@ -133,17 +113,8 @@ function KanbanContent() {
     updateDefect(defectId, { status: newStatus }, currentUser.id, currentUser.name);
   };
 
-  const handleActionPointDrop = (apId: string, newStatus: ActionPointStatus) => {
-    updateActionPoint(apId, {
-      status: newStatus,
-      completedAt: newStatus === 'completed' ? new Date() : undefined,
-      completedBy: newStatus === 'completed' ? currentUser?.id : undefined
-    });
-  };
-
-  const showTasks = viewMode === 'all' || viewMode === 'tasks';
-  const showDefects = viewMode === 'all' || viewMode === 'defects';
-  const showActionPoints = viewMode === 'all' || viewMode === 'actionPoints';
+  const showTasks = viewMode === 'tasks';
+  const showDefects = viewMode === 'defects';
 
   return (
     <div className="h-full flex flex-col p-4 lg:p-8">
@@ -151,14 +122,12 @@ function KanbanContent() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-[#f0f0f5] mb-1">Work Board</h1>
-            <p className="text-sm text-[#6b6b80]">Unified board across tasks, action points and defects — drag cards to update status</p>
+            <p className="text-sm text-[#6b6b80]">Track tasks and defects — switch tabs to view each board, drag cards to update status</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-              <button onClick={() => setViewMode('all')} className={`px-3 py-1.5 text-xs ${viewMode === 'all' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>All</button>
               <button onClick={() => setViewMode('tasks')} className={`px-3 py-1.5 text-xs ${viewMode === 'tasks' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Tasks</button>
-              <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Bugs</button>
-              <button onClick={() => setViewMode('actionPoints')} className={`px-3 py-1.5 text-xs ${viewMode === 'actionPoints' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Action Points</button>
+              <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#00e5ff] bg-[rgba(0,229,255,0.1)]' : 'text-[#6b6b80]'}`}>Defects</button>
             </div>
             <select
               value={sortBy}
@@ -233,23 +202,6 @@ function KanbanContent() {
               getGoalById={getGoalById}
               getAppById={getAppById}
               type="defect"
-              allTags={tags}
-            />
-          );
-        })}
-        {showActionPoints && ACTION_POINT_COLUMNS.map((column) => {
-          const columnAPs = filteredActionPoints.filter(ap => ap.status === column.id);
-          return (
-            <KanbanColumn
-              key={`ap-${column.id}`}
-              column={column}
-              tasks={columnAPs}
-              onDrop={(id) => handleActionPointDrop(id, column.id)}
-              onCardClick={(ap) => {}}
-              getEmployeeById={getEmployeeById}
-              getGoalById={getGoalById}
-              getAppById={getAppById}
-              type="actionPoint"
               allTags={tags}
             />
           );

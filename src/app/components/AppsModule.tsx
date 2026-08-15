@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight, Tag as TagIcon, X } from 'lucide-react';
+import { Plus, Layers, Target, CheckSquare, Edit2, Trash2, ArrowRight, Tag as TagIcon, X, Bug, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { App, Tag } from '../types';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
@@ -18,7 +18,7 @@ const PRESET_COLORS = [
 
 export function AppsModule({ onNavigate }: AppsModuleProps) {
   const { currentUser, hasPermission } = useAuth();
-  const { apps, goals, tasks, tags, addApp, updateApp, deleteApp, addTag, deleteTag, getGoalsForApp, getTasksForGoal, getTagsForApp } = useApp();
+  const { apps, goals, tasks, defects, tags, addApp, updateApp, deleteApp, addTag, deleteTag, getGoalsForApp, getTasksForGoal, getTagsForApp } = useApp();
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<App | null>(null);
   const [newTagName, setNewTagName] = useState('');
@@ -27,7 +27,6 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     name: '',
     description: '',
     status: 'active' as 'active' | 'completed' | 'on_hold',
-    currentStage: 'pre-development' as 'pre-development' | 'development' | 'post-development',
     color: '#00e5ff',
     cardStyle: 'default' as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal'
   });
@@ -56,7 +55,6 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
       name: app.name,
       description: app.description,
       status: app.status,
-      currentStage: app.currentStage || 'pre-development',
       color: app.color || '#00e5ff',
       cardStyle: app.cardStyle || 'default'
     });
@@ -89,7 +87,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
             onClick={() => {
               setShowForm(!showForm);
               setEditingApp(null);
-              setFormData({ name: '', description: '', status: 'active', currentStage: 'pre-development', color: '#00e5ff', cardStyle: 'default' });
+              setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
           >
@@ -147,24 +145,6 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Current Stage</label>
-              <select
-                value={formData.currentStage}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    currentStage: e.target.value as 'pre-development' | 'development' | 'post-development'
-                  })
-                }
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
-              >
-                <option value="pre-development">Pre-Development</option>
-                <option value="development">Development</option>
-                <option value="post-development">Post-Development</option>
-              </select>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Color</label>
@@ -218,7 +198,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 onClick={() => {
                   setShowForm(false);
                   setEditingApp(null);
-    setFormData({ name: '', description: '', status: 'active', currentStage: 'pre-development', color: '#00e5ff', cardStyle: 'default' });
+    setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
                 }}
                 className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
               >
@@ -233,6 +213,9 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
         {apps.map((app) => {
           const appGoals = getGoalsForApp(app.id);
           const appTasks = appGoals.flatMap((g) => getTasksForGoal(g.id));
+          const appDefects = defects.filter((d) => d.applicationId === app.id);
+          const openDefects = appDefects.filter((d) => !['resolved', 'closed'].includes(d.status)).length;
+          const blockedTasks = appTasks.filter((t) => t.status === 'blocked').length;
 
           const completedTasks = appTasks.filter((t) => t.status === 'approved');
           const progress =
@@ -324,7 +307,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
                   <Target className="w-5 h-5 text-[#00e5ff] mx-auto mb-1" />
                   <p className="text-xs text-[#6b6b80]">Goals</p>
@@ -334,6 +317,16 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                   <CheckSquare className="w-5 h-5 text-[#10b981] mx-auto mb-1" />
                   <p className="text-xs text-[#6b6b80]">Tasks</p>
                   <p className="text-lg font-bold text-[#f0f0f5]">{appTasks.length}</p>
+                </div>
+                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                  <Bug className="w-5 h-5 text-[#dc2626] mx-auto mb-1" />
+                  <p className="text-xs text-[#6b6b80]">Defects</p>
+                  <p className="text-lg font-bold text-[#f0f0f5]">{openDefects}</p>
+                </div>
+                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                  <AlertCircle className="w-5 h-5 text-[#ff3b5c] mx-auto mb-1" />
+                  <p className="text-xs text-[#6b6b80]">Blocked</p>
+                  <p className="text-lg font-bold text-[#f0f0f5]">{blockedTasks}</p>
                 </div>
               </div>
 

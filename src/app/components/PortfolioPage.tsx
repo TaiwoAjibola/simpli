@@ -11,10 +11,11 @@ const LEVEL_STYLES: Record<string, string> = {
 };
 
 export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appId?: string) => void }) {
-  const { apps, tasks, defects, workDependencies, phases } = useApp();
+  const { apps, goals, tasks, defects, workDependencies, phases } = useApp();
 
   const rows = apps.map((app: App) => {
-    const appTasks = tasks.filter(t => (t.appId || (t as any).goalAppId) === app.id || tasks.some(tt => tt.id === t.id && (tt.appId === app.id)));
+    const appGoalIds = goals.filter(g => g.appId === app.id).map(g => g.id);
+    const appTasks = tasks.filter(t => appGoalIds.includes(t.goalId));
     const appDefects = defects.filter(d => d.applicationId === app.id);
     const blockedByDeps = workDependencies.filter(d => {
       const workInApp = (kind: string, wid: string) =>
@@ -52,7 +53,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
               <div>
                 <h3 className="font-medium text-[#f0f0f5]">{app.name}</h3>
                 <p className="text-xs text-[#6b6b80] mt-1 capitalize">
-                  {app.currentStage?.replace('-', ' ')}
+                  {app.status.replace('_', ' ')}
                   {currentPhase ? ` · ${currentPhase.name}` : ''}
                 </p>
               </div>

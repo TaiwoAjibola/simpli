@@ -33,7 +33,7 @@ export function NotificationInbox() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-96 max-w-[90vw] bg-[#12121a] border border-[rgba(0,229,255,0.15)] shadow-xl z-50">
+          <div className="absolute left-0 top-full mt-2 w-96 max-w-[90vw] bg-[#12121a] border border-[rgba(0,229,255,0.15)] shadow-xl z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(0,229,255,0.1)]">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-[#00e5ff]" />
