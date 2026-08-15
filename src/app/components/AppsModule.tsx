@@ -11,7 +11,7 @@ type AppsModuleProps = {
 };
 
 const PRESET_COLORS = [
-  '#00e5ff', '#8b5cf6', '#ff006e', '#ff6b35',
+  '#22C55E', '#8b5cf6', '#ff006e', '#ff6b35',
   '#00c853', '#ffd600', '#2979ff', '#ff3d00',
   '#00bfa5', '#d500f9', '#536dfe', '#f50057'
 ];
@@ -22,12 +22,12 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingApp, setEditingApp] = useState<App | null>(null);
   const [newTagName, setNewTagName] = useState('');
-  const [newTagColor, setNewTagColor] = useState('#00e5ff');
+  const [newTagColor, setNewTagColor] = useState('#22C55E');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     status: 'active' as 'active' | 'completed' | 'on_hold',
-    color: '#00e5ff',
+    color: '#22C55E',
     cardStyle: 'default' as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal'
   });
 
@@ -45,7 +45,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
         createdBy: currentUser!.id
       });
     }
-    setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
+    setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
     setShowForm(false);
     setEditingApp(null);
   };
@@ -55,7 +55,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
       name: app.name,
       description: app.description,
       status: app.status,
-      color: app.color || '#00e5ff',
+      color: app.color || '#22C55E',
       cardStyle: app.cardStyle || 'default'
     });
     setEditingApp(app);
@@ -72,24 +72,24 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
     if (!newTagName.trim()) return;
     await addTag({ appId, name: newTagName.trim(), color: newTagColor });
     setNewTagName('');
-    setNewTagColor('#00e5ff');
+    setNewTagColor('#22C55E');
   };
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Apps</h1>
-          <p className="text-[#6b6b80]">{apps.length} total applications</p>
+          <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">Apps</h1>
+          <p className="text-[#94A3B8]">{apps.length} total applications</p>
         </div>
         {canCreateApp && (
           <button
             onClick={() => {
               setShowForm(!showForm);
               setEditingApp(null);
-              setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
+              setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
           >
             <Plus className="w-4 h-4" />
             New App
@@ -98,29 +98,29 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
       </div>
 
       {showForm && (
-        <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="font-semibold text-[#f0f0f5] mb-4">
+        <div className="mb-6 p-6 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <h3 className="font-semibold text-[#F8FAFC] mb-4">
             {editingApp ? 'Edit App' : 'Create New App'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">App Name</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">App Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 placeholder="e.g., Biops"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Description</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 rows={3}
                 placeholder="What is this app about?"
                 required
@@ -128,7 +128,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Status</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) =>
@@ -137,7 +137,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                     status: e.target.value as 'active' | 'completed' | 'on_hold'
                   })
                 }
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
               >
                 <option value="active">Active</option>
                 <option value="on_hold">On Hold</option>
@@ -147,7 +147,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Color</label>
+                <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Card Color</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -155,7 +155,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     className="w-10 h-10 border-0 cursor-pointer bg-transparent"
                   />
-                  <span className="text-sm text-[#6b6b80] font-mono">{formData.color}</span>
+                  <span className="text-sm text-[#94A3B8] font-mono">{formData.color}</span>
                 </div>
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {PRESET_COLORS.map(c => (
@@ -163,18 +163,18 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                       key={c}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, color: c }))}
-                      className={`w-6 h-6 border-2 ${formData.color === c ? 'border-[#f0f0f5]' : 'border-transparent'} hover:scale-110 transition`}
+                      className={`w-6 h-6 border-2 ${formData.color === c ? 'border-[#F8FAFC]' : 'border-transparent'} hover:scale-110 transition`}
                       style={{ backgroundColor: c }}
                     />
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Card Style</label>
+                <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Card Style</label>
                 <select
                   value={formData.cardStyle}
                   onChange={(e) => setFormData({ ...formData, cardStyle: e.target.value as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal' })}
-                  className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 >
                   <option value="default">Default</option>
                   <option value="rounded">Rounded</option>
@@ -182,14 +182,14 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                   <option value="elevated">Elevated</option>
                   <option value="minimal">Minimal</option>
                 </select>
-                <p className="text-xs text-[#6b6b80] mt-1">Tasks and action points will use this color and style on their cards.</p>
+                <p className="text-xs text-[#94A3B8] mt-1">Tasks and action points will use this color and style on their cards.</p>
               </div>
             </div>
 
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+                className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
               >
                 {editingApp ? 'Update' : 'Create'} App
               </button>
@@ -198,9 +198,9 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 onClick={() => {
                   setShowForm(false);
                   setEditingApp(null);
-    setFormData({ name: '', description: '', status: 'active', color: '#00e5ff', cardStyle: 'default' });
+    setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
                 }}
-                className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
+                className="px-4 py-2 bg-[#1E293B] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
               >
                 Cancel
               </button>
@@ -226,7 +226,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
           const statusColors = {
             active: 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border border-[rgba(16,185,129,0.2)]',
             on_hold: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border border-[rgba(245,158,11,0.2)]',
-            completed: 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)]'
+            completed: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.2)]'
           };
 
           const circumference = 2 * Math.PI * 28;
@@ -235,26 +235,26 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
           return (
             <div
               key={app.id}
-              className={`${getCardClasses(app.cardStyle || 'default', app.color || '#00e5ff')} relative overflow-hidden`}
-              style={getCardInlineStyle(app.cardStyle || 'default', app.color || '#00e5ff')}
+              className={`${getCardClasses(app.cardStyle || 'default', app.color || '#22C55E')} relative overflow-hidden`}
+              style={getCardInlineStyle(app.cardStyle || 'default', app.color || '#22C55E')}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #00e5ff 0%, transparent 70%)' }}></div>
+              <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #22C55E 0%, transparent 70%)' }}></div>
 
               <div className="flex items-start justify-between mb-4">
                 <button
                   onClick={() => onNavigate('app-details', app.id)}
                   className="flex items-start gap-3 text-left hover:opacity-80 transition flex-1"
                 >
-                  <div className="p-3 bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.2)]">
-                    <Layers className="w-6 h-6 text-[#00e5ff]" />
+                  <div className="p-3 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
+                    <Layers className="w-6 h-6 text-[#22C55E]" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-[#f0f0f5] text-lg">{app.name}</h3>
-                    <p className="text-sm text-[#6b6b80] mt-1">
+                    <h3 className="font-bold text-[#F8FAFC] text-lg">{app.name}</h3>
+                    <p className="text-sm text-[#94A3B8] mt-1">
                       Created {format(app.createdAt, 'MMM d, yyyy')}
                     </p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[#6b6b80] mt-1" />
+                  <ArrowRight className="w-4 h-4 text-[#94A3B8] mt-1" />
                 </button>
                 <div className="flex items-center gap-2">
                   <span
@@ -267,7 +267,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                   {canEditApp && (
                     <button
                       onClick={() => handleEdit(app)}
-                      className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                      className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] transition"
                       title="Edit"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -285,55 +285,55 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                 </div>
               </div>
 
-              <p className="text-sm text-[#6b6b80] mb-4">{app.description}</p>
+              <p className="text-sm text-[#94A3B8] mb-4">{app.description}</p>
 
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative">
                   <svg width="64" height="64" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="28" fill="none" stroke="#1e1e2a" strokeWidth="4" />
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#1E293B" strokeWidth="4" />
                     <circle
-                      cx="32" cy="32" r="28" fill="none" stroke="#00e5ff" strokeWidth="4"
+                      cx="32" cy="32" r="28" fill="none" stroke="#22C55E" strokeWidth="4"
                       strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
                       strokeLinecap="round" transform="rotate(-90 32 32)"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-[#f0f0f5]">{progress}%</span>
+                    <span className="text-sm font-bold text-[#F8FAFC]">{progress}%</span>
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-[#6b6b80]">Task Completion</p>
-                  <p className="text-xs text-[#6b6b80] mt-1">{completedTasks.length} of {appTasks.length} tasks approved</p>
+                  <p className="text-sm text-[#94A3B8]">Task Completion</p>
+                  <p className="text-xs text-[#94A3B8] mt-1">{completedTasks.length} of {appTasks.length} tasks approved</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-4 gap-2">
-                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-                  <Target className="w-5 h-5 text-[#00e5ff] mx-auto mb-1" />
-                  <p className="text-xs text-[#6b6b80]">Goals</p>
-                  <p className="text-lg font-bold text-[#f0f0f5]">{appGoals.length}</p>
+                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+                  <Target className="w-5 h-5 text-[#22C55E] mx-auto mb-1" />
+                  <p className="text-xs text-[#94A3B8]">Goals</p>
+                  <p className="text-lg font-bold text-[#F8FAFC]">{appGoals.length}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
                   <CheckSquare className="w-5 h-5 text-[#10b981] mx-auto mb-1" />
-                  <p className="text-xs text-[#6b6b80]">Tasks</p>
-                  <p className="text-lg font-bold text-[#f0f0f5]">{appTasks.length}</p>
+                  <p className="text-xs text-[#94A3B8]">Tasks</p>
+                  <p className="text-lg font-bold text-[#F8FAFC]">{appTasks.length}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
                   <Bug className="w-5 h-5 text-[#dc2626] mx-auto mb-1" />
-                  <p className="text-xs text-[#6b6b80]">Defects</p>
-                  <p className="text-lg font-bold text-[#f0f0f5]">{openDefects}</p>
+                  <p className="text-xs text-[#94A3B8]">Defects</p>
+                  <p className="text-lg font-bold text-[#F8FAFC]">{openDefects}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
                   <AlertCircle className="w-5 h-5 text-[#ff3b5c] mx-auto mb-1" />
-                  <p className="text-xs text-[#6b6b80]">Blocked</p>
-                  <p className="text-lg font-bold text-[#f0f0f5]">{blockedTasks}</p>
+                  <p className="text-xs text-[#94A3B8]">Blocked</p>
+                  <p className="text-lg font-bold text-[#F8FAFC]">{blockedTasks}</p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-[rgba(0,229,255,0.1)]">
+              <div className="mt-4 pt-4 border-t border-[rgba(34,197,94,0.1)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <TagIcon className="w-4 h-4 text-[#6b6b80]" />
-                  <span className="text-xs font-medium text-[#6b6b80] uppercase tracking-wider">Tags</span>
+                  <TagIcon className="w-4 h-4 text-[#94A3B8]" />
+                  <span className="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Tags</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {getTagsForApp(app.id).map(tag => (
@@ -354,7 +354,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                     </span>
                   ))}
                   {getTagsForApp(app.id).length === 0 && (
-                    <span className="text-xs text-[#6b6b80]">No tags</span>
+                    <span className="text-xs text-[#94A3B8]">No tags</span>
                   )}
                 </div>
                 {canEditApp && (
@@ -364,7 +364,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                       value={newTagName}
                       onChange={(e) => setNewTagName(e.target.value)}
                       placeholder="Tag name..."
-                      className="flex-1 px-2 py-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                      className="flex-1 px-2 py-1 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs outline-none"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(app.id))}
                     />
                     <input
@@ -376,7 +376,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                     <button
                       onClick={() => handleAddTag(app.id)}
                       disabled={!newTagName.trim()}
-                      className="px-2 py-1 bg-[#00e5ff] text-[#0a0a0f] text-xs font-medium disabled:opacity-50"
+                      className="px-2 py-1 bg-[#22C55E] text-[#020617] text-xs font-medium disabled:opacity-50"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -389,12 +389,12 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
       </div>
 
       {apps.length === 0 && !showForm && (
-        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <Layers className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
-          <p className="text-[#6b6b80] mb-4">No apps yet</p>
+        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <Layers className="w-16 h-16 text-[#94A3B8] mx-auto mb-4" />
+          <p className="text-[#94A3B8] mb-4">No apps yet</p>
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+            className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
           >
             Create Your First App
           </button>

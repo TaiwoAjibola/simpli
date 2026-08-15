@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --font-family: 'Jost', sans-serif;
+  --font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 body {
@@ -21,7 +21,7 @@ body {
 }
 
 .glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
 }
 
 .glow-purple {
@@ -33,7 +33,7 @@ body {
 }
 
 .glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
 }
 
 .stroke-cyan {
@@ -44,14 +44,14 @@ body {
   content: '';
   position: absolute;
   inset: -1px;
-  background: linear-gradient(135deg, rgba(0, 229, 255, 0.5), transparent, rgba(0, 229, 255, 0.5));
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), transparent, rgba(34, 197, 94, 0.5));
   z-index: -1;
 }
 
 .grid-bg {
   background-image:
-    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -60,7 +60,7 @@ body {
     45deg,
     transparent,
     transparent 10px,
-    rgba(0, 229, 255, 0.02) 10px,
-    rgba(0, 229, 255, 0.02) 20px
+    rgba(34, 197, 94, 0.02) 10px,
+    rgba(34, 197, 94, 0.02) 20px
   );
 }

@@ -56,15 +56,15 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#f0f0f5] flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-[#F8FAFC] flex items-center gap-2">
           <Link2 className="w-4 h-4" />
           Dependencies
-          <span className="text-xs font-normal text-[#6b6b80]">({deps.length})</span>
+          <span className="text-xs font-normal text-[#94A3B8]">({deps.length})</span>
         </h3>
         {canManage && (
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-[rgba(0,229,255,0.1)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.2)] rounded"
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] rounded"
           >
             <Plus className="w-3.5 h-3.5" /> Link Work
           </button>
@@ -78,10 +78,10 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           </p>
           <ul className="space-y-1">
             {blockedBy.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#f0f0f5]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
                 <span>{labelFor(d.fromKind, d.fromId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#6b6b80] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -96,10 +96,10 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <p className="text-xs font-medium text-[#eab308] mb-2">Blocks</p>
           <ul className="space-y-1">
             {blocking.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#f0f0f5]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
                 <span>{labelFor(d.toKind, d.toId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#6b6b80] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -110,18 +110,18 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {deps.filter(d => d.type === 'related_to').length > 0 && (
-        <div className="bg-[#161b22] border border-[rgba(0,229,255,0.1)] p-3 rounded">
-          <p className="text-xs font-medium text-[#6b6b80] mb-2">Related to</p>
+        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded">
+          <p className="text-xs font-medium text-[#94A3B8] mb-2">Related to</p>
           <ul className="space-y-1">
             {deps.filter(d => d.type === 'related_to').map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#f0f0f5]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
                 <span>
                   {d.fromKind === workKind && d.fromId === workId
                     ? labelFor(d.toKind, d.toId)
                     : labelFor(d.fromKind, d.fromId)}
                 </span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#6b6b80] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -132,11 +132,11 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {showAdd && (
-        <div className="bg-[#161b22] border border-[rgba(0,229,255,0.1)] p-3 rounded space-y-2">
+        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded space-y-2">
           <select
             value={depType}
             onChange={e => setDepType(e.target.value as WorkDependencyType)}
-            className="w-full bg-[#0d1117] border border-[rgba(0,229,255,0.2)] text-[#f0f0f5] text-sm px-2 py-1.5 rounded"
+            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
           >
             <option value="blocked_by">Blocked by</option>
             <option value="blocks">Blocks</option>
@@ -145,7 +145,7 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <select
             value={targetId}
             onChange={e => setTargetId(e.target.value)}
-            className="w-full bg-[#0d1117] border border-[rgba(0,229,255,0.2)] text-[#f0f0f5] text-sm px-2 py-1.5 rounded"
+            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
           >
             <option value="">Select work item...</option>
             {workRefs.filter(r => r.id !== workId).map(r => (
@@ -155,7 +155,7 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <button
             onClick={handleAdd}
             disabled={!targetId}
-            className="w-full px-3 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0] rounded disabled:opacity-50"
+            className="w-full px-3 py-1.5 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a] rounded disabled:opacity-50"
           >
             Add Link
           </button>

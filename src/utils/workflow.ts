@@ -5,7 +5,7 @@ export type PermissionCheck = (permission: string) => boolean;
 
 export type WorkKind = 'task' | 'defect' | 'action_point';
 
-const TASK_STATUSES: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'completed', 'approved'];
+const TASK_STATUSES: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'pending_qa', 'completed', 'approved'];
 
 const DEFECT_STATUSES: DefectStatus[] = ['open', 'in_progress', 'pending_qa', 'resolved', 'closed'];
 

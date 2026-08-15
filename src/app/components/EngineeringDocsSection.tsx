@@ -80,13 +80,13 @@ export function EngineeringDocsSection({ appId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-[#f0f0f5]">Engineering Documents</h2>
-          <p className="text-sm text-[#6b6b80] mt-1">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-xl font-bold text-[#F8FAFC]">Engineering Documents</h2>
+          <p className="text-sm text-[#94A3B8] mt-1">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
         </div>
         {canUpload && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
           >
             {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             {showForm ? 'Cancel' : 'Upload Document'}
@@ -96,44 +96,44 @@ export function EngineeringDocsSection({ appId }: Props) {
 
       {/* Upload form */}
       {showForm && canUpload && (
-        <div className="p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)] space-y-4">
-          <h3 className="text-sm font-semibold text-[#f0f0f5] uppercase tracking-wider">Upload New Document</h3>
+        <div className="p-6 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] space-y-4">
+          <h3 className="text-sm font-semibold text-[#F8FAFC] uppercase tracking-wider">Upload New Document</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Document Name *</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Document Name *</label>
               <input
                 type="text"
                 value={docName}
                 onChange={(e) => setDocName(e.target.value)}
                 placeholder="e.g. System Architecture v2"
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Version</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Version</label>
               <input
                 type="text"
                 value={docVersion}
                 onChange={(e) => setDocVersion(e.target.value)}
                 placeholder="e.g. 1.0, 2.3"
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-[#6b6b80] mb-1">File *</label>
-            <div className="border-2 border-dashed border-[rgba(0,229,255,0.2)] p-6 text-center hover:border-[rgba(0,229,255,0.4)] transition-colors">
+            <label className="block text-xs text-[#94A3B8] mb-1">File *</label>
+            <div className="border-2 border-dashed border-[rgba(34,197,94,0.2)] p-6 text-center hover:border-[rgba(34,197,94,0.4)] transition-colors">
               {docFile ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-[#f0f0f5]">
-                  <FileText className="w-4 h-4 text-[#00e5ff]" />
+                <div className="flex items-center justify-center gap-2 text-sm text-[#F8FAFC]">
+                  <FileText className="w-4 h-4 text-[#22C55E]" />
                   <span>{docFile.name}</span>
-                  <span className="text-[#6b6b80]">({formatSize(docFile.size)})</span>
+                  <span className="text-[#94A3B8]">({formatSize(docFile.size)})</span>
                   <button onClick={() => setDocFile(null)} className="text-[#ff3b5c] hover:underline text-xs ml-2">Remove</button>
                 </div>
               ) : (
                 <label className="cursor-pointer">
-                  <Upload className="w-8 h-8 text-[#6b6b80] mx-auto mb-2" />
-                  <p className="text-sm text-[#6b6b80]">Click to select a file (PDF, Word, Markdown, etc.)</p>
+                  <Upload className="w-8 h-8 text-[#94A3B8] mx-auto mb-2" />
+                  <p className="text-sm text-[#94A3B8]">Click to select a file (PDF, Word, Markdown, etc.)</p>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.md,.txt,.xlsx,.pptx"
@@ -148,7 +148,7 @@ export function EngineeringDocsSection({ appId }: Props) {
             <button
               onClick={handleUpload}
               disabled={uploading || !docName.trim() || !docFile}
-              className="flex items-center gap-2 px-6 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50"
             >
               {uploading && <Loader className="w-4 h-4 animate-spin" />}
               {uploading ? 'Uploading...' : 'Upload'}
@@ -159,13 +159,13 @@ export function EngineeringDocsSection({ appId }: Props) {
 
       {/* Document list */}
       {docs.length === 0 ? (
-        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <FileText className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-          <p className="text-[#6b6b80]">No engineering documents uploaded yet.</p>
+        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <FileText className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+          <p className="text-[#94A3B8]">No engineering documents uploaded yet.</p>
           {canUpload && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-3 text-sm text-[#00e5ff] hover:underline"
+              className="mt-3 text-sm text-[#22C55E] hover:underline"
             >
               Upload the first document
             </button>
@@ -176,20 +176,20 @@ export function EngineeringDocsSection({ appId }: Props) {
           {docs.map(doc => (
             <div
               key={doc.id}
-              className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4 flex items-center gap-4 hover:bg-[rgba(255,255,255,0.02)] cursor-pointer"
+              className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4 flex items-center gap-4 hover:bg-[rgba(255,255,255,0.02)] cursor-pointer"
               onClick={() => setPreviewDoc(previewDoc === doc.id ? null : doc.id)}
             >
-              <div className="p-2 bg-[rgba(0,229,255,0.05)] flex-shrink-0">
-                <FileText className="w-5 h-5 text-[#00e5ff]" />
+              <div className="p-2 bg-[rgba(34,197,94,0.05)] flex-shrink-0">
+                <FileText className="w-5 h-5 text-[#22C55E]" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-[#f0f0f5] truncate">{doc.name}</h3>
+                  <h3 className="font-medium text-[#F8FAFC] truncate">{doc.name}</h3>
                   <span className="text-xs px-1.5 py-0.5 bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]">
                     v{doc.version}
                   </span>
                 </div>
-                <p className="text-xs text-[#6b6b80] mt-0.5">
+                <p className="text-xs text-[#94A3B8] mt-0.5">
                   {doc.uploadedByName} &middot; {new Date(doc.createdAt).toLocaleDateString()} &middot; {formatSize(doc.fileSize)}
                 </p>
               </div>
@@ -199,7 +199,7 @@ export function EngineeringDocsSection({ appId }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                  className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] rounded"
                   title="Download"
                 >
                   <Download className="w-4 h-4" />
@@ -207,7 +207,7 @@ export function EngineeringDocsSection({ appId }: Props) {
                 {canUpload && (
                   <button
                     onClick={() => handleDelete(doc)}
-                    className="p-2 text-[#6b6b80] hover:text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
+                    className="p-2 text-[#94A3B8] hover:text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] rounded"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -221,7 +221,7 @@ export function EngineeringDocsSection({ appId }: Props) {
 
       {/* Preview */}
       {previewDoc && (
-        <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] overflow-hidden">
+        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] overflow-hidden">
           {(() => {
             const doc = docs.find(d => d.id === previewDoc);
             if (!doc) return null;
@@ -231,17 +231,17 @@ export function EngineeringDocsSection({ appId }: Props) {
 
             return (
               <div>
-                <div className="flex items-center justify-between p-4 border-b border-[rgba(0,229,255,0.1)]">
+                <div className="flex items-center justify-between p-4 border-b border-[rgba(34,197,94,0.1)]">
                   <div>
-                    <h3 className="font-medium text-[#f0f0f5]">{doc.name}</h3>
-                    <p className="text-xs text-[#6b6b80]">v{doc.version} &middot; {doc.uploadedByName} &middot; {new Date(doc.createdAt).toLocaleDateString()}</p>
+                    <h3 className="font-medium text-[#F8FAFC]">{doc.name}</h3>
+                    <p className="text-xs text-[#94A3B8]">v{doc.version} &middot; {doc.uploadedByName} &middot; {new Date(doc.createdAt).toLocaleDateString()}</p>
                   </div>
                   <a
                     href={doc.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     download
-                    className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
                   >
                     <Download className="w-4 h-4" />
                     Download
@@ -255,12 +255,12 @@ export function EngineeringDocsSection({ appId }: Props) {
                   ) : isText ? (
                     <iframe src={doc.fileUrl} className="w-full h-full border-0" title={doc.name} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-[#6b6b80]">
+                    <div className="flex items-center justify-center h-full text-[#94A3B8]">
                       <p className="text-center">
                         <FileText className="w-12 h-12 mx-auto mb-3" />
                         Preview not available for this file type.
                         <br />
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download className="text-[#00e5ff] hover:underline mt-2 inline-block">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download className="text-[#22C55E] hover:underline mt-2 inline-block">
                           Download to view
                         </a>
                       </p>

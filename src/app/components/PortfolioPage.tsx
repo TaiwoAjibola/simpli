@@ -35,11 +35,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#f0f0f5] flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-[#00e5ff]" />
+        <h1 className="text-2xl font-bold text-[#F8FAFC] flex items-center gap-2">
+          <BarChart3 className="w-6 h-6 text-[#22C55E]" />
           Portfolio
         </h1>
-        <p className="text-sm text-[#6b6b80] mt-1">Health snapshot of all applications.</p>
+        <p className="text-sm text-[#94A3B8] mt-1">Health snapshot of all applications.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -47,12 +47,12 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
           <button
             key={app.id}
             onClick={() => onNavigate?.('app-details', app.id)}
-            className="text-left bg-[#161b22] border border-[rgba(0,229,255,0.1)] p-5 rounded-lg hover:border-[#00e5ff] transition group"
+            className="text-left bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg hover:border-[#22C55E] transition group"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-[#f0f0f5]">{app.name}</h3>
-                <p className="text-xs text-[#6b6b80] mt-1 capitalize">
+                <h3 className="font-medium text-[#F8FAFC]">{app.name}</h3>
+                <p className="text-xs text-[#94A3B8] mt-1 capitalize">
                   {app.status.replace('_', ' ')}
                   {currentPhase ? ` · ${currentPhase.name}` : ''}
                 </p>
@@ -64,36 +64,36 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
 
             <div className="mt-4">
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-[#0d1117] rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-[#020617] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${health.level === 'healthy' ? 'bg-[#10b981]' : health.level === 'at_risk' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`}
                     style={{ width: `${health.score}%` }}
                   />
                 </div>
-                <span className="text-sm font-bold text-[#f0f0f5]">{health.score}</span>
+                <span className="text-sm font-bold text-[#F8FAFC]">{health.score}</span>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-[#6b6b80]">
-              <span>Open tasks: <span className="text-[#f0f0f5]">{health.openTasks}</span></span>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-[#94A3B8]">
+              <span>Open tasks: <span className="text-[#F8FAFC]">{health.openTasks}</span></span>
               <span>Overdue: <span className="text-[#f59e0b]">{health.overdueTasks}</span></span>
-              <span>Open defects: <span className="text-[#f0f0f5]">{health.openDefects}</span></span>
+              <span>Open defects: <span className="text-[#F8FAFC]">{health.openDefects}</span></span>
               <span>Pending QA: <span className="text-[#8b5cf6]">{health.qaPending}</span></span>
               <span>Blocked: <span className="text-[#ef4444]">{health.blocked}</span></span>
               <span>Critical: <span className="text-[#ef4444]">{health.criticalDefects}</span></span>
             </div>
 
-            <div className="mt-4 flex items-center gap-1 text-xs text-[#00e5ff] opacity-0 group-hover:opacity-100 transition">
+            <div className="mt-4 flex items-center gap-1 text-xs text-[#22C55E] opacity-0 group-hover:opacity-100 transition">
               View app details <ArrowUpRight className="w-3 h-3" />
             </div>
           </button>
         ))}
       </div>
 
-      <div className="bg-[#161b22] border border-[rgba(0,229,255,0.1)] rounded-lg overflow-hidden">
+      <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-[#6b6b80] border-b border-[rgba(0,229,255,0.1)]">
+            <tr className="text-left text-xs text-[#94A3B8] border-b border-[rgba(34,197,94,0.1)]">
               <th className="px-4 py-3 font-medium">Application</th>
               <th className="px-4 py-3 font-medium">Health</th>
               <th className="px-4 py-3 font-medium">Tasks</th>
@@ -104,23 +104,23 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
           </thead>
           <tbody>
             {rows.map(({ app, health }) => (
-              <tr key={app.id} className="border-b border-[rgba(0,229,255,0.05)] last:border-0 hover:bg-[rgba(0,229,255,0.03)]">
-                <td className="px-4 py-3 text-[#f0f0f5]">{app.name}</td>
+              <tr key={app.id} className="border-b border-[rgba(34,197,94,0.05)] last:border-0 hover:bg-[rgba(34,197,94,0.03)]">
+                <td className="px-4 py-3 text-[#F8FAFC]">{app.name}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded ${LEVEL_STYLES[health.level]}`}>
                     <HeartPulse className="w-3 h-3" />
                     {health.score}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[#c0c0d0]">{health.openTasks}</td>
-                <td className="px-4 py-3 text-[#c0c0d0]">{health.openDefects}</td>
+                <td className="px-4 py-3 text-[#CBD5E1]">{health.openTasks}</td>
+                <td className="px-4 py-3 text-[#CBD5E1]">{health.openDefects}</td>
                 <td className="px-4 py-3 text-[#8b5cf6]">{health.qaPending}</td>
                 <td className="px-4 py-3 text-[#ef4444]">{health.blocked}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="text-sm text-[#6b6b80] p-4">No applications yet.</p>}
+        {rows.length === 0 && <p className="text-sm text-[#94A3B8] p-4">No applications yet.</p>}
       </div>
     </div>
   );

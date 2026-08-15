@@ -14,7 +14,6 @@ import {
   Bug,
   Menu,
   X,
-  ShieldCheck,
   Rocket,
   LayoutTemplate,
   Plug,
@@ -45,8 +44,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'portfolio', label: 'Portfolio', icon: BarChart3, show: hasPermission('view_all_apps') },
         { id: 'repositories', label: 'Repositories', icon: Layers, show: hasPermission('view_all_apps') },
         { id: 'integrations', label: 'Integrations', icon: Plug, show: hasPermission('view_all_apps') },
-        { id: 'insights', label: 'Insights', icon: BarChart3, show: true },
-        { id: 'gate-review', label: 'Gate Review', icon: ShieldCheck, show: true }
+        { id: 'insights', label: 'Insights', icon: BarChart3, show: true }
       ]
     },
     {
@@ -76,24 +74,24 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     <>
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)]"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]"
       >
-        {sidebarOpen ? <X className="w-5 h-5 text-[#f0f0f5]" /> : <Menu className="w-5 h-5 text-[#f0f0f5]" />}
+        {sidebarOpen ? <X className="w-5 h-5 text-[#F8FAFC]" /> : <Menu className="w-5 h-5 text-[#F8FAFC]" />}
       </button>
 
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className={`h-screen w-64 bg-[#0e0e16] border-r border-[rgba(0,229,255,0.1)] flex flex-col fixed lg:static z-40 transition-transform duration-300 ${
+      <div className={`h-screen w-64 bg-[#0F172A] border-r border-[rgba(34,197,94,0.1)] flex flex-col fixed lg:static z-40 transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-      <div className="p-6 border-b border-[rgba(0,229,255,0.1)]">
+      <div className="p-6 border-b border-[rgba(34,197,94,0.1)]">
         <div className="flex items-center gap-3">
           <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
           <div>
-            <h1 className="font-bold text-lg text-[#f0f0f5] tracking-wide">Simpli</h1>
-            <p className="text-xs text-[#6b6b80] uppercase tracking-wider">{currentRole?.name}</p>
+            <h1 className="font-bold text-lg text-[#F8FAFC] tracking-wide">Simpli</h1>
+            <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{currentRole?.name}</p>
           </div>
         </div>
       </div>
@@ -105,7 +103,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
           return (
             <div key={section.label} className="mb-6">
-              <p className="text-xs font-semibold text-[#6b6b80] uppercase tracking-wider mb-2 px-4">
+              <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-2 px-4">
                 {section.label}
               </p>
               <div className="space-y-1">
@@ -119,8 +117,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
                         isActive
-                          ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] font-medium border-l-2 border-[#00e5ff]'
-                          : 'text-[#6b6b80] hover:text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.03)]'
+                          ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] font-medium border-l-2 border-[#22C55E]'
+                          : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.03)]'
                       }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -134,14 +132,14 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[rgba(0,229,255,0.1)]">
+      <div className="p-4 border-t border-[rgba(34,197,94,0.1)]">
         <div className="flex items-center gap-3 mb-1 px-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] flex items-center justify-center text-[#0a0a0f] font-bold">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#22C55E] to-[#8b5cf6] flex items-center justify-center text-[#020617] font-bold">
             {currentUser?.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm text-[#f0f0f5] truncate">{currentUser?.name}</p>
-            <p className="text-xs text-[#6b6b80] truncate">{currentUser?.email}</p>
+            <p className="font-medium text-sm text-[#F8FAFC] truncate">{currentUser?.name}</p>
+            <p className="text-xs text-[#94A3B8] truncate">{currentUser?.email}</p>
           </div>
           <NotificationInbox />
         </div>

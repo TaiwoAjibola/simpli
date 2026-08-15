@@ -130,27 +130,27 @@ export function MyWork() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">My Work</h1>
-        <p className="text-[#6b6b80]">
+        <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">My Work</h1>
+        <p className="text-[#94A3B8]">
           {totalCount} open items assigned to you across tasks, action points and defects
         </p>
       </div>
 
       {sections.length === 0 ? (
-        <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-12 text-center">
-          <Briefcase className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-          <p className="text-[#6b6b80]">You're all caught up — no open work assigned to you.</p>
+        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-12 text-center">
+          <Briefcase className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+          <p className="text-[#94A3B8]">You're all caught up — no open work assigned to you.</p>
         </div>
       ) : (
         <div className="space-y-8">
           {sections.map(section => (
             <div key={section.id}>
               <div className="flex items-center gap-2 mb-3">
-                <section.icon className="w-4 h-4 text-[#00e5ff]" />
-                <h2 className="text-lg font-semibold text-[#f0f0f5]">{section.title}</h2>
-                <span className="text-sm text-[#6b6b80]">({section.items.length})</span>
+                <section.icon className="w-4 h-4 text-[#22C55E]" />
+                <h2 className="text-lg font-semibold text-[#F8FAFC]">{section.title}</h2>
+                <span className="text-sm text-[#94A3B8]">({section.items.length})</span>
               </div>
-              <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] divide-y divide-[rgba(0,229,255,0.05)]">
+              <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] divide-y divide-[rgba(34,197,94,0.05)]">
                 {section.items.map(item => {
                   const goal = item.goalId ? getGoalById(item.goalId) : null;
                   const app = item.appId ? getAppById(item.appId) : null;
@@ -204,7 +204,7 @@ function WorkRow({
   canToggleActionPoint: boolean;
 }) {
   const kindConfig = {
-    task: { icon: CheckSquare, color: 'text-[#00e5ff]', label: 'Task' },
+    task: { icon: CheckSquare, color: 'text-[#22C55E]', label: 'Task' },
     action_point: { icon: FileText, color: 'text-[#f59e0b]', label: 'Action Point' },
     defect: { icon: Bug, color: 'text-[#dc2626]', label: 'Defect' }
   } as const;
@@ -216,8 +216,8 @@ function WorkRow({
     : item.priority === 'high'
     ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]'
     : item.priority === 'medium'
-    ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]'
-    : 'bg-[rgba(107,107,128,0.1)] text-[#6b6b80]';
+    ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]'
+    : 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]';
 
   const statusText = item.status.replace(/_/g, ' ');
 
@@ -231,10 +231,10 @@ function WorkRow({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-[#f0f0f5] truncate">{item.title}</p>
+              <p className="font-medium text-[#F8FAFC] truncate">{item.title}</p>
               {item.priority === 'urgent' && <Star className="w-4 h-4 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />}
             </div>
-            <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-[#6b6b80]">
+            <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-[#94A3B8]">
               <span className={`px-2 py-0.5 ${kind.color} bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]`}>
                 {kind.label}
               </span>
@@ -261,7 +261,7 @@ function WorkRow({
         <span className={`text-xs font-medium px-2 py-1 ${priorityColor}`}>
           {item.priority.toUpperCase()}
         </span>
-        <span className="text-xs text-[#6b6b80] capitalize">{statusText}</span>
+        <span className="text-xs text-[#94A3B8] capitalize">{statusText}</span>
         {canToggleActionPoint && (
           <button
             onClick={(e) => {

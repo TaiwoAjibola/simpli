@@ -28,12 +28,12 @@ export function AdminPanel() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Admin Panel</h1>
-        <p className="text-[#6b6b80]">Manage employees, roles, and system settings</p>
+        <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">Admin Panel</h1>
+        <p className="text-[#94A3B8]">Manage employees, roles, and system settings</p>
       </div>
 
-      <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-        <div className="border-b border-[rgba(0,229,255,0.1)]">
+      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+        <div className="border-b border-[rgba(34,197,94,0.1)]">
           <div className="flex gap-1 p-2">
             <TabButton
               active={activeTab === 'employees'}
@@ -82,8 +82,8 @@ function TabButton({
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2 transition ${
         active
-          ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] font-medium'
-          : 'text-[#6b6b80] hover:text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.02)]'
+          ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] font-medium'
+          : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.02)]'
       }`}
     >
       <Icon className="w-4 h-4" />
@@ -160,8 +160,8 @@ function EmployeesTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#f0f0f5]">Team Members</h2>
-          <p className="text-sm text-[#6b6b80] mt-1">
+          <h2 className="text-xl font-bold text-[#F8FAFC]">Team Members</h2>
+          <p className="text-sm text-[#94A3B8] mt-1">
             {employees.filter(e => e.firebaseUid).length} of {employees.length} users have Firebase Auth accounts
           </p>
         </div>
@@ -169,14 +169,14 @@ function EmployeesTab() {
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center gap-2 px-4 py-2 bg-[#8b5cf6] text-[#0a0a0f] font-medium hover:bg-[#7c4fe0] transition disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-[#8b5cf6] text-[#020617] font-medium hover:bg-[#7c4fe0] transition disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
             Sync Auth Accounts
           </button>
           <button
             onClick={() => { setShowAddForm(!showAddForm); setShowPassword(false); }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
           >
             <Plus className="w-4 h-4" />
             Add Employee
@@ -190,9 +190,9 @@ function EmployeesTab() {
         }`}>
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className={`w-5 h-5 ${syncResult.failed.length > 0 ? 'text-[#f59e0b]' : 'text-[#10b981]'}`} />
-            <h3 className="font-semibold text-[#f0f0f5]">Sync Complete</h3>
+            <h3 className="font-semibold text-[#F8FAFC]">Sync Complete</h3>
           </div>
-          <p className="text-sm text-[#f0f0f5]">
+          <p className="text-sm text-[#F8FAFC]">
             ✓ {syncResult.success} account{syncResult.success !== 1 ? 's' : ''} created
             {syncResult.failed.length > 0 && ` · ✗ ${syncResult.failed.length} failed`}
           </p>
@@ -209,53 +209,53 @@ function EmployeesTab() {
       )}
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
+        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Name</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Email</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Password</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 pr-10 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 pr-10 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b80] hover:text-[#f0f0f5] transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#F8FAFC] transition"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Role</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Role</label>
               <select
                 value={formData.roleId}
                 onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 required
               >
                 <option value="">Select role</option>
@@ -274,7 +274,7 @@ function EmployeesTab() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+              className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50"
             >
               {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create') + ' Employee'}
             </button>
@@ -287,7 +287,7 @@ function EmployeesTab() {
                 setSubmitError(null);
                 setFormData({ name: '', email: '', password: '', roleId: '' });
               }}
-              className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
+              className="px-4 py-2 bg-[#1E293B] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
             >
               Cancel
             </button>
@@ -301,17 +301,17 @@ function EmployeesTab() {
           return (
             <div
               key={employee.id}
-              className="flex items-center gap-4 p-4 border border-[rgba(0,229,255,0.1)] hover:border-[rgba(0,229,255,0.3)] transition"
+              className="flex items-center gap-4 p-4 border border-[rgba(34,197,94,0.1)] hover:border-[rgba(34,197,94,0.3)] transition"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-[#00e5ff] to-[#8b5cf6] flex items-center justify-center text-[#0a0a0f] font-bold text-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#22C55E] to-[#8b5cf6] flex items-center justify-center text-[#020617] font-bold text-lg">
                 {employee.name.charAt(0)}
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-[#f0f0f5]">{employee.name}</h3>
-                <p className="text-sm text-[#6b6b80]">{employee.email}</p>
+                <h3 className="font-semibold text-[#F8FAFC]">{employee.name}</h3>
+                <p className="text-sm text-[#94A3B8]">{employee.email}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-[rgba(0,229,255,0.1)] text-[#00e5ff] text-sm font-medium border border-[rgba(0,229,255,0.2)]">
+                <span className="px-3 py-1 bg-[rgba(34,197,94,0.1)] text-[#22C55E] text-sm font-medium border border-[rgba(34,197,94,0.2)]">
                   {role?.name}
                 </span>
                 {employee.firebaseUid ? (
@@ -325,7 +325,7 @@ function EmployeesTab() {
                 )}
                 <button
                   onClick={() => handleEdit(employee)}
-                  className="p-2 text-[#6b6b80] hover:bg-[rgba(255,255,255,0.02)] transition"
+                  className="p-2 text-[#94A3B8] hover:bg-[rgba(255,255,255,0.02)] transition"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -343,11 +343,11 @@ function EmployeesTab() {
 
       {employees.length === 0 && !showAddForm && (
         <div className="text-center py-12">
-          <Users className="w-16 h-16 text-[#6b6b80] mx-auto mb-4" />
-          <p className="text-[#6b6b80] mb-4">No team members yet</p>
+          <Users className="w-16 h-16 text-[#94A3B8] mx-auto mb-4" />
+          <p className="text-[#94A3B8] mb-4">No team members yet</p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+            className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
           >
             Add Your First Employee
           </button>
@@ -441,14 +441,14 @@ function RolesTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-[#f0f0f5]">Roles & Permissions</h2>
+        <h2 className="text-xl font-bold text-[#F8FAFC]">Roles & Permissions</h2>
         <button
           onClick={() => {
             setShowAddForm(!showAddForm);
             setEditingId(null);
             setFormData({ name: '', permissions: [] });
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+          className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
         >
           <Plus className="w-4 h-4" />
           Add Role
@@ -456,33 +456,33 @@ function RolesTab() {
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
+        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Role Name</label>
+            <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Role Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+              className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Permissions</label>
+            <label className="block text-sm font-medium text-[#F8FAFC] mb-3">Permissions</label>
             <div className="grid grid-cols-2 gap-2">
               {allPermissions.map((permission) => (
                 <label
                   key={permission}
-                  className="flex items-center gap-2 p-3 border border-[rgba(0,229,255,0.1)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition"
+                  className="flex items-center gap-2 p-3 border border-[rgba(34,197,94,0.1)] cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition"
                 >
                   <input
                     type="checkbox"
                     checked={formData.permissions.includes(permission)}
                     onChange={() => togglePermission(permission)}
-                    className="w-4 h-4 accent-[#00e5ff]"
+                    className="w-4 h-4 accent-[#22C55E]"
                   />
-                  <span className="text-sm text-[#f0f0f5]">
+                  <span className="text-sm text-[#F8FAFC]">
                     {permission.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                   </span>
                 </label>
@@ -493,7 +493,7 @@ function RolesTab() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+              className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
             >
               {editingId ? 'Update' : 'Create'} Role
             </button>
@@ -504,7 +504,7 @@ function RolesTab() {
                 setEditingId(null);
                 setFormData({ name: '', permissions: [] });
               }}
-              className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
+              className="px-4 py-2 bg-[#1E293B] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
             >
               Cancel
             </button>
@@ -516,21 +516,21 @@ function RolesTab() {
         {roles.map((role) => {
           const employeeCount = employees.filter(e => e.roleId === role.id).length;
           return (
-            <div key={role.id} className="p-5 border border-[rgba(0,229,255,0.1)]">
+            <div key={role.id} className="p-5 border border-[rgba(34,197,94,0.1)]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-[#f0f0f5]">{role.name}</h3>
+                  <h3 className="text-lg font-semibold text-[#F8FAFC]">{role.name}</h3>
                   {employeeCount > 0 && (
-                    <span className="text-xs text-[#6b6b80] bg-[#1a1a2e] px-2 py-1 border border-[rgba(0,229,255,0.1)]">
+                    <span className="text-xs text-[#94A3B8] bg-[#1E293B] px-2 py-1 border border-[rgba(34,197,94,0.1)]">
                       {employeeCount} employee{employeeCount > 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-[#6b6b80] mr-2">{role.permissions.length} permissions</span>
+                  <span className="text-sm text-[#94A3B8] mr-2">{role.permissions.length} permissions</span>
                   <button
                     onClick={() => handleEdit(role)}
-                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                    className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] transition"
                     title="Edit"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -711,8 +711,8 @@ function NotificationsTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#f0f0f5] mb-2">Notification Settings</h2>
-          <p className="text-sm text-[#6b6b80]">
+          <h2 className="text-xl font-bold text-[#F8FAFC] mb-2">Notification Settings</h2>
+          <p className="text-sm text-[#94A3B8]">
             Configure notifications for system events
           </p>
         </div>
@@ -722,18 +722,18 @@ function NotificationsTab() {
               {testResult}
             </span>
           )}
-          <div className="flex items-center gap-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] px-3 py-1.5">
+          <div className="flex items-center gap-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] px-3 py-1.5">
             <input
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="your@email.com"
-              className="bg-transparent text-sm text-[#f0f0f5] outline-none w-32 lg:w-40"
+              className="bg-transparent text-sm text-[#F8FAFC] outline-none w-32 lg:w-40"
             />
             <button
               onClick={handleTestEmail}
               disabled={testSending || !testEmail}
-              className="text-xs text-[#00e5ff] hover:text-[#00c4e0] disabled:text-[#6b6b80] disabled:cursor-not-allowed transition whitespace-nowrap"
+              className="text-xs text-[#22C55E] hover:text-[#16a34a] disabled:text-[#94A3B8] disabled:cursor-not-allowed transition whitespace-nowrap"
             >
               {testSending ? 'Sending...' : 'Test Email'}
             </button>
@@ -751,7 +751,7 @@ function NotificationsTab() {
               ccRecipients: []
             });
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] transition"
+          className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
         >
           <Plus className="w-4 h-4" />
           New Notification Rule
@@ -760,19 +760,19 @@ function NotificationsTab() {
     </div>
 
       {showForm && (
-        <div className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="font-semibold text-[#f0f0f5] mb-4">
+        <div className="mb-6 p-6 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+          <h3 className="font-semibold text-[#F8FAFC] mb-4">
             {editingId ? 'Edit' : 'Create'} Notification Rule
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Event</label>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Event</label>
               <select
                 value={formData.event}
                 onChange={(e) =>
                   setFormData({ ...formData, event: e.target.value as NotificationRule['event'] })
                 }
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 required
               >
                 <option value="task_started">Task Started (In Progress)</option>
@@ -788,7 +788,7 @@ function NotificationsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">
                 Email Subject
               </label>
               <input
@@ -796,21 +796,21 @@ function NotificationsTab() {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 onFocus={() => setActiveField('subject')}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 placeholder="e.g., Task Completed: {task_name}"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">
                 Email Message
               </label>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 onFocus={() => setActiveField('message')}
-                className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 rows={4}
                 placeholder="Enter the email message body..."
                 required
@@ -818,8 +818,8 @@ function NotificationsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Variable Library</label>
-              <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4">
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-3">Variable Library</label>
+              <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
                 <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
                   {(Object.keys(NOTIFICATION_VARIABLES) as Array<keyof typeof NOTIFICATION_VARIABLES>).map((category) => (
                     <button
@@ -828,8 +828,8 @@ function NotificationsTab() {
                       onClick={() => setActiveVariableCategory(category)}
                       className={`px-3 py-1.5 text-sm font-medium whitespace-nowrap transition ${
                         activeVariableCategory === category
-                          ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.3)]'
-                          : 'text-[#6b6b80] hover:text-[#f0f0f5] border border-transparent'
+                          ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.3)]'
+                          : 'text-[#94A3B8] hover:text-[#F8FAFC] border border-transparent'
                       }`}
                     >
                       {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -839,9 +839,9 @@ function NotificationsTab() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 mb-2">
-                    <Info className="w-4 h-4 text-[#00e5ff]" />
-                    <p className="text-xs text-[#6b6b80]">
-                      Click to insert into <span className="text-[#00e5ff] font-medium">{activeField === 'subject' ? 'Subject' : 'Message'}</span>
+                    <Info className="w-4 h-4 text-[#22C55E]" />
+                    <p className="text-xs text-[#94A3B8]">
+                      Click to insert into <span className="text-[#22C55E] font-medium">{activeField === 'subject' ? 'Subject' : 'Message'}</span>
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -850,7 +850,7 @@ function NotificationsTab() {
                         key={variable}
                         type="button"
                         onClick={() => insertVariable(variable)}
-                        className="group flex items-center gap-2 px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] hover:border-[#00e5ff] transition text-sm font-mono text-[#00e5ff]"
+                        className="group flex items-center gap-2 px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] hover:border-[#22C55E] transition text-sm font-mono text-[#22C55E]"
                         title={`Insert ${variable}`}
                       >
                         {variable}
@@ -863,9 +863,9 @@ function NotificationsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">Primary Recipients (To)</label>
-              <div className="p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] space-y-3">
-                <p className="text-xs text-[#6b6b80]">Auto-filled recipients based on task context. At least one required.</p>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-3">Primary Recipients (To)</label>
+              <div className="p-4 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] space-y-3">
+                <p className="text-xs text-[#94A3B8]">Auto-filled recipients based on task context. At least one required.</p>
                 <div className="flex flex-wrap gap-2">
                   {primaryOptions.map((option) => {
                     const isSelected = formData.primaryRecipients.some(r => r.type === option.type);
@@ -876,8 +876,8 @@ function NotificationsTab() {
                         onClick={() => togglePrimaryRecipient(option.type)}
                         className={`px-3 py-1.5 text-sm border-2 transition ${
                           isSelected
-                            ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                            : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                            ? 'bg-[rgba(34,197,94,0.1)] border-[#22C55E] text-[#22C55E] font-medium'
+                            : 'bg-[#1E293B] border-[rgba(34,197,94,0.1)] text-[#F8FAFC] hover:border-[rgba(34,197,94,0.3)]'
                         }`}
                       >
                         {option.label}
@@ -887,8 +887,8 @@ function NotificationsTab() {
                 </div>
 
                 {formData.primaryRecipients.some(r => r.type === 'role') && (
-                  <div className="pt-2 border-t border-[rgba(0,229,255,0.1)]">
-                    <p className="text-xs font-medium text-[#6b6b80] mb-2">Select Role</p>
+                  <div className="pt-2 border-t border-[rgba(34,197,94,0.1)]">
+                    <p className="text-xs font-medium text-[#94A3B8] mb-2">Select Role</p>
                     <div className="flex flex-wrap gap-2">
                       {roles.map((role) => {
                         const isSelected = formData.primaryRecipients.some(r => r.type === 'role' && r.id === role.id);
@@ -900,7 +900,7 @@ function NotificationsTab() {
                             className={`px-3 py-1.5 text-sm border-2 transition ${
                               isSelected
                                 ? 'bg-[rgba(139,92,246,0.1)] border-[#8b5cf6] text-[#8b5cf6] font-medium'
-                                : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                                : 'bg-[#1E293B] border-[rgba(34,197,94,0.1)] text-[#F8FAFC] hover:border-[rgba(34,197,94,0.3)]'
                             }`}
                           >
                             {role.name}
@@ -912,8 +912,8 @@ function NotificationsTab() {
                 )}
 
                 {formData.primaryRecipients.some(r => r.type === 'user') && (
-                  <div className="pt-2 border-t border-[rgba(0,229,255,0.1)]">
-                    <p className="text-xs font-medium text-[#6b6b80] mb-2">Select User</p>
+                  <div className="pt-2 border-t border-[rgba(34,197,94,0.1)]">
+                    <p className="text-xs font-medium text-[#94A3B8] mb-2">Select User</p>
                     <div className="flex flex-wrap gap-2">
                       {employees.map((employee) => {
                         const isSelected = formData.primaryRecipients.some(r => r.type === 'user' && r.id === employee.id);
@@ -924,8 +924,8 @@ function NotificationsTab() {
                             onClick={() => togglePrimaryRecipient('user', employee.id)}
                             className={`px-3 py-1.5 text-sm border-2 transition ${
                               isSelected
-                                ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                                : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                                ? 'bg-[rgba(34,197,94,0.1)] border-[#22C55E] text-[#22C55E] font-medium'
+                                : 'bg-[#1E293B] border-[rgba(34,197,94,0.1)] text-[#F8FAFC] hover:border-[rgba(34,197,94,0.3)]'
                             }`}
                           >
                             {employee.name}
@@ -939,11 +939,11 @@ function NotificationsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-3">CC Recipients</label>
-              <div className="p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)] space-y-3">
-                <p className="text-xs text-[#6b6b80]">Optional. Add users or roles for visibility.</p>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-3">CC Recipients</label>
+              <div className="p-4 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] space-y-3">
+                <p className="text-xs text-[#94A3B8]">Optional. Add users or roles for visibility.</p>
                 <div>
-                  <p className="text-xs font-medium text-[#6b6b80] mb-2">Roles</p>
+                  <p className="text-xs font-medium text-[#94A3B8] mb-2">Roles</p>
                   <div className="flex flex-wrap gap-2">
                     {roles.map((role) => {
                       const isSelected = formData.ccRecipients.some(r => r.type === 'role' && r.id === role.id);
@@ -955,7 +955,7 @@ function NotificationsTab() {
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
                               ? 'bg-[rgba(139,92,246,0.1)] border-[#8b5cf6] text-[#8b5cf6] font-medium'
-                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                              : 'bg-[#1E293B] border-[rgba(34,197,94,0.1)] text-[#F8FAFC] hover:border-[rgba(34,197,94,0.3)]'
                           }`}
                         >
                           {role.name}
@@ -965,7 +965,7 @@ function NotificationsTab() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-[#6b6b80] mb-2">Specific Users</p>
+                  <p className="text-xs font-medium text-[#94A3B8] mb-2">Specific Users</p>
                   <div className="flex flex-wrap gap-2">
                     {employees.map((employee) => {
                       const isSelected = formData.ccRecipients.some(r => r.type === 'user' && r.id === employee.id);
@@ -976,8 +976,8 @@ function NotificationsTab() {
                           onClick={() => toggleCcRecipient('user', employee.id)}
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
-                              ? 'bg-[rgba(0,229,255,0.1)] border-[#00e5ff] text-[#00e5ff] font-medium'
-                              : 'bg-[#1a1a2e] border-[rgba(0,229,255,0.1)] text-[#f0f0f5] hover:border-[rgba(0,229,255,0.3)]'
+                              ? 'bg-[rgba(34,197,94,0.1)] border-[#22C55E] text-[#22C55E] font-medium'
+                              : 'bg-[#1E293B] border-[rgba(34,197,94,0.1)] text-[#F8FAFC] hover:border-[rgba(34,197,94,0.3)]'
                           }`}
                         >
                           {employee.name}
@@ -995,9 +995,9 @@ function NotificationsTab() {
                 id="enabled"
                 checked={formData.enabled}
                 onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                className="w-4 h-4 accent-[#00e5ff]"
+                className="w-4 h-4 accent-[#22C55E]"
               />
-              <label htmlFor="enabled" className="text-sm text-[#f0f0f5]">
+              <label htmlFor="enabled" className="text-sm text-[#F8FAFC]">
                 Enable this notification rule
               </label>
             </div>
@@ -1010,7 +1010,7 @@ function NotificationsTab() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+                className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50"
               >
                 {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create') + ' Rule'}
               </button>
@@ -1029,7 +1029,7 @@ function NotificationsTab() {
                     ccRecipients: []
                   });
                 }}
-                className="px-4 py-2 bg-[#1a1a2e] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1e1e2a]"
+                className="px-4 py-2 bg-[#1E293B] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
               >
                 Cancel
               </button>
@@ -1046,12 +1046,12 @@ function NotificationsTab() {
           return (
             <div
               key={rule.id}
-              className="p-5 border border-[rgba(0,229,255,0.1)] bg-[#12121a]"
+              className="p-5 border border-[rgba(34,197,94,0.1)] bg-[#0F172A]"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-[#f0f0f5]">
+                    <h3 className="font-semibold text-[#F8FAFC]">
                       {rule.event.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                     </h3>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1061,23 +1061,23 @@ function NotificationsTab() {
                         onChange={(e) => handleToggle(rule.id, e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-[#1e1e2a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00e5ff]"></div>
+                      <div className="w-11 h-6 bg-[#1E293B] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22C55E]"></div>
                     </label>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs font-medium text-[#6b6b80] mb-1">Subject:</p>
-                      <p className="text-sm text-[#f0f0f5]">{rule.subject}</p>
+                      <p className="text-xs font-medium text-[#94A3B8] mb-1">Subject:</p>
+                      <p className="text-sm text-[#F8FAFC]">{rule.subject}</p>
                     </div>
 
                     <div>
-                      <p className="text-xs font-medium text-[#6b6b80] mb-1">Message:</p>
-                      <p className="text-sm text-[#f0f0f5] whitespace-pre-line">{rule.message}</p>
+                      <p className="text-xs font-medium text-[#94A3B8] mb-1">Message:</p>
+                      <p className="text-sm text-[#F8FAFC] whitespace-pre-line">{rule.message}</p>
                     </div>
 
                     <div>
-                      <p className="text-xs font-medium text-[#6b6b80] mb-2">To (Primary):</p>
+                      <p className="text-xs font-medium text-[#94A3B8] mb-2">To (Primary):</p>
                       <div className="flex flex-wrap gap-2">
                         {primaryRecipients.map((recipient, idx) => {
                           let label = getPrimaryLabel(recipient.type);
@@ -1089,7 +1089,7 @@ function NotificationsTab() {
                           return (
                             <span
                               key={idx}
-                              className="px-3 py-1 text-xs font-medium bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)]"
+                              className="px-3 py-1 text-xs font-medium bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.2)]"
                             >
                               {label}
                             </span>
@@ -1100,7 +1100,7 @@ function NotificationsTab() {
 
                     {ccRecipients.length > 0 && (
                       <div>
-                        <p className="text-xs font-medium text-[#6b6b80] mb-2">CC:</p>
+                        <p className="text-xs font-medium text-[#94A3B8] mb-2">CC:</p>
                         <div className="flex flex-wrap gap-2">
                           {ccRecipients.map((recipient, idx) => {
                             const label =
@@ -1125,7 +1125,7 @@ function NotificationsTab() {
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => handleEdit(rule)}
-                    className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] transition"
+                    className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] transition"
                     title="Edit"
                   >
                     <Edit2 className="w-4 h-4" />
@@ -1144,12 +1144,12 @@ function NotificationsTab() {
         })}
 
         {notificationRules.length === 0 && !showForm && (
-          <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-            <Bell className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-            <p className="text-[#6b6b80] mb-4">No notification rules configured</p>
+          <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+            <Bell className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+            <p className="text-[#94A3B8] mb-4">No notification rules configured</p>
             <button
               onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]"
+              className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
             >
               Create Your First Rule
             </button>

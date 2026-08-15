@@ -19,7 +19,7 @@ export function NotificationInbox() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-[#6b6b80] hover:text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.03)] transition"
+        className="relative p-2 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.03)] transition"
         title="Notifications"
       >
         <Bell className="w-5 h-5" />
@@ -33,26 +33,26 @@ export function NotificationInbox() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-2 w-96 max-w-[90vw] bg-[#12121a] border border-[rgba(0,229,255,0.15)] shadow-xl z-50">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(0,229,255,0.1)]">
+          <div className="absolute left-0 top-full mt-2 w-96 max-w-[90vw] bg-[#0F172A] border border-[rgba(34,197,94,0.15)] shadow-xl z-50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(34,197,94,0.1)]">
               <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-[#00e5ff]" />
-                <h3 className="font-semibold text-[#f0f0f5] text-sm">Notifications</h3>
+                <Bell className="w-4 h-4 text-[#22C55E]" />
+                <h3 className="font-semibold text-[#F8FAFC] text-sm">Notifications</h3>
                 {unread.length > 0 && (
-                  <span className="text-xs text-[#6b6b80]">({unread.length} unread)</span>
+                  <span className="text-xs text-[#94A3B8]">({unread.length} unread)</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 {unread.length > 0 && (
                   <button
                     onClick={() => markAllNotificationsRead(currentUser.id)}
-                    className="flex items-center gap-1 text-xs text-[#00e5ff] hover:text-[#00d5ef] transition"
+                    className="flex items-center gap-1 text-xs text-[#22C55E] hover:text-[#00d5ef] transition"
                     title="Mark all as read"
                   >
                     <CheckCheck className="w-3.5 h-3.5" /> All read
                   </button>
                 )}
-                <button onClick={() => setOpen(false)} className="text-[#6b6b80] hover:text-[#f0f0f5]">
+                <button onClick={() => setOpen(false)} className="text-[#94A3B8] hover:text-[#F8FAFC]">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -61,8 +61,8 @@ export function NotificationInbox() {
             <div className="max-h-[60vh] overflow-y-auto">
               {mine.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Bell className="w-10 h-10 text-[#6b6b80] mx-auto mb-2" />
-                  <p className="text-sm text-[#6b6b80]">No notifications yet</p>
+                  <Bell className="w-10 h-10 text-[#94A3B8] mx-auto mb-2" />
+                  <p className="text-sm text-[#94A3B8]">No notifications yet</p>
                 </div>
               ) : (
                 <div className="divide-y divide-[rgba(255,255,255,0.04)]">
@@ -89,21 +89,21 @@ function NotificationRow({ notification, onRead }: { notification: Notification;
         setExpanded(!expanded);
       }}
       className={`w-full text-left px-4 py-3 transition hover:bg-[rgba(255,255,255,0.02)] ${
-        notification.read ? 'opacity-60' : 'bg-[rgba(0,229,255,0.03)]'
+        notification.read ? 'opacity-60' : 'bg-[rgba(34,197,94,0.03)]'
       }`}
     >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#f0f0f5] leading-snug">{notification.title}</p>
-          <p className="text-xs text-[#6b6b80] mt-0.5">{notification.type.replace(/_/g, ' ')}</p>
-          <p className="text-xs text-[#6b6b80] mt-1">
+          <p className="text-sm font-medium text-[#F8FAFC] leading-snug">{notification.title}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{notification.type.replace(/_/g, ' ')}</p>
+          <p className="text-xs text-[#94A3B8] mt-1">
             {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
           </p>
           {expanded && notification.message && (
-            <div className="mt-2 p-2 bg-[#0e0e16] border border-[rgba(255,255,255,0.05)]">
-              <p className="text-xs text-[#f0f0f5] whitespace-pre-line">{notification.message}</p>
+            <div className="mt-2 p-2 bg-[#0F172A] border border-[rgba(255,255,255,0.05)]">
+              <p className="text-xs text-[#F8FAFC] whitespace-pre-line">{notification.message}</p>
               {notification.relatedTo && (
-                <p className="text-[11px] text-[#6b6b80] mt-1 mt-2 uppercase tracking-wide">
+                <p className="text-[11px] text-[#94A3B8] mt-1 mt-2 uppercase tracking-wide">
                   {notification.relatedTo.type} · {notification.relatedTo.id}
                 </p>
               )}
@@ -111,8 +111,8 @@ function NotificationRow({ notification, onRead }: { notification: Notification;
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          {!notification.read && <span className="w-2 h-2 rounded-full bg-[#00e5ff]" />}
-          {expanded ? <ChevronDown className="w-3.5 h-3.5 text-[#6b6b80]" /> : <ChevronRight className="w-3.5 h-3.5 text-[#6b6b80]" />}
+          {!notification.read && <span className="w-2 h-2 rounded-full bg-[#22C55E]" />}
+          {expanded ? <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8]" /> : <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />}
         </div>
       </div>
     </button>

@@ -138,8 +138,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   };
 
   const statusColors: Record<Phase['status'], string> = {
-    planned: 'bg-[#6b6b80]',
-    in_progress: 'bg-[#00e5ff]',
+    planned: 'bg-[#94A3B8]',
+    in_progress: 'bg-[#22C55E]',
     completed: 'bg-[#10b981]',
     on_hold: 'bg-[#f59e0b]'
   };
@@ -166,8 +166,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   if (!app) {
     return (
       <div className="p-8 text-center">
-        <p className="text-[#6b6b80]">App not found</p>
-        <button onClick={() => onNavigate('apps')} className="mt-4 text-[#00e5ff] hover:underline">
+        <p className="text-[#94A3B8]">App not found</p>
+        <button onClick={() => onNavigate('apps')} className="mt-4 text-[#22C55E] hover:underline">
           Back to Apps
         </button>
       </div>
@@ -181,11 +181,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           onClick={() => onNavigate('apps')}
           className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"
         >
-          <ArrowLeft className="w-5 h-5 text-[#f0f0f5]" />
+          <ArrowLeft className="w-5 h-5 text-[#F8FAFC]" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-[#f0f0f5]">{app.name}</h1>
-          <p className="text-[#6b6b80]">{app.description}</p>
+          <h1 className="text-3xl font-bold text-[#F8FAFC]">{app.name}</h1>
+          <p className="text-[#94A3B8]">{app.description}</p>
         </div>
         <span className={`ml-auto text-xs px-3 py-1 ${
           app.status === 'active' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' :
@@ -197,15 +197,15 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       </div>
 
       {/* Tab navigation */}
-      <div className="flex gap-1 mb-6 border-b border-[rgba(0,229,255,0.1)]">
+      <div className="flex gap-1 mb-6 border-b border-[rgba(34,197,94,0.1)]">
         {(['overview', 'engineering', 'operations', 'product'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveProfileTab(tab)}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeProfileTab === tab
-                ? 'border-[#00e5ff] text-[#00e5ff]'
-                : 'border-transparent text-[#6b6b80] hover:text-[#f0f0f5]'
+                ? 'border-[#22C55E] text-[#22C55E]'
+                : 'border-transparent text-[#94A3B8] hover:text-[#F8FAFC]'
             }`}
           >
             {tab === 'overview' && <ClipboardCheck className="w-4 h-4" />}
@@ -222,7 +222,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       {/* Phases */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-[#f0f0f5]">Phases ({appPhases.length})</h2>
+          <h2 className="text-xl font-bold text-[#F8FAFC]">Phases ({appPhases.length})</h2>
         </div>
         {hasPermission('create_app') && (
           <button
@@ -231,7 +231,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               setEditingPhase(null);
               setFormData({ name: '', details: '', notes: '', status: 'planned', stage: 'pre-development', startDate: '', endDate: '', sprintCount: '', techStack: '', qaCriteria: '', deploymentTarget: '' });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
           >
             <Plus className="w-4 h-4" />
             Add Phase
@@ -240,18 +240,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
       </div>
 
       {/* Planning Notes */}
-      <div className="mb-6 p-6 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="text-lg font-medium text-[#f0f0f5] mb-4">Planning Notes</h3>
+      <div className="mb-6 p-6 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <h3 className="text-lg font-medium text-[#F8FAFC] mb-4">Planning Notes</h3>
           <textarea
             value={planningNotesText}
             onChange={(e) => setPlanningNotesText(e.target.value)}
-            className="w-full bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] p-4 h-48 resize-none outline-none"
+            className="w-full bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] p-4 h-48 resize-none outline-none"
             placeholder="Record meeting notes, requirements discussions, research findings, and planning decisions..."
           />
           <div className="flex justify-end mt-4">
             <button
               onClick={() => updateApp(appId, { planningNotes: planningNotesText })}
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+              className="px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
             >
               Save Notes
             </button>
@@ -259,28 +259,28 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         </div>
 
           {(showAddPhase || editingPhase) && (
-            <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] space-y-4">
-              <h3 className="text-lg font-medium text-[#f0f0f5]">
+            <form onSubmit={handleSubmit} className="mb-6 p-6 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] space-y-4">
+              <h3 className="text-lg font-medium text-[#F8FAFC]">
                 {editingPhase ? 'Edit Phase' : 'New Phase'}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Name *</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Phase Name *</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                     placeholder="e.g. MVP1, Phase 2, Beta"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Status</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as Phase['status'] })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                   >
                     <option value="planned">Planned</option>
                     <option value="in_progress">In Progress</option>
@@ -289,11 +289,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Stage</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Stage</label>
                   <select
                     value={formData.stage}
                     onChange={(e) => setFormData({ ...formData, stage: e.target.value as Phase['stage'] })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                   >
                     <option value="pre-development">Pre-Development</option>
                     <option value="development">Development</option>
@@ -303,23 +303,23 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 {formData.stage === 'development' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Sprint Count</label>
+                      <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Sprint Count</label>
                       <input
                         type="number"
                         value={formData.sprintCount}
                         onChange={(e) => setFormData({ ...formData, sprintCount: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                         placeholder="e.g. 6"
                         min="1"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Tech Stack</label>
+                      <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Tech Stack</label>
                       <input
                         type="text"
                         value={formData.techStack}
                         onChange={(e) => setFormData({ ...formData, techStack: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                         placeholder="e.g. React, Node.js, PostgreSQL"
                       />
                     </div>
@@ -328,72 +328,72 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 {formData.stage === 'post-development' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">QA Criteria</label>
+                      <label className="block text-sm font-medium text-[#F8FAFC] mb-2">QA Criteria</label>
                       <input
                         type="text"
                         value={formData.qaCriteria}
                         onChange={(e) => setFormData({ ...formData, qaCriteria: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                         placeholder="e.g. All critical bugs resolved, 95% test coverage"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Deployment Target</label>
+                      <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Deployment Target</label>
                       <input
                         type="text"
                         value={formData.deploymentTarget}
                         onChange={(e) => setFormData({ ...formData, deploymentTarget: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                        className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                         placeholder="e.g. Production v2.0, Staging v1.5"
                       />
                     </div>
                   </>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Start Date</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Start Date</label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">End Date</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">End Date</label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5]"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Phase Details</label>
                   <textarea
                     value={formData.details}
                     onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-24 resize-none"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] h-24 resize-none"
                     placeholder="Describe the scope, objectives, and key deliverables of this phase..."
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-[#f0f0f5] mb-2">Notes</label>
+                  <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Notes</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] h-16 resize-none"
+                    className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] h-16 resize-none"
                     placeholder="Additional notes, reminders, or observations..."
                   />
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]">
+                <button type="submit" className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]">
                   {editingPhase ? 'Update' : 'Create'} Phase
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowAddPhase(false); setEditingPhase(null); }}
-                  className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)]"
+                  className="px-4 py-2 bg-[#0F172A] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)]"
                 >
                   Cancel
                 </button>
@@ -402,9 +402,9 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           )}
 
       {appPhases.length === 0 && !showAddPhase && (
-        <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <Clock className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-          <p className="text-[#6b6b80]">No phases yet. Add your first phase to get started.</p>
+        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <Clock className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+          <p className="text-[#94A3B8]">No phases yet. Add your first phase to get started.</p>
         </div>
       )}
 
@@ -415,13 +415,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           const StatusIcon = statusIcons[phase.status];
 
           return (
-            <div key={phase.id} className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
+            <div key={phase.id} className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
               <button onClick={() => togglePhase(phase.id)} className="w-full flex items-center gap-4 p-4 text-left hover:bg-[rgba(255,255,255,0.02)]">
                 <div className="flex-shrink-0">
                   {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-[#6b6b80]" />
+                    <ChevronDown className="w-5 h-5 text-[#94A3B8]" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-[#6b6b80]" />
+                    <ChevronRight className="w-5 h-5 text-[#94A3B8]" />
                   )}
                 </div>
 
@@ -431,7 +431,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#f0f0f5]">{phase.name}</h3>
+                    <h3 className="text-lg font-semibold text-[#F8FAFC]">{phase.name}</h3>
                     <span className={`text-xs px-2 py-0.5 ${statusColors[phase.status]} text-white`}>
                       {phase.status.replace('_', ' ')}
                     </span>
@@ -439,7 +439,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                       {stageLabels[phase.stage]}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-[#6b6b80]">
+                  <div className="flex items-center gap-4 mt-1 text-sm text-[#94A3B8]">
                     <span className="flex items-center gap-1">
                       <Target className="w-3 h-3" />
                       {phaseGoals.length} goals
@@ -450,7 +450,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                     </span>
                   </div>
                   {phase.details && !isExpanded && (
-                    <p className="text-sm text-[#6b6b80] mt-1 line-clamp-1">{phase.details}</p>
+                    <p className="text-sm text-[#94A3B8] mt-1 line-clamp-1">{phase.details}</p>
                   )}
                   {phase.notes && !isExpanded && (
                     <p className="text-xs text-[#8b5cf6] mt-0.5 italic truncate">Note: {phase.notes}</p>
@@ -473,7 +473,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                   <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleEdit(phase)}
-                      className="p-2 text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                      className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] rounded"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -488,12 +488,12 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               </button>
 
               {isExpanded && (
-                <div className="border-t border-[rgba(0,229,255,0.1)]">
+                <div className="border-t border-[rgba(34,197,94,0.1)]">
                   <div className="p-4 space-y-4">
                     {phase.details && (
                       <div>
-                        <h4 className="text-sm font-medium text-[#f0f0f5] mb-2">Phase Details</h4>
-                        <p className="text-sm text-[#6b6b80] whitespace-pre-wrap leading-relaxed">{phase.details}</p>
+                        <h4 className="text-sm font-medium text-[#F8FAFC] mb-2">Phase Details</h4>
+                        <p className="text-sm text-[#94A3B8] whitespace-pre-wrap leading-relaxed">{phase.details}</p>
                       </div>
                     )}
                     {phase.notes && (
@@ -507,13 +507,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                         {phase.sprintCount && (
                           <div>
                             <span className="text-[10px] font-medium text-[#10b981] uppercase">Sprints</span>
-                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.sprintCount}</p>
+                            <p className="text-sm text-[#F8FAFC] mt-0.5">{phase.sprintCount}</p>
                           </div>
                         )}
                         {phase.techStack && (
                           <div>
                             <span className="text-[10px] font-medium text-[#10b981] uppercase">Tech Stack</span>
-                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.techStack}</p>
+                            <p className="text-sm text-[#F8FAFC] mt-0.5">{phase.techStack}</p>
                           </div>
                         )}
                       </div>
@@ -523,22 +523,22 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                         {phase.qaCriteria && (
                           <div>
                             <span className="text-[10px] font-medium text-[#8b5cf6] uppercase">QA Criteria</span>
-                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.qaCriteria}</p>
+                            <p className="text-sm text-[#F8FAFC] mt-0.5">{phase.qaCriteria}</p>
                           </div>
                         )}
                         {phase.deploymentTarget && (
                           <div>
                             <span className="text-[10px] font-medium text-[#8b5cf6] uppercase">Deployment Target</span>
-                            <p className="text-sm text-[#f0f0f5] mt-0.5">{phase.deploymentTarget}</p>
+                            <p className="text-sm text-[#F8FAFC] mt-0.5">{phase.deploymentTarget}</p>
                           </div>
                         )}
                       </div>
                     )}
 
-                    <div className="border-t border-[rgba(0,229,255,0.1)] pt-4">
-                      <h4 className="text-sm font-medium text-[#f0f0f5] mb-3">Goals ({phaseGoals.length})</h4>
+                    <div className="border-t border-[rgba(34,197,94,0.1)] pt-4">
+                      <h4 className="text-sm font-medium text-[#F8FAFC] mb-3">Goals ({phaseGoals.length})</h4>
                       {phaseGoals.length === 0 ? (
-                        <p className="text-sm text-[#6b6b80] text-center py-4">No goals in this phase</p>
+                        <p className="text-sm text-[#94A3B8] text-center py-4">No goals in this phase</p>
                       ) : (
                         <div className="space-y-3">
                           {phaseGoals.map(goal => {
@@ -546,21 +546,21 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                             const completedTasks = goalTasks.filter(t => t.status === 'approved' || t.status === 'completed').length;
 
                             return (
-                              <div key={goal.id} className="p-4 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)]">
+                              <div key={goal.id} className="p-4 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <Target className="w-5 h-5 text-[#8b5cf6]" />
                                     <div>
-                                      <h4 className="font-medium text-[#f0f0f5]">{goal.name}</h4>
-                                      <p className="text-sm text-[#6b6b80]">{goal.description}</p>
+                                      <h4 className="font-medium text-[#F8FAFC]">{goal.name}</h4>
+                                      <p className="text-sm text-[#94A3B8]">{goal.description}</p>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-sm text-[#6b6b80]">
+                                    <p className="text-sm text-[#94A3B8]">
                                       {completedTasks}/{goalTasks.length} tasks
                                     </p>
                                     {goalTasks.length > 0 && (
-                                      <div className="w-24 h-1.5 bg-[#12121a] rounded-full mt-1">
+                                      <div className="w-24 h-1.5 bg-[#0F172A] rounded-full mt-1">
                                         <div
                                           className="h-full bg-[#10b981] rounded-full"
                                           style={{ width: `${(completedTasks / goalTasks.length) * 100}%` }}
@@ -571,20 +571,20 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                                 </div>
 
                                 {goalTasks.length > 0 && (
-                                  <div className="mt-3 pt-3 border-t border-[rgba(0,229,255,0.05)]">
+                                  <div className="mt-3 pt-3 border-t border-[rgba(34,197,94,0.05)]">
                                     <div className="grid grid-cols-2 gap-2">
                                       {goalTasks.slice(0, 6).map(task => (
                                         <div key={task.id} className="flex items-center gap-2 text-sm">
                                           <CheckSquare className={`w-3 h-3 ${
                                             task.status === 'approved' ? 'text-[#10b981]' :
                                             task.status === 'completed' ? 'text-[#8b5cf6]' :
-                                            task.status === 'in_progress' ? 'text-[#00e5ff]' :
+                                            task.status === 'in_progress' ? 'text-[#22C55E]' :
                                             task.status === 'blocked' ? 'text-[#ff3b5c]' :
-                                            'text-[#6b6b80]'
+                                            'text-[#94A3B8]'
                                           }`} />
-                                          <span className="text-[#f0f0f5] truncate">{task.name}</span>
+                                          <span className="text-[#F8FAFC] truncate">{task.name}</span>
                                           {task.assignedTo.length > 0 && (
-                                            <span className="text-xs text-[#6b6b80] ml-auto">
+                                            <span className="text-xs text-[#94A3B8] ml-auto">
                                               → {getEmployeeById(task.assignedTo[0])?.name?.split(' ')[0] || ''}
                                             </span>
                                           )}
@@ -592,7 +592,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                                       ))}
                                     </div>
                                     {goalTasks.length > 6 && (
-                                      <p className="text-xs text-[#6b6b80] mt-2">+{goalTasks.length - 6} more tasks</p>
+                                      <p className="text-xs text-[#94A3B8] mt-2">+{goalTasks.length - 6} more tasks</p>
                                     )}
                                   </div>
                                 )}
@@ -610,16 +610,16 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         })}
       </div>
 
-      <div className="mt-8 border-t border-[rgba(0,229,255,0.1)] pt-6">
+      <div className="mt-8 border-t border-[rgba(34,197,94,0.1)] pt-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <ClipboardCheck className="w-5 h-5 text-[#00e5ff]" />
-            <h2 className="text-xl font-bold text-[#f0f0f5]">Modules</h2>
+            <ClipboardCheck className="w-5 h-5 text-[#22C55E]" />
+            <h2 className="text-xl font-bold text-[#F8FAFC]">Modules</h2>
           </div>
           {hasPermission('manage_modules') && (
             <button
               onClick={() => setShowModules(!showModules)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] text-sm font-medium hover:bg-[#00c4e0]"
+              className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
             >
               <Plus className="w-4 h-4" />
               {showModules ? 'Cancel' : 'New Module'}
@@ -628,13 +628,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         </div>
 
         {showModules && hasPermission('manage_modules') && currentUser && (
-          <div className="mb-4 p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] flex gap-2">
+          <div className="mb-4 p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] flex gap-2">
             <input
               type="text"
               value={moduleFormName}
               onChange={(e) => setModuleFormName(e.target.value)}
               placeholder="Module name..."
-              className="flex-1 px-3 py-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+              className="flex-1 px-3 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && moduleFormName.trim()) {
                   addModule({ appId, name: moduleFormName.trim(), status: 'open', createdBy: currentUser.id });
@@ -652,7 +652,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 }
               }}
               disabled={!moduleFormName.trim()}
-              className="px-4 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium disabled:opacity-50"
             >
               Create
             </button>
@@ -662,32 +662,32 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         {(() => {
           const appModules = getModulesForApp(appId);
           return appModules.length === 0 ? (
-            <p className="text-sm text-[#6b6b80] text-center py-6">No modules yet for this app</p>
+            <p className="text-sm text-[#94A3B8] text-center py-6">No modules yet for this app</p>
           ) : (
             <div className="space-y-3">
               {appModules.map(mod => {
                 const modExps = getExpectationsForModule(mod.id);
                 const modAchieved = modExps.filter(e => e.status === 'achieved').length;
                 return (
-                  <div key={mod.id} className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-4">
+                  <div key={mod.id} className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-[#f0f0f5]">{mod.name}</h3>
-                        <span className={`text-[10px] px-1.5 py-0.5 ${mod.status === 'open' ? 'bg-[rgba(0,229,255,0.1)] text-[#00e5ff]' : 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'}`}>
+                        <h3 className="font-medium text-[#F8FAFC]">{mod.name}</h3>
+                        <span className={`text-[10px] px-1.5 py-0.5 ${mod.status === 'open' ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]' : 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'}`}>
                           {mod.status}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {modExps.length > 0 && (
                           <div className="flex items-center gap-1.5">
-                            <div className="w-16 h-1 bg-[#1a1a2e] rounded-full overflow-hidden">
+                            <div className="w-16 h-1 bg-[#1E293B] rounded-full overflow-hidden">
                               <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${(modAchieved / modExps.length) * 100}%` }} />
                             </div>
-                            <span className="text-xs text-[#6b6b80]">{modAchieved}/{modExps.length}</span>
+                            <span className="text-xs text-[#94A3B8]">{modAchieved}/{modExps.length}</span>
                           </div>
                         )}
                         {hasPermission('manage_modules') && (
-                          <button onClick={() => deleteModule(mod.id)} className="p-1 text-[#6b6b80] hover:text-[#ff3b5c]">
+                          <button onClick={() => deleteModule(mod.id)} className="p-1 text-[#94A3B8] hover:text-[#ff3b5c]">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -696,13 +696,13 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
                     <div className="space-y-1.5">
                       {modExps.map(exp => (
-                        <div key={exp.id} className="flex items-start gap-2 p-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.03)]">
+                        <div key={exp.id} className="flex items-start gap-2 p-2 bg-[#1E293B] border border-[rgba(34,197,94,0.03)]">
                           <button
                             onClick={() => updateExpectation(exp.id, { status: exp.status === 'achieved' ? 'pending' : 'achieved' })}
                             className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                               exp.status === 'achieved' ? 'bg-[#10b981] border-[#10b981] text-white' :
                               exp.status === 'missed' ? 'bg-[#ff3b5c] border-[#ff3b5c] text-white' :
-                              'border-[#6b6b80] hover:border-[#00e5ff]'
+                              'border-[#94A3B8] hover:border-[#22C55E]'
                             }`}
                           >
                             {(exp.status === 'achieved' || exp.status === 'missed') && (
@@ -710,11 +710,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                             )}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs ${exp.status === 'missed' ? 'text-[#ff3b5c] line-through' : 'text-[#f0f0f5]'}`}>
+                            <p className={`text-xs ${exp.status === 'missed' ? 'text-[#ff3b5c] line-through' : 'text-[#F8FAFC]'}`}>
                               {exp.description}
                             </p>
                             {exp.taskId && (
-                              <span className="text-[10px] text-[#00e5ff] flex items-center gap-0.5 mt-0.5">
+                              <span className="text-[10px] text-[#22C55E] flex items-center gap-0.5 mt-0.5">
                                 <Link className="w-2.5 h-2.5" /> {tasks.find(t => t.id === exp.taskId)?.name || 'Unknown'}
                               </span>
                             )}
@@ -723,26 +723,26 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                             <div className="flex items-center gap-0.5 flex-shrink-0">
                               <button
                                 onClick={() => setLinkingExpId(linkingExpId === exp.id ? null : exp.id)}
-                                className={`p-0.5 ${exp.taskId ? 'text-[#10b981]' : 'text-[#6b6b80]'} hover:text-[#00e5ff]`}
+                                className={`p-0.5 ${exp.taskId ? 'text-[#10b981]' : 'text-[#94A3B8]'} hover:text-[#22C55E]`}
                               >
                                 <Link className="w-3 h-3" />
                               </button>
                               <button
                                 onClick={() => updateExpectation(exp.id, { status: exp.status === 'missed' ? 'pending' : 'missed' })}
-                                className="p-0.5 text-[#6b6b80] hover:text-[#ff3b5c]"
+                                className="p-0.5 text-[#94A3B8] hover:text-[#ff3b5c]"
                               >
                                 <Flag className="w-3 h-3" />
                               </button>
-                              <button onClick={() => deleteExpectation(exp.id)} className="p-0.5 text-[#6b6b80] hover:text-[#ff3b5c]">
+                              <button onClick={() => deleteExpectation(exp.id)} className="p-0.5 text-[#94A3B8] hover:text-[#ff3b5c]">
                                 <Trash2 className="w-3 h-3" />
                               </button>
                             </div>
                           )}
                           {linkingExpId === exp.id && (
-                            <div className="absolute mt-5 right-0 z-10 w-56 p-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] shadow-lg">
+                            <div className="absolute mt-5 right-0 z-10 w-56 p-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] shadow-lg">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-[#f0f0f5] font-medium">Link to Task</span>
-                                <button onClick={() => setLinkingExpId(null)} className="text-xs text-[#6b6b80]">Close</button>
+                                <span className="text-xs text-[#F8FAFC] font-medium">Link to Task</span>
+                                <button onClick={() => setLinkingExpId(null)} className="text-xs text-[#94A3B8]">Close</button>
                               </div>
                               <div className="max-h-24 overflow-y-auto space-y-0.5">
                                 {(() => {
@@ -752,11 +752,11 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                                     <button
                                       key={t.id}
                                       onClick={() => { updateExpectation(exp.id, { taskId: t.id }); setLinkingExpId(null); }}
-                                      className="w-full text-left px-2 py-1 text-xs text-[#f0f0f5] hover:bg-[rgba(0,229,255,0.1)] rounded"
+                                      className="w-full text-left px-2 py-1 text-xs text-[#F8FAFC] hover:bg-[rgba(34,197,94,0.1)] rounded"
                                     >
                                       {t.name}
                                     </button>
-                                  )) : <p className="text-xs text-[#6b6b80] py-1">No tasks</p>;
+                                  )) : <p className="text-xs text-[#94A3B8] py-1">No tasks</p>;
                                 })()}
                               </div>
                               {exp.taskId && (
@@ -775,7 +775,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                           value={newExpText[mod.id] || ''}
                           onChange={(e) => setNewExpText(prev => ({ ...prev, [mod.id]: e.target.value }))}
                           placeholder="What do you hope to achieve?"
-                          className="flex-1 px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs outline-none"
+                          className="flex-1 px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs outline-none"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && (newExpText[mod.id] || '').trim() && currentUser) {
                               addExpectation({ moduleId: mod.id, description: (newExpText[mod.id] || '').trim(), status: 'pending', createdBy: currentUser.id });
@@ -792,7 +792,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                               }
                             }}
                             disabled={!(newExpText[mod.id] || '').trim()}
-                            className="px-2 py-1.5 bg-[#00e5ff] text-[#0a0a0f] text-xs font-medium disabled:opacity-50"
+                            className="px-2 py-1.5 bg-[#22C55E] text-[#020617] text-xs font-medium disabled:opacity-50"
                           >
                             <Plus className="w-3 h-3" />
                           </button>

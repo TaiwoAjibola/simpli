@@ -45,32 +45,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={toast.id}
             className={`pointer-events-auto p-4 border shadow-lg animate-slide-in ${
               toast.type === 'success' ? 'bg-[#0a1a0a] border-[rgba(16,185,129,0.3)]' :
-              toast.type === 'error' ? 'bg-[#1a0a0a] border-[rgba(255,59,92,0.3)]' :
+              toast.type === 'error' ? 'bg-[#0F172A] border-[rgba(255,59,92,0.3)]' :
               toast.type === 'warning' ? 'bg-[#1a140a] border-[rgba(245,158,11,0.3)]' :
-              'bg-[#0a0a1a] border-[rgba(0,229,255,0.3)]'
+              'bg-[#0a0a1a] border-[rgba(34,197,94,0.3)]'
             }`}
           >
             <div className="flex items-start gap-3">
               {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-[#10b981] flex-shrink-0 mt-0.5" />}
               {toast.type === 'error' && <XCircle className="w-5 h-5 text-[#ff3b5c] flex-shrink-0 mt-0.5" />}
               {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-[#f59e0b] flex-shrink-0 mt-0.5" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-[#00e5ff] flex-shrink-0 mt-0.5" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-[#22C55E] flex-shrink-0 mt-0.5" />}
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-medium ${
                   toast.type === 'success' ? 'text-[#10b981]' :
                   toast.type === 'error' ? 'text-[#ff3b5c]' :
                   toast.type === 'warning' ? 'text-[#f59e0b]' :
-                  'text-[#00e5ff]'
+                  'text-[#22C55E]'
                 }`}>
                   {toast.title}
                 </p>
                 {toast.message && (
-                  <p className="text-xs text-[#6b6b80] mt-1">{toast.message}</p>
+                  <p className="text-xs text-[#94A3B8] mt-1">{toast.message}</p>
                 )}
               </div>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="p-1 text-[#6b6b80] hover:text-[#f0f0f5] flex-shrink-0"
+                className="p-1 text-[#94A3B8] hover:text-[#F8FAFC] flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

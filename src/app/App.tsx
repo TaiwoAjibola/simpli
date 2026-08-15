@@ -18,7 +18,6 @@ const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({
 const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
 const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
-const GateReview = lazy(() => import('./components/GateReview').then(m => ({ default: m.GateReview })));
 const SprintsPage = lazy(() => import('./components/SprintsPage').then(m => ({ default: m.SprintsPage })));
 const WorkTemplatesPage = lazy(() => import('./components/WorkTemplatesPage').then(m => ({ default: m.WorkTemplatesPage })));
 const AutomationsPage = lazy(() => import('./components/AutomationsPage').then(m => ({ default: m.AutomationsPage })));
@@ -46,11 +45,12 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen flex bg-[#0a0a0f]">
+    <div className="h-screen flex bg-[#020617]">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
         <Suspense fallback={<PageLoader message="Loading..." />}>
-          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          <div key={currentPage} className="animate-fade-up h-full">
+            {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {currentPage === 'my-work' && <MyWork />}
           {currentPage === 'kanban' && <KanbanBoard />}
           {currentPage === 'insights' && <InsightsPage />}
@@ -66,8 +66,8 @@ function AppContent() {
           {currentPage === 'portfolio' && <PortfolioPage onNavigate={handleNavigate} />}
           {currentPage === 'repositories' && <RepositoriesPage />}
           {currentPage === 'integrations' && <IntegrationsPage />}
-          {currentPage === 'gate-review' && <GateReview />}
           {currentPage === 'admin' && <AdminPanel />}
+          </div>
         </Suspense>
       </main>
     </div>

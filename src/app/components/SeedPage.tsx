@@ -108,24 +108,24 @@ export function SeedPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-      <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-8 max-w-md w-full">
-        <h1 className="text-2xl font-bold text-[#f0f0f5] mb-4">Seed Database</h1>
-        <p className="text-[#6b6b80] mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold text-[#F8FAFC] mb-4">Seed Database</h1>
+        <p className="text-[#94A3B8] mb-6">
           This will create the initial roles and admin user in Firebase.
         </p>
 
         {status === 'idle' && (
           <button
             onClick={handleSeed}
-            className="w-full bg-[#00e5ff] text-[#0a0a0f] py-3 font-medium hover:bg-[#00c4e0] transition"
+            className="w-full bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition"
           >
             Seed Database
           </button>
         )}
 
         {status === 'loading' && (
-          <div className="flex items-center gap-3 text-[#f0f0f5]">
+          <div className="flex items-center gap-3 text-[#F8FAFC]">
             <Loader className="w-5 h-5 animate-spin" />
             <span>{message}</span>
           </div>
@@ -137,14 +137,14 @@ export function SeedPage() {
               <CheckCircle className="w-5 h-5" />
               <span>{message}</span>
             </div>
-            <div className="bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] p-4">
-              <p className="text-sm text-[#f0f0f5] mb-2">Admin credentials:</p>
-              <p className="text-sm text-[#6b6b80]">Email: <span className="text-[#00e5ff]">{adminUser.email}</span></p>
-              <p className="text-sm text-[#6b6b80]">Password: <span className="text-[#00e5ff]">{adminUser.password}</span></p>
+            <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-4">
+              <p className="text-sm text-[#F8FAFC] mb-2">Admin credentials:</p>
+              <p className="text-sm text-[#94A3B8]">Email: <span className="text-[#22C55E]">{adminUser.email}</span></p>
+              <p className="text-sm text-[#94A3B8]">Password: <span className="text-[#22C55E]">{adminUser.password}</span></p>
             </div>
             <a
               href="/"
-              className="block text-center bg-[#00e5ff] text-[#0a0a0f] py-3 font-medium hover:bg-[#00c4e0] transition"
+              className="block text-center bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition"
             >
               Go to Login
             </a>

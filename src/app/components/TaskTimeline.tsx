@@ -26,8 +26,8 @@ import {
 import { Task, TaskStatus } from '../types';
 
 const statusColors: Record<TaskStatus, string> = {
-  not_started: '#6b6b80',
-  in_progress: '#00e5ff',
+  not_started: '#94A3B8',
+  in_progress: '#22C55E',
   blocked: '#ff3b5c',
   pending_qa: '#f59e0b',
   completed: '#8b5cf6',
@@ -97,14 +97,14 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
     const result: { key: string; label: string; appColor: string; tasks: Task[] }[] = [];
     map.forEach((ts, key) => {
       if (key === 'ungrouped') {
-        result.push({ key, label: 'Unassigned Tasks', appColor: '#6b6b80', tasks: ts });
+        result.push({ key, label: 'Unassigned Tasks', appColor: '#94A3B8', tasks: ts });
       } else {
         const goal = getGoalById(key);
         const app = goal ? getAppById(goal.appId) : undefined;
         result.push({
           key,
           label: `${app?.name || 'App'} / ${goal?.name || 'Goal'}`,
-          appColor: app?.color || '#00e5ff',
+          appColor: app?.color || '#22C55E',
           tasks: ts
         });
       }
@@ -123,28 +123,28 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
         .filter(g => g.tasks.length > 0);
 
   return (
-    <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-      <div className="flex items-center justify-between p-4 border-b border-[rgba(0,229,255,0.1)]">
+    <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+      <div className="flex items-center justify-between p-4 border-b border-[rgba(34,197,94,0.1)]">
         <button onClick={prevQuarter} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
-          <ChevronLeft className="w-5 h-5 text-[#f0f0f5]" />
+          <ChevronLeft className="w-5 h-5 text-[#F8FAFC]" />
         </button>
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-[#f0f0f5]">
+          <h2 className="text-lg font-semibold text-[#F8FAFC]">
             {format(qStart, 'MMM yyyy')} - {format(qEnd, 'MMM yyyy')}
           </h2>
           <button
             onClick={goToToday}
-            className="px-3 py-1 text-sm bg-[rgba(0,229,255,0.1)] text-[#00e5ff] border border-[rgba(0,229,255,0.2)] hover:bg-[rgba(0,229,255,0.2)]"
+            className="px-3 py-1 text-sm bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.2)] hover:bg-[rgba(34,197,94,0.2)]"
           >
             Today
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#6b6b80]" />
+          <Filter className="w-4 h-4 text-[#94A3B8]" />
           <select
             value={filterStatus}
             onChange={(e) => onFilterChange(e.target.value as TaskStatus | 'all')}
-            className="px-2 py-1 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-xs"
+            className="px-2 py-1 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs"
           >
             <option value="all">All Statuses</option>
             {Object.entries(statusLabels).map(([value, label]) => (
@@ -152,52 +152,52 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
             ))}
           </select>
           <button onClick={nextQuarter} className="p-2 hover:bg-[rgba(255,255,255,0.02)] rounded">
-            <ChevronRight className="w-5 h-5 text-[#f0f0f5]" />
+            <ChevronRight className="w-5 h-5 text-[#F8FAFC]" />
           </button>
         </div>
       </div>
 
       <div className="flex">
-        <div className="w-56 flex-shrink-0 border-r border-[rgba(0,229,255,0.1)]">
-          <div className="h-10 border-b border-[rgba(0,229,255,0.1)]" />
+        <div className="w-56 flex-shrink-0 border-r border-[rgba(34,197,94,0.1)]">
+          <div className="h-10 border-b border-[rgba(34,197,94,0.1)]" />
           {months.map(m => (
-            <div key={m.toISOString()} className="h-10 border-b border-[rgba(0,229,255,0.05)] flex items-center px-3">
-              <span className="text-xs font-medium text-[#6b6b80]">{format(m, 'MMMM')}</span>
+            <div key={m.toISOString()} className="h-10 border-b border-[rgba(34,197,94,0.05)] flex items-center px-3">
+              <span className="text-xs font-medium text-[#94A3B8]">{format(m, 'MMMM')}</span>
             </div>
           ))}
         </div>
 
         <div className="flex-1 overflow-x-auto">
           <div className="min-w-[600px]">
-            <div className="flex h-10 border-b border-[rgba(0,229,255,0.1)] relative">
+            <div className="flex h-10 border-b border-[rgba(34,197,94,0.1)] relative">
               {months.map(m => {
                 const left = getDateLeft(startOfMonth(m));
                 const width = getDateLeft(endOfMonth(m));
                 return (
                   <div
                     key={m.toISOString()}
-                    className="absolute top-0 bottom-0 border-r border-[rgba(0,229,255,0.1)]"
+                    className="absolute top-0 bottom-0 border-r border-[rgba(34,197,94,0.1)]"
                     style={{ left, width }}
                   >
-                    <span className="text-[10px] text-[#6b6b80] px-1">{format(m, 'MMM')}</span>
+                    <span className="text-[10px] text-[#94A3B8] px-1">{format(m, 'MMM')}</span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="divide-y divide-[rgba(0,229,255,0.05)]">
+            <div className="divide-y divide-[rgba(34,197,94,0.05)]">
               {visibleGroups.length === 0 && (
                 <div className="p-12 text-center">
-                  <Calendar className="w-12 h-12 text-[#6b6b80] mx-auto mb-3" />
-                  <p className="text-[#6b6b80]">No tasks in this range</p>
+                  <Calendar className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+                  <p className="text-[#94A3B8]">No tasks in this range</p>
                 </div>
               )}
               {visibleGroups.map(group => (
                 <div key={group.key}>
-                  <div className="flex items-center gap-2 px-4 py-2 border-b border-[rgba(0,229,255,0.05)]">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-[rgba(34,197,94,0.05)]">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.appColor }} />
-                    <span className="font-semibold text-sm text-[#f0f0f5]">{group.label}</span>
-                    <span className="text-xs text-[#6b6b80] ml-auto">{group.tasks.length} tasks</span>
+                    <span className="font-semibold text-sm text-[#F8FAFC]">{group.label}</span>
+                    <span className="text-xs text-[#94A3B8] ml-auto">{group.tasks.length} tasks</span>
                   </div>
                   {group.tasks.map(task => {
                     const start = toDate(task.startDate);
@@ -210,14 +210,14 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
                       task.status === 'in_progress' ? Clock : XCircle;
 
                     return (
-                      <div key={task.id} className="flex items-center ml-8 border-t border-[rgba(0,229,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
+                      <div key={task.id} className="flex items-center ml-8 border-t border-[rgba(34,197,94,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
                         <div className="w-48 flex-shrink-0 px-3 py-2">
                           <div className="flex items-center gap-1.5">
                             <StatusIcon className="w-3 h-3 flex-shrink-0" style={{ color: statusColors[task.status] }} />
-                            <span className="text-xs text-[#f0f0f5] truncate">{task.name}</span>
+                            <span className="text-xs text-[#F8FAFC] truncate">{task.name}</span>
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-[#6b6b80]">{statusLabels[task.status]}</span>
+                            <span className="text-[10px] text-[#94A3B8]">{statusLabels[task.status]}</span>
                             {isOverdue && <span className="text-[10px] text-[#ff3b5c]">Overdue</span>}
                           </div>
                         </div>
@@ -238,7 +238,7 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
                                 className="h-full"
                                 style={{ width: '100%', backgroundColor: `${statusColors[task.status]}55` }}
                               />
-                              <span className="absolute inset-0 flex items-center px-1.5 text-[10px] text-[#f0f0f5] truncate">
+                              <span className="absolute inset-0 flex items-center px-1.5 text-[10px] text-[#F8FAFC] truncate">
                                 {task.name}
                               </span>
                             </button>
@@ -254,7 +254,7 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
         </div>
       </div>
 
-      <div className="p-4 border-t border-[rgba(0,229,255,0.1)] flex items-center gap-4 text-xs text-[#6b6b80]">
+      <div className="p-4 border-t border-[rgba(34,197,94,0.1)] flex items-center gap-4 text-xs text-[#94A3B8]">
         <span className="font-medium">Legend:</span>
         {Object.entries(statusLabels).map(([status, label]) => (
           <div key={status} className="flex items-center gap-1.5">

@@ -108,29 +108,29 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 bg-[rgba(0,0,0,0.7)] overflow-y-auto">
-      <div className="w-full max-w-4xl bg-[#0a0a0f] border border-[rgba(0,229,255,0.1)] p-8">
+      <div className="w-full max-w-4xl bg-[#020617] border border-[rgba(34,197,94,0.1)] p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-[#f0f0f5]">Bulk Add Defects</h2>
-            <p className="text-sm text-[#6b6b80] mt-1">
+            <h2 className="text-2xl font-bold text-[#F8FAFC]">Bulk Add Defects</h2>
+            <p className="text-sm text-[#94A3B8] mt-1">
               {app?.name || 'Unknown App'} — {validRows.length} defect(s) to create
             </p>
           </div>
-          <button onClick={onClose} className="p-2 text-[#6b6b80] hover:text-[#f0f0f5]">
+          <button onClick={onClose} className="p-2 text-[#94A3B8] hover:text-[#F8FAFC]">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Common fields */}
-        <div className="mb-6 p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-          <h3 className="text-sm font-medium text-[#f0f0f5] mb-3">Common Fields (applies to all)</h3>
+        <div className="mb-6 p-4 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <h3 className="text-sm font-medium text-[#F8FAFC] mb-3">Common Fields (applies to all)</h3>
           <div className="grid grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Environment</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Environment</label>
               <select
                 value={common.environment}
                 onChange={(e) => setCommon({ ...common, environment: e.target.value as any })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               >
                 <option value="dev">Dev</option>
                 <option value="staging">Staging</option>
@@ -139,11 +139,11 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Issue Type</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Issue Type</label>
               <select
                 value={common.issueType}
                 onChange={(e) => setCommon({ ...common, issueType: e.target.value as DefectIssueType })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               >
                 <option value="bug">Bug</option>
                 <option value="ui_issue">UI Issue</option>
@@ -154,11 +154,11 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Reproducibility</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Reproducibility</label>
               <select
                 value={common.reproducibility}
                 onChange={(e) => setCommon({ ...common, reproducibility: e.target.value as DefectReproducibility })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               >
                 <option value="always">Always</option>
                 <option value="sometimes">Sometimes</option>
@@ -166,11 +166,11 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[#6b6b80] mb-1">Frequency</label>
+              <label className="block text-xs text-[#94A3B8] mb-1">Frequency</label>
               <select
                 value={common.frequency}
                 onChange={(e) => setCommon({ ...common, frequency: e.target.value as DefectFrequency })}
-                className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
               >
                 <option value="100">100%</option>
                 <option value="intermittent">Intermittent</option>
@@ -183,10 +183,10 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
         {/* Defect rows */}
         <div className="space-y-3 mb-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-[#f0f0f5]">Defects</h3>
+            <h3 className="text-sm font-medium text-[#F8FAFC]">Defects</h3>
             <button
               onClick={addRow}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#00e5ff] text-sm hover:bg-[rgba(0,229,255,0.05)]"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#22C55E] text-sm hover:bg-[rgba(34,197,94,0.05)]"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Row
@@ -196,7 +196,7 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="text-xs text-[#6b6b80] uppercase">
+                <tr className="text-xs text-[#94A3B8] uppercase">
                   <th className="text-left py-2 pr-2 w-[30%]">Title *</th>
                   <th className="text-left py-2 px-2 w-[13%]">Severity</th>
                   <th className="text-left py-2 px-2 w-[13%]">Priority</th>
@@ -214,14 +214,14 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
                         value={row.title}
                         onChange={(e) => updateRow(index, 'title', e.target.value)}
                         placeholder="e.g. Login button not working"
-                        className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                        className="w-full px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
                       />
                     </td>
                     <td className="py-1.5 px-2">
                       <select
                         value={row.severity}
                         onChange={(e) => updateRow(index, 'severity', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                        className="w-full px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
                       >
                         <option value="blocker">Blocker</option>
                         <option value="critical">Critical</option>
@@ -233,7 +233,7 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
                       <select
                         value={row.priority}
                         onChange={(e) => updateRow(index, 'priority', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                        className="w-full px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
                       >
                         <option value="high">High</option>
                         <option value="medium">Medium</option>
@@ -246,7 +246,7 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
                         value={row.module}
                         onChange={(e) => updateRow(index, 'module', e.target.value)}
                         placeholder="Module"
-                        className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                        className="w-full px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
                       />
                     </td>
                     <td className="py-1.5 px-2">
@@ -255,14 +255,14 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
                         value={row.description}
                         onChange={(e) => updateRow(index, 'description', e.target.value)}
                         placeholder="Brief description"
-                        className="w-full px-2 py-1.5 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none"
+                        className="w-full px-2 py-1.5 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none"
                       />
                     </td>
                     <td className="py-1.5 pl-2 text-right">
                       {rows.length > 1 && (
                         <button
                           onClick={() => removeRow(index)}
-                          className="p-1 text-[#6b6b80] hover:text-[#ff3b5c]"
+                          className="p-1 text-[#94A3B8] hover:text-[#ff3b5c]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -276,8 +276,8 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-[rgba(0,229,255,0.1)]">
-          <p className="text-sm text-[#6b6b80]">
+        <div className="flex items-center justify-between pt-4 border-t border-[rgba(34,197,94,0.1)]">
+          <p className="text-sm text-[#94A3B8]">
             {validRows.length} defect{validRows.length !== 1 ? 's' : ''} ready to submit
             {rows.some(r => !r.title.trim()) && (
               <span className="text-[#f59e0b] ml-2">({rows.filter(r => !r.title.trim()).length} row(s) missing title will be skipped)</span>
@@ -286,14 +286,14 @@ export function DefectBulkCreateModal({ onClose, appId }: DefectBulkCreateModalP
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-[#12121a] text-[#f0f0f5] border border-[rgba(0,229,255,0.1)] hover:bg-[#1a1a2e]"
+              className="px-4 py-2 bg-[#0F172A] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!allValid || submitting}
-              className="flex items-center gap-2 px-6 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0] disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50"
             >
               {submitting && <Loader className="w-4 h-4 animate-spin" />}
               {submitting ? 'Creating...' : `Submit All (${validRows.length})`}

@@ -173,8 +173,8 @@ export function SoftwareEngineeringProfileForm({ app, onSave }: Props) {
       </Section>
 
       {/* Save */}
-      <div className="flex justify-end pt-4 border-t border-[rgba(0,229,255,0.1)]">
-        <button onClick={() => onSave(d)} className="flex items-center gap-2 px-6 py-2 bg-[#00e5ff] text-[#0a0a0f] font-medium hover:bg-[#00c4e0]">
+      <div className="flex justify-end pt-4 border-t border-[rgba(34,197,94,0.1)]">
+        <button onClick={() => onSave(d)} className="flex items-center gap-2 px-6 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]">
           <Save className="w-4 h-4" /> Save Software Engineering Profile
         </button>
       </div>
@@ -185,8 +185,8 @@ export function SoftwareEngineeringProfileForm({ app, onSave }: Props) {
 // Shared sub-components
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="p-4 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
-      <h3 className="text-sm font-semibold text-[#f0f0f5] uppercase tracking-wider mb-4">{title}</h3>
+    <div className="p-4 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+      <h3 className="text-sm font-semibold text-[#F8FAFC] uppercase tracking-wider mb-4">{title}</h3>
       {children}
     </div>
   );
@@ -195,14 +195,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, value, onChange, placeholder, disabled }: { label: string; value: string; onChange?: (v: string) => void; placeholder?: string; disabled?: boolean }) {
   return (
     <div>
-      <label className="block text-xs text-[#6b6b80] mb-1">{label}</label>
+      <label className="block text-xs text-[#94A3B8] mb-1">{label}</label>
       <input
         type="text"
         value={value}
         onChange={e => onChange?.(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full px-3 py-2 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] text-sm outline-none disabled:opacity-60"
+        className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm outline-none disabled:opacity-60"
       />
     </div>
   );
@@ -213,7 +213,7 @@ function TableHeader({ labels }: { labels: string[] }) {
   return (
     <div className="flex gap-2 mb-1">
       {labels.map((l, i) => (
-        <span key={i} className="flex-1 text-[10px] text-[#6b6b80] uppercase tracking-wider px-2">{l}</span>
+        <span key={i} className="flex-1 text-[10px] text-[#94A3B8] uppercase tracking-wider px-2">{l}</span>
       ))}
       <span className="w-8" />
     </div>
@@ -225,7 +225,7 @@ function TableRow({ total, onRemove, children }: { total: number; children: Reac
     <div className="flex gap-2 items-center mb-1.5">
       {children}
       {total > 1 && (
-        <button onClick={onRemove} className="flex-shrink-0 p-1 text-[#6b6b80] hover:text-[#ff3b5c]">
+        <button onClick={onRemove} className="flex-shrink-0 p-1 text-[#94A3B8] hover:text-[#ff3b5c]">
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       )}
@@ -236,7 +236,7 @@ function TableRow({ total, onRemove, children }: { total: number; children: Reac
 
 function AddButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-1 text-xs text-[#00e5ff] hover:underline mt-1">
+    <button onClick={onClick} className="flex items-center gap-1 text-xs text-[#22C55E] hover:underline mt-1">
       <Plus className="w-3 h-3" /> Add Row
     </button>
   );

@@ -63,8 +63,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2">Dashboard</h1>
-        <p className="text-[#6b6b80]">Welcome back, {currentUser?.name}</p>
+        <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">Dashboard</h1>
+        <p className="text-[#94A3B8]">Welcome back, {currentUser?.name}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -103,12 +103,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6">
+        <div className="lg:col-span-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#f0f0f5]">Recent Activity</h2>
+            <h2 className="text-xl font-bold text-[#F8FAFC]">Recent Activity</h2>
             <button
               onClick={() => onNavigate('insights')}
-              className="text-sm text-[#00e5ff] hover:text-[#00c4e0] flex items-center gap-1"
+              className="text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1"
             >
               View All <ArrowUpRight className="w-4 h-4" />
             </button>
@@ -121,25 +121,25 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               >
                 <div className={`w-8 h-8 flex items-center justify-center text-white text-sm font-semibold ${
                   activity.type === 'task_approved' ? 'bg-[#10b981]' :
-                  activity.type === 'task_completed' ? 'bg-[#00e5ff]' :
-                  'bg-[#6b6b80]'
+                  activity.type === 'task_completed' ? 'bg-[#22C55E]' :
+                  'bg-[#94A3B8]'
                 }`}>
                   {activity.userName.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#f0f0f5]">
+                  <p className="text-sm text-[#F8FAFC]">
                     <span className="font-medium">{activity.userName}</span>{' '}
                     {activity.description}
                   </p>
-                  <p className="text-xs text-[#6b6b80] mt-1">
+                  <p className="text-xs text-[#94A3B8] mt-1">
                     {format(activity.timestamp, 'MMM d, h:mm a')}
                   </p>
                 </div>
               </div>
             )) : (
               <div className="text-center py-8">
-                <ActivityIcon className="w-12 h-12 text-[#6b6b80] mx-auto mb-2" />
-                <p className="text-[#6b6b80] text-sm">No activity yet</p>
+                <ActivityIcon className="w-12 h-12 text-[#94A3B8] mx-auto mb-2" />
+                <p className="text-[#94A3B8] text-sm">No activity yet</p>
               </div>
             )}
           </div>
@@ -147,8 +147,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
         <div className="space-y-6">
           {canViewAll && (
-            <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6">
-              <h3 className="font-bold text-[#f0f0f5] mb-4">Quick Stats</h3>
+            <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+              <h3 className="font-bold text-[#F8FAFC] mb-4">Quick Stats</h3>
               <div className="space-y-3">
                 <QuickStat
                   icon={Layers}
@@ -172,8 +172,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           )}
 
-          <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6">
-            <h3 className="font-bold text-[#f0f0f5] mb-4">Urgent Tasks</h3>
+          <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+            <h3 className="font-bold text-[#F8FAFC] mb-4">Urgent Tasks</h3>
             {priorityTasks.length > 0 ? (
               <div className="space-y-2">
                 {priorityTasks.map((task) => (
@@ -181,11 +181,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     key={task.id}
                     className="p-3 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)]"
                   >
-                    <p className="text-sm font-medium text-[#f0f0f5]">{task.name}</p>
+                    <p className="text-sm font-medium text-[#F8FAFC]">{task.name}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-[#ff3b5c] font-medium">URGENT</span>
-                      <span className="text-xs text-[#6b6b80]">•</span>
-                      <span className="text-xs text-[#6b6b80] capitalize">
+                      <span className="text-xs text-[#94A3B8]">•</span>
+                      <span className="text-xs text-[#94A3B8] capitalize">
                         {task.status.replace('_', ' ')}
                       </span>
                     </div>
@@ -193,19 +193,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-[#6b6b80]">No urgent tasks</p>
+              <p className="text-sm text-[#94A3B8]">No urgent tasks</p>
             )}
           </div>
         </div>
       </div>
 
       {canViewAll && activeApps.length > 0 && (
-        <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6">
+        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#f0f0f5]">Active Apps</h2>
+            <h2 className="text-xl font-bold text-[#F8FAFC]">Active Apps</h2>
             <button
               onClick={() => onNavigate('apps')}
-              className="text-sm text-[#00e5ff] hover:text-[#00c4e0] flex items-center gap-1"
+              className="text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1"
             >
               View All <ArrowUpRight className="w-4 h-4" />
             </button>
@@ -224,22 +224,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               return (
                 <div
                   key={app.id}
-                  className="p-4 border border-[rgba(0,229,255,0.1)] hover:border-[#00e5ff] transition cursor-pointer bg-[#1a1a2e]"
+                  className="p-4 border border-[rgba(34,197,94,0.1)] hover:border-[#22C55E] transition cursor-pointer bg-[#1E293B]"
                   onClick={() => onNavigate('apps')}
                 >
-                  <h3 className="font-semibold text-[#f0f0f5] mb-2">{app.name}</h3>
-                  <p className="text-sm text-[#6b6b80] mb-4 line-clamp-2">
+                  <h3 className="font-semibold text-[#F8FAFC] mb-2">{app.name}</h3>
+                  <p className="text-sm text-[#94A3B8] mb-4 line-clamp-2">
                     {app.description}
                   </p>
                   <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="text-[#6b6b80]">
+                    <span className="text-[#94A3B8]">
                       {appGoals.length} goals
                     </span>
-                    <span className="text-[#00e5ff] font-medium">{progress}%</span>
+                    <span className="text-[#22C55E] font-medium">{progress}%</span>
                   </div>
-                  <div className="w-full bg-[#1e1e2a] h-1.5">
+                  <div className="w-full bg-[#1E293B] h-1.5">
                     <div
-                      className="bg-[#00e5ff] h-1.5 transition-all"
+                      className="bg-[#22C55E] h-1.5 transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -269,7 +269,7 @@ function StatCard({
   percentage: number;
 }) {
   const colors = {
-    cyan: { bg: '#00e5ff', glow: 'rgba(0,229,255,0.2)' },
+    cyan: { bg: '#22C55E', glow: 'rgba(34,197,94,0.2)' },
     purple: { bg: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' },
     red: { bg: '#ff3b5c', glow: 'rgba(255,59,92,0.2)' },
     green: { bg: '#10b981', glow: 'rgba(16,185,129,0.2)' }
@@ -280,7 +280,7 @@ function StatCard({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-6 relative overflow-hidden">
+    <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10" style={{ background: `radial-gradient(circle, ${bg} 0%, transparent 70%)` }}></div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative">
@@ -290,7 +290,7 @@ function StatCard({
               cy="40"
               r="36"
               fill="none"
-              stroke="#1e1e2a"
+              stroke="#1E293B"
               strokeWidth="4"
             />
             <circle
@@ -312,9 +312,9 @@ function StatCard({
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-[#f0f0f5]">{value}</p>
-        <p className="text-sm text-[#6b6b80] mt-1">{title}</p>
-        <p className="text-xs text-[#6b6b80] mt-2">{trend}</p>
+        <p className="text-3xl font-bold text-[#F8FAFC]">{value}</p>
+        <p className="text-sm text-[#94A3B8] mt-1">{title}</p>
+        <p className="text-xs text-[#94A3B8] mt-2">{trend}</p>
       </div>
     </div>
   );
@@ -334,13 +334,13 @@ function QuickStat({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between p-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] hover:border-[rgba(0,229,255,0.3)] transition"
+      className="w-full flex items-center justify-between p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] hover:border-[rgba(34,197,94,0.3)] transition"
     >
       <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-[#00e5ff]" />
-        <span className="text-sm text-[#f0f0f5]">{label}</span>
+        <Icon className="w-5 h-5 text-[#22C55E]" />
+        <span className="text-sm text-[#F8FAFC]">{label}</span>
       </div>
-      <span className="text-lg font-bold text-[#f0f0f5]">{value}</span>
+      <span className="text-lg font-bold text-[#F8FAFC]">{value}</span>
     </button>
   );
 }

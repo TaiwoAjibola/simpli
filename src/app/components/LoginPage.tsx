@@ -31,31 +31,31 @@ export function LoginPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
-        <div className="text-[#f0f0f5]">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+        <div className="text-[#F8FAFC]">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden">
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#00e5ff]/5 blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#22C55E]/5 blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ff006e]/5 blur-3xl"></div>
       </div>
 
       <div className="w-full max-w-md px-6 relative z-10">
-        <div className="bg-[#12121a] border border-[rgba(0,229,255,0.1)] p-8">
+        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-8">
           <div className="flex items-center justify-center mb-8">
             <div className="relative">
               <img src={SimpliLogo} alt="Simpli" className="w-20 h-20" style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(5493%) hue-rotate(165deg) brightness(101%) contrast(101%)' }} />
-              <div className="absolute -inset-2 border border-[rgba(0,229,255,0.2)]"></div>
+              <div className="absolute -inset-2 border border-[rgba(34,197,94,0.2)]"></div>
             </div>
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#f0f0f5] mb-2 tracking-wide">Simpli</h1>
-            <p className="text-[#6b6b80]">Sign in to manage your applications</p>
+            <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2 tracking-wide">Simpli</h1>
+            <p className="text-[#94A3B8]">Sign in to manage your applications</p>
           </div>
 
           {error && (
@@ -67,38 +67,38 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-4 py-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition"
                   placeholder="you@company.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#f0f0f5] mb-2">
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6b6b80]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 bg-[#1a1a2e] border border-[rgba(0,229,255,0.1)] text-[#f0f0f5] focus:ring-2 focus:ring-[#00e5ff] focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-12 py-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b80] hover:text-[#f0f0f5] transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#F8FAFC] transition"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -108,14 +108,14 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[#00e5ff] text-[#0a0a0f] py-3 font-medium hover:bg-[#00c4e0] transition shadow-lg shadow-[#00e5ff]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition shadow-lg shadow-[#22C55E]/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-[#6b6b80] mt-6">
+        <p className="text-center text-sm text-[#94A3B8] mt-6">
           Frontend prototype - data resets on refresh
         </p>
       </div>
