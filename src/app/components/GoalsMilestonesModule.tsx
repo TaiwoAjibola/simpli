@@ -148,9 +148,9 @@ export function GoalsModule() {
               setEditingGoal(null);
               setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
+            className="group flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 micro-pop" />
             New Goal
           </button>
         )}
@@ -318,12 +318,12 @@ export function GoalsModule() {
           return (
             <div
               key={goal.id}
-              className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 hover:border-[rgba(34,197,94,0.3)] transition"
+              className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 hover:border-[rgba(34,197,94,0.3)] transition card-lift"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-start gap-3">
                   <div className="p-3 bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.2)]">
-                    <Target className="w-6 h-6 text-[#10b981]" />
+                    <Target className="w-6 h-6 text-[#10b981] micro-wiggle" />
                   </div>
                   <div>
                     <h3 className="font-bold text-[#F8FAFC] text-lg">{goal.name}</h3>
@@ -391,9 +391,9 @@ export function GoalsModule() {
                     <>
                       <button
                         onClick={() => toggleGate(goal.id)}
-                        className="w-full flex items-center gap-2 px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-left hover:border-[rgba(34,197,94,0.3)] transition"
+                        className="group w-full flex items-center gap-2 px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-left hover:border-[rgba(34,197,94,0.3)] transition cursor-pointer"
                       >
-                        <ShieldCheck className="w-4 h-4 text-[#8b5cf6]" />
+                        <ShieldCheck className="w-4 h-4 text-[#8b5cf6] micro-wiggle" />
                         <span className="text-sm font-medium text-[#F8FAFC]">Gate Review</span>
                         {goalExps.length > 0 && (
                           <span className="ml-auto text-xs text-[#94A3B8] whitespace-nowrap">

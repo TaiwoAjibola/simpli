@@ -47,7 +47,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
           <button
             key={app.id}
             onClick={() => onNavigate?.('app-details', app.id)}
-            className="text-left bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg hover:border-[#22C55E] transition group"
+            className="text-left bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg hover:border-[#22C55E] transition group card-lift cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>

@@ -115,13 +115,13 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
+                      className={`group w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-200 ${
                         isActive
                           ? 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] font-medium border-l-2 border-[#22C55E]'
                           : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.03)]'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className={`w-5 h-5 micro-slide ${isActive ? 'text-[#22C55E]' : ''}`} />
                       <span>{item.label}</span>
                     </button>
                   );

@@ -106,12 +106,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="lg:col-span-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#F8FAFC]">Recent Activity</h2>
-            <button
-              onClick={() => onNavigate('insights')}
-              className="text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1"
-            >
-              View All <ArrowUpRight className="w-4 h-4" />
-            </button>
+<button
+      onClick={() => onNavigate('insights')}
+      className="group text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1 cursor-pointer"
+    >
+      View All <ArrowUpRight className="w-4 h-4 micro-slide" />
+    </button>
           </div>
           <div className="space-y-4">
             {recentActivities.length > 0 ? recentActivities.map((activity) => (
@@ -203,12 +203,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#F8FAFC]">Active Apps</h2>
-            <button
-              onClick={() => onNavigate('apps')}
-              className="text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1"
-            >
-              View All <ArrowUpRight className="w-4 h-4" />
-            </button>
+<button
+      onClick={() => onNavigate('apps')}
+      className="group text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1 cursor-pointer"
+    >
+      View All <ArrowUpRight className="w-4 h-4 micro-slide" />
+    </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {activeApps.slice(0, 3).map((app) => {
@@ -224,7 +224,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               return (
                 <div
                   key={app.id}
-                  className="p-4 border border-[rgba(34,197,94,0.1)] hover:border-[#22C55E] transition cursor-pointer bg-[#1E293B]"
+                  className="group p-4 border border-[rgba(34,197,94,0.1)] hover:border-[#22C55E] transition cursor-pointer bg-[#1E293B] card-lift"
                   onClick={() => onNavigate('apps')}
                 >
                   <h3 className="font-semibold text-[#F8FAFC] mb-2">{app.name}</h3>
@@ -280,7 +280,7 @@ function StatCard({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 relative overflow-hidden">
+    <div className="group bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 relative overflow-hidden card-lift hover:border-[rgba(34,197,94,0.3)] cursor-default">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10" style={{ background: `radial-gradient(circle, ${bg} 0%, transparent 70%)` }}></div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative">
@@ -307,7 +307,7 @@ function StatCard({
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className="w-6 h-6" style={{ color: bg }} />
+            <Icon className="w-6 h-6 micro-pop" style={{ color: bg }} />
           </div>
         </div>
       </div>
@@ -334,10 +334,10 @@ function QuickStat({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-between p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] hover:border-[rgba(34,197,94,0.3)] transition"
+      className="group w-full flex items-center justify-between p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] hover:border-[rgba(34,197,94,0.3)] transition cursor-pointer"
     >
       <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-[#22C55E]" />
+        <Icon className="w-5 h-5 text-[#22C55E] micro-pop" />
         <span className="text-sm text-[#F8FAFC]">{label}</span>
       </div>
       <span className="text-lg font-bold text-[#F8FAFC]">{value}</span>

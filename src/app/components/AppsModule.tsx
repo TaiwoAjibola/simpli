@@ -89,9 +89,9 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
               setEditingApp(null);
               setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition"
+            className="group flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 micro-pop" />
             New App
           </button>
         )}
@@ -235,7 +235,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
           return (
             <div
               key={app.id}
-              className={`${getCardClasses(app.cardStyle || 'default', app.color || '#22C55E')} relative overflow-hidden`}
+              className={`${getCardClasses(app.cardStyle || 'default', app.color || '#22C55E')} relative overflow-hidden card-lift cursor-pointer`}
               style={getCardInlineStyle(app.cardStyle || 'default', app.color || '#22C55E')}
             >
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none" style={{ background: 'radial-gradient(circle, #22C55E 0%, transparent 70%)' }}></div>
@@ -243,10 +243,10 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
               <div className="flex items-start justify-between mb-4">
                 <button
                   onClick={() => onNavigate('app-details', app.id)}
-                  className="flex items-start gap-3 text-left hover:opacity-80 transition flex-1"
+                  className="group flex items-start gap-3 text-left hover:opacity-80 transition flex-1 cursor-pointer"
                 >
                   <div className="p-3 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
-                    <Layers className="w-6 h-6 text-[#22C55E]" />
+                    <Layers className="w-6 h-6 text-[#22C55E] micro-pop" />
                   </div>
                   <div>
                     <h3 className="font-bold text-[#F8FAFC] text-lg">{app.name}</h3>
@@ -254,7 +254,7 @@ export function AppsModule({ onNavigate }: AppsModuleProps) {
                       Created {format(app.createdAt, 'MMM d, yyyy')}
                     </p>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[#94A3B8] mt-1" />
+                  <ArrowRight className="w-4 h-4 text-[#94A3B8] mt-1 micro-slide" />
                 </button>
                 <div className="flex items-center gap-2">
                   <span

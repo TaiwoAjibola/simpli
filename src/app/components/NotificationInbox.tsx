@@ -19,10 +19,10 @@ export function NotificationInbox() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.03)] transition"
+        className="group relative p-2 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.03)] transition cursor-pointer"
         title="Notifications"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-5 h-5 micro-wiggle" />
         {unread.length > 0 && (
           <span className="absolute top-0 right-0 bg-[#ff006e] text-white text-[10px] rounded-full min-w-4 h-4 px-1 flex items-center justify-center">
             {unread.length > 9 ? '9+' : unread.length}
