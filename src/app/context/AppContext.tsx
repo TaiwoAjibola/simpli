@@ -954,6 +954,13 @@ const sendActionPointNotification = useCallback(async (apId: string) => {
     await deleteDoc(doc(db, 'tasks', taskId));
   }, [subtasks]);
 
+  const runAutomationForEventRef = useRef<((evt: AutomationTriggerEvent, payload: {
+    workKind: string;
+    workId: string;
+    workStatus: string;
+    workType?: string;
+  }) => Promise<void>) | null>(null);
+
 const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -1067,14 +1074,14 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
     await updateDoc(doc(db, 'tasks', taskId), updateData);
 
     if (statusChanged) {
-      await runAutomationForEvent('task_status_changed', {
+      await runAutomationForEventRef.current?.('task_status_changed', {
         workKind: 'task',
         workId: taskId,
         workStatus: updates.status || task.status,
         workType: task.workType || 'non-development'
       });
     }
-  }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies, runAutomationForEvent]);
+  }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies]);
 
   const approveTask = useCallback(async (taskId: string, approverId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -1477,14 +1484,14 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
     await updateDoc(doc(db, 'defects', defectId), sanitizeForFirestore(updateData));
 
     if (statusChanged) {
-      await runAutomationForEvent('defect_status_changed', {
+      await runAutomationForEventRef.current?.('defect_status_changed', {
         workKind: 'defect',
         workId: defectId,
         workStatus: updates.status || defect.status,
         workType: defect.workType || 'development'
       });
     }
-  }, [defects, hasPermission, workDependencies, runAutomationForEvent]);
+  }, [defects, hasPermission, workDependencies]);
 
   const deleteDefect = useCallback(async (defectId: string) => {
     await deleteDoc(doc(db, 'defects', defectId));
@@ -2069,6 +2076,8 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
       setAutomations(prev => prev.map(a => (a.id === rule.id ? { ...a, runHistory: updatedHistory, updatedAt: new Date() } : a)));
     }
   }, [automations, tasks, employees, roles, updateTask, updateDefect, updateActionPoint, notifyWork]);
+
+  runAutomationForEventRef.current = runAutomationForEvent;
 
   const addRepository = useCallback(async (repo: Omit<Repository, 'id' | 'createdAt'>) => {
     const repoId = `repo-${Date.now()}`;
