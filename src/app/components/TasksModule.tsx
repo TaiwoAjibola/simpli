@@ -13,6 +13,7 @@ import {
   Filter,
   List,
   LayoutGrid,
+  CalendarRange,
   Edit2,
   Trash2,
   ChevronDown,
@@ -27,6 +28,7 @@ import {
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
+import { TaskTimeline } from './TaskTimeline';
 import { TagBadges } from './TagBadges';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 import { getWorkTargetStates, PermissionCheck } from '../../utils/workflow';
@@ -75,7 +77,7 @@ export function TasksModule() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -331,6 +333,12 @@ export function TasksModule() {
               className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'kanban' ? 'text-[#00e5ff]' : 'text-[#6b6b80]'}`}
             >
               <LayoutGrid className="w-4 h-4" /> Kanban
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'timeline' ? 'text-[#00e5ff]' : 'text-[#6b6b80]'}`}
+            >
+              <CalendarRange className="w-4 h-4" /> Timeline
             </button>
           </div>
           {canAssignTasks && (
@@ -966,7 +974,7 @@ export function TasksModule() {
               />
           ))}
         </div>
-      ) : (
+      ) : viewMode === 'kanban' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {(['not_started', 'in_progress', 'blocked', 'completed', 'approved'] as TaskStatus[]).map((status) => {
             const statusTasks = filteredTasks.filter(t => t.status === status);
@@ -1040,9 +1048,17 @@ export function TasksModule() {
           );
         })}
       </div>
+      ) : (
+        <TaskTimeline
+          tasks={filteredTasks}
+          filterStatus={filterStatus}
+          onStatusChange={(id, status) => updateTask(id, { status })}
+          onSelect={(task) => setSelectedTask(task)}
+          onFilterChange={(status) => setFilterStatus(status)}
+        />
       )}
 
-      {filteredTasks.length === 0 && (
+      {filteredTasks.length === 0 && viewMode !== 'timeline' && (
         <div className="text-center py-12 bg-[#12121a] border border-[rgba(0,229,255,0.1)]">
           <p className="text-[#6b6b80]">No tasks found</p>
         </div>

@@ -169,7 +169,8 @@ export type Module = {
 
 export type ModuleExpectation = {
   id: string;
-  moduleId: string;
+  moduleId?: string;
+  goalId?: string;
   description: string;
   status: ExpectationStatus;
   taskId?: string;

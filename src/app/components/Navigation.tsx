@@ -10,18 +10,15 @@ import {
   LogOut,
   Zap,
   Briefcase,
-  Activity,
   BarChart3,
-  Calendar,
-  Archive,
   Bug,
   Menu,
   X,
-  ClipboardCheck,
   ShieldCheck,
   Rocket,
   LayoutTemplate,
-  Plug
+  Plug,
+  Clock
 } from 'lucide-react';
 import SimpliLogo from '../assets/Simpli.svg';
 import { NotificationInbox } from './NotificationInbox';
@@ -33,10 +30,7 @@ type NavigationProps = {
 
 export function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const { currentUser, currentRole, logout, hasPermission } = useAuth();
-  const { notifications } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const unreadCount = notifications.filter(n => !n.read && (!n.recipientId || n.recipientId === currentUser?.id)).length;
 
   const navSections = [
     {
@@ -51,11 +45,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'portfolio', label: 'Portfolio', icon: BarChart3, show: hasPermission('view_all_apps') },
         { id: 'repositories', label: 'Repositories', icon: Layers, show: hasPermission('view_all_apps') },
         { id: 'integrations', label: 'Integrations', icon: Plug, show: hasPermission('view_all_apps') },
-        { id: 'analytics', label: 'Analytics', icon: Activity, show: hasPermission('view_all_apps') },
-        { id: 'timeline', label: 'Timeline', icon: Calendar, show: hasPermission('view_all_apps') },
-        { id: 'archive', label: 'Archive', icon: Archive, show: hasPermission('view_all_apps') },
-        { id: 'gate-review', label: 'Gate Review', icon: ShieldCheck, show: true },
-        { id: 'activities', label: 'Activities', icon: Activity, show: true }
+        { id: 'insights', label: 'Insights', icon: BarChart3, show: true },
+        { id: 'gate-review', label: 'Gate Review', icon: ShieldCheck, show: true }
       ]
     },
     {
@@ -71,7 +62,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     {
       label: 'Settings',
       items: [
-        { id: 'admin', label: 'Admin Panel', icon: Zap, show: hasPermission('manage_users') }
+        { id: 'admin', label: 'Admin Panel', icon: Clock, show: hasPermission('manage_users') }
       ]
     }
   ];
@@ -134,11 +125,6 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                     >
                       <Icon className="w-5 h-5" />
                       <span>{item.label}</span>
-                      {item.id === 'my-work' && unreadCount > 0 && (
-                        <span className="ml-auto bg-[#ff006e] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {unreadCount}
-                        </span>
-                      )}
                     </button>
                   );
                 })}

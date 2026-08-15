@@ -107,7 +107,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#f0f0f5]">Recent Activity</h2>
             <button
-              onClick={() => onNavigate('activities')}
+              onClick={() => onNavigate('insights')}
               className="text-sm text-[#00e5ff] hover:text-[#00c4e0] flex items-center gap-1"
             >
               View All <ArrowUpRight className="w-4 h-4" />

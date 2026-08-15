@@ -136,6 +136,7 @@ type AppContextType = {
   updateExpectation: (expId: string, updates: Partial<ModuleExpectation>) => Promise<void>;
   deleteExpectation: (expId: string) => Promise<void>;
   getExpectationsForModule: (moduleId: string) => ModuleExpectation[];
+  getExpectationsForGoal: (goalId: string) => ModuleExpectation[];
   addActionPoint: (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => Promise<void>;
   updateActionPoint: (actionPointId: string, updates: Partial<ActionPoint>) => Promise<void>;
   deleteActionPoint: (actionPointId: string) => Promise<void>;
@@ -1627,6 +1628,10 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
     return expectations.filter(e => e.moduleId === moduleId);
   }, [expectations]);
 
+  const getExpectationsForGoal = useCallback((goalId: string) => {
+    return expectations.filter(e => e.goalId === goalId);
+  }, [expectations]);
+
   const addActionPoint = useCallback(async (ap: Omit<ActionPoint, 'id' | 'createdAt' | 'taskId'> & { taskId?: string }) => {
     const apId = `ap-${Date.now()}`;
     const now = new Date();
@@ -2194,6 +2199,7 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
         updateExpectation,
         deleteExpectation,
         getExpectationsForModule,
+        getExpectationsForGoal,
         actionPoints,
         addActionPoint,
         updateActionPoint,

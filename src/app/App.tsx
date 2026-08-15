@@ -14,10 +14,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ def
 const AppsModule = lazy(() => import('./components/AppsModule').then(m => ({ default: m.AppsModule })));
 const GoalsModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsModule })));
 const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
-const ActivitiesPage = lazy(() => import('./components/ActivitiesPage').then(m => ({ default: m.ActivitiesPage })));
-const AnalyticsPage = lazy(() => import('./components/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
-const TimelinePage = lazy(() => import('./components/TimelinePage').then(m => ({ default: m.TimelinePage })));
-const ArchivePage = lazy(() => import('./components/ArchivePage').then(m => ({ default: m.ArchivePage })));
+const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({ default: m.InsightsPage })));
 const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
 const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
@@ -56,11 +53,8 @@ function AppContent() {
           {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
           {currentPage === 'my-work' && <MyWork />}
           {currentPage === 'kanban' && <KanbanBoard />}
-          {currentPage === 'analytics' && <AnalyticsPage />}
-          {currentPage === 'timeline' && <TimelinePage onNavigate={handleNavigate} />}
-          {currentPage === 'archive' && <ArchivePage />}
+          {currentPage === 'insights' && <InsightsPage />}
           {currentPage === 'defects' && <DefectDashboard />}
-          {currentPage === 'activities' && <ActivitiesPage />}
           {currentPage === 'apps' && <AppsModule onNavigate={handleNavigate} />}
           {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
           {currentPage === 'goals' && <GoalsModule />}
