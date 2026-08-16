@@ -450,43 +450,39 @@ a:active > .lucide {
 }
 
 /* ============================================================
-   Brick-by-brick loader
+   Brick-layer loader (brick-by-brick)
    ============================================================ */
-@keyframes loader-brick-place {
-  0% {
-    transform: translateY(26px) scale(0.5);
-    opacity: 0;
-    filter: brightness(0.4);
-  }
-  55% {
-    opacity: 1;
-    transform: translateY(-3px) scale(1.05);
-  }
-  75% {
-    transform: translateY(1px) scale(0.97);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-    filter: brightness(1);
-  }
+.simpli-loader {
+  width: 90px;
+  height: 14px;
+  box-shadow: 0 3px 0 #22C55E, 0 8px 22px -8px rgba(34, 197, 94, 0.6);
+  position: relative;
+  clip-path: inset(-40px 0 -5px);
 }
-
-.loader-brick {
-  animation: loader-brick-place 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+.simpli-loader:before {
+  content: "";
+  position: absolute;
+  inset: auto calc(50% - 17px) 0;
+  height: 50px;
+  --g: no-repeat linear-gradient(180deg, #2ce37d 0%, #15995a 62%, #0c7c41 100%);
+  background: var(--g), var(--g), var(--g), var(--g);
+  background-size: 16px 14px;
+  animation:
+    l7-1 2s infinite linear,
+    l7-2 2s infinite linear;
 }
-
-@keyframes loader-wall-glow {
-  0%, 100% {
-    box-shadow: 0 0 18px -6px rgba(34, 197, 94, 0.45), 0 0 0 1px rgba(34, 197, 94, 0.18);
-  }
-  50% {
-    box-shadow: 0 0 34px -4px rgba(34, 197, 94, 0.75), 0 0 0 1px rgba(34, 197, 94, 0.35);
-  }
+@keyframes l7-1 {
+  0%,
+  100%  { background-position: 0 -50px, 100% -50px; }
+  17.5% { background-position: 0 100%, 100% -50px, 0 -50px, 100% -50px; }
+  35%   { background-position: 0 100%, 100% 100%, 0 -50px, 100% -50px; }
+  52.5% { background-position: 0 100%, 100% 100%, 0 calc(100% - 16px), 100% -50px; }
+  70%,
+  98%   { background-position: 0 100%, 100% 100%, 0 calc(100% - 16px), 100% calc(100% - 16px); }
 }
-
-.loader-wall-glow {
-  animation: loader-wall-glow 2.4s ease-in-out infinite;
+@keyframes l7-2 {
+  0%, 70% { transform: translate(0); }
+  100%    { transform: translate(200%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -499,8 +495,11 @@ a:active > .lucide {
   .shimmer-border {
     animation: none !important;
   }
-  .loader-brick,
-  .loader-wall-glow {
+  .simpli-loader,
+  .simpli-loader:before {
     animation: none !important;
+  }
+  .simpli-loader:before {
+    background-position: 0 100%, 100% 100%, 0 calc(100% - 16px), 100% calc(100% - 16px);
   }
 }
