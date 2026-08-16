@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import SimpliLogo from '../assets/Simpli.svg';
 import {
   LayoutDashboard,
   Kanban,
@@ -88,18 +89,15 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <div className="p-6 border-b border-[rgba(34,197,94,0.1)]">
-          <div className="flex items-center gap-3 group">
-            <div className="brand-orb">
-              <span className="brand-orb-core" />
-              <span className="brand-orb-ring" />
-              <span className="brand-orb-sat" />
+          <div className="flex items-center justify-between gap-3 group">
+            <div className="flex items-center gap-3">
+              <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
+              <div>
+                <h1 className="font-bold text-lg text-[#F8FAFC] tracking-wide">Simpli</h1>
+                <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{currentRole?.name}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-bold text-lg text-[#F8FAFC] tracking-wide">
-                <span className="text-gradient">Simpli</span>
-              </h1>
-              <p className="text-xs text-[#94A3B8] uppercase tracking-wider">{currentRole?.name}</p>
-            </div>
+            <NotificationInbox />
           </div>
         </div>
 
@@ -152,7 +150,6 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               <p className="font-medium text-sm text-[#F8FAFC] truncate">{currentUser?.name}</p>
               <p className="text-xs text-[#94A3B8] truncate">{currentUser?.email}</p>
             </div>
-            <NotificationInbox />
           </div>
           <button
             onClick={logout}
