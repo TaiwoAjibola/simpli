@@ -1,4 +1,4 @@
-import { githubApi, runRoute } from './github-helper';
+import { githubApi, runRoute } from './github-helper.js';
 
 // GitHub issues API: create / update (title/body/labels) / set state (open,
 // closed) and get. Wired to Defects — a defect creates a linked issue, and

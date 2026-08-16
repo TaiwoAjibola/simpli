@@ -1,4 +1,4 @@
-import { githubApi, runRoute } from './github-helper';
+import { githubApi, runRoute } from './github-helper.js';
 
 export default runRoute({
   run: async (query) => {

@@ -1,5 +1,5 @@
-import { githubApi, runRoute } from './github-helper';
-import { mapCompareFiles } from '../../src/utils/githubApiLogic';
+import { githubApi, runRoute } from './github-helper.js';
+import { mapCompareFiles } from '../../src/utils/githubApiLogic.js';
 
 // Compare two branches (or base...head shas). Returns changed files with patches.
 export default runRoute({

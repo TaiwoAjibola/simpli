@@ -88,7 +88,7 @@ type DefectLike = {
   };
 };
 
-type GoalLike = { id: string; name: string; status?: string };
+type GoalLike = { id: string; name: string; appId?: string; status?: string };
 type RepoLike = { connectionStatus?: string };
 type EmpLike = { id: string; name: string };
 type ActLike = { id: string; userName: string; description: string; timestamp: any };

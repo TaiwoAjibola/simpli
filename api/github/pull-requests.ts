@@ -1,5 +1,5 @@
-import { githubApi, runRoute } from './github-helper';
-import { summarizeReviews, summarizeChecks } from '../../src/utils/githubApiLogic';
+import { githubApi, runRoute } from './github-helper.js';
+import { summarizeReviews, summarizeChecks } from '../../src/utils/githubApiLogic.js';
 
 export default runRoute({
   method: 'POST',

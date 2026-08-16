@@ -3,7 +3,7 @@
 // this route adds the GROQ_API_KEY server-side, prompts the model, and returns
 // a Markdown report. The key NEVER reaches the client.
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { buildReportPrompt, ReportSnapshot } from '../src/utils/reportLogic';
+import { buildReportPrompt, ReportSnapshot } from '../src/utils/reportLogic.js';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const DEFAULT_MODEL = 'llama-3.3-70b-versatile';

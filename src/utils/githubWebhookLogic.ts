@@ -4,6 +4,13 @@ export type GithubSubDoc = {
   branchUrl?: string;
   commits?: GithubCommit[];
   pullRequest?: GithubPullRequest;
+  issue?: {
+    issueNumber: number;
+    url: string;
+    state: string;
+    title: string;
+    updatedAt?: string;
+  };
   status: string;
 };
 
@@ -65,7 +72,7 @@ export function mergeCommits(existing: GithubCommit[] | undefined, incoming: Git
 }
 
 export function computeWorkUpdate(eventType: string, event: any, existing: GithubSubDoc | undefined): any {
-  const g = existing || {};
+  const g: GithubSubDoc = existing || { status: 'not_started' };
   const update: any = {};
 
   if (eventType === 'push') {

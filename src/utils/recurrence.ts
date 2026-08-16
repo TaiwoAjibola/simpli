@@ -1,4 +1,4 @@
-import { Task, TaskOrigin } from '../app/types';
+import { Task, TaskOrigin } from '../app/types.js';
 
 export function nextOccurrence(task: Pick<Task, 'recurrence' | 'dueDate' | 'completedAt'>): Date | null {
   const rec = task.recurrence;
@@ -21,10 +21,9 @@ export function isRecurring(task: Pick<Task, 'recurrence'>): boolean {
   return !!task.recurrence;
 }
 
-export type NextTaskTemplate = Omit<
-  Task,
-  'id' | 'createdAt' | 'status' | 'completedAt' | 'approvedAt' | 'approvedBy' | 'github' | 'lastEmailSentAt'
->;
+export type NextTaskTemplate = Omit<Task, 'recurrence'> & {
+  recurrence?: { frequency: 'daily' | 'weekly' | 'monthly'; interval: number; endDate?: Date };
+};
 
 export function buildNextOccurrence<T extends NextTaskTemplate>(
   task: T,

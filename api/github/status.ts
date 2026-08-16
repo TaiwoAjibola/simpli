@@ -1,4 +1,4 @@
-import { githubApi, runRoute, getGithubAuthMode } from './github-helper';
+import { githubApi, runRoute, getGithubAuthMode } from './github-helper.js';
 
 // Verify the configured token is valid and report the authenticated account.
 // Used by the Integrations page "connect/sync" for GitHub — no hardcoded repo.

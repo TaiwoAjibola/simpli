@@ -1,5 +1,5 @@
-import { githubApi, runRoute } from './github-helper';
-import { filterTreeFiles } from '../../src/utils/githubApiLogic';
+import { githubApi, runRoute } from './github-helper.js';
+import { filterTreeFiles } from '../../src/utils/githubApiLogic.js';
 
 export default runRoute({
   run: async (query) => {

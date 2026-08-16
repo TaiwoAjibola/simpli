@@ -8,7 +8,7 @@ import {
   resolveWebhookBranch,
   resolveWebhookEventId,
   computeWorkUpdate
-} from '../../src/utils/githubWebhookLogic';
+} from '../../src/utils/githubWebhookLogic.js';
 
 function verify(body: string, signatureHeader: string | undefined, secret: string): boolean {
   if (!signatureHeader || !secret) return false;
