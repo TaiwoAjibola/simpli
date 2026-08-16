@@ -10,7 +10,7 @@ import {
   resolvePatToken,
   resolveInstallationId,
   type GithubAuthConfig
-} from '../../src/utils/githubAuthLogic.js';
+} from '../src/utils/githubAuthLogic.js';
 
 export type GithubRouteHandler = {
   method?: string;
