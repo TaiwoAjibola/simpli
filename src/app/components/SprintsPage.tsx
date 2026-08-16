@@ -42,7 +42,7 @@ export function SprintsPage() {
     getAppById
   } = useApp();
 
-  const canManage = hasPermission('manage_sprints') || hasPermission('manage_goals');
+  const canManage = hasPermission('manage_sprints') || hasPermission('manage_goals') || hasPermission('view_all_apps');
   const [filterApp, setFilterApp] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);

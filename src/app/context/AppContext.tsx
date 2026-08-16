@@ -53,7 +53,8 @@ import {
   Automation,
   AutomationTriggerEvent,
   Repository,
-  GithubSubDoc
+  GithubSubDoc,
+  AppReport
 } from '../types';
 
 type AppContextType = {
@@ -76,6 +77,7 @@ type AppContextType = {
   sprints: Sprint[];
   qaCycles: QaCycle[];
   workDependencies: WorkDependency[];
+  reports: AppReport[];
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -146,6 +148,8 @@ type AppContextType = {
   addTag: (tag: Omit<Tag, 'id' | 'createdAt'>) => Promise<void>;
   updateTag: (tagId: string, updates: Partial<Tag>) => Promise<void>;
   deleteTag: (tagId: string) => Promise<void>;
+  addReport: (report: Omit<AppReport, 'id' | 'createdAt'>) => Promise<void>;
+  deleteReport: (reportId: string) => Promise<void>;
   getTagsForApp: (appId: string) => Tag[];
   addSprint: (sprint: Omit<Sprint, 'id' | 'createdAt'>) => Promise<void>;
   updateSprint: (sprintId: string, updates: Partial<Sprint>) => Promise<void>;
@@ -403,6 +407,15 @@ function docToRepository(doc: any): Repository {
   };
 }
 
+function docToReport(doc: any): AppReport {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
 function docToActionPoint(doc: any): ActionPoint {
   const data = doc.data();
   return {
@@ -442,6 +455,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [workTemplates, setWorkTemplates] = useState<WorkTemplate[]>([]);
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [reports, setReports] = useState<AppReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -470,7 +484,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'workDependencies'), setter: setWorkDependencies, transformer: docToWorkDependency },
       { ref: collection(db, 'workTemplates'), setter: setWorkTemplates, transformer: docToWorkTemplate },
       { ref: collection(db, 'automations'), setter: setAutomations, transformer: docToAutomation },
-      { ref: collection(db, 'repositories'), setter: setRepositories, transformer: docToRepository }
+      { ref: collection(db, 'repositories'), setter: setRepositories, transformer: docToRepository },
+      { ref: query(collection(db, 'reports'), orderBy('createdAt', 'desc')), setter: setReports, transformer: docToReport }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -1745,6 +1760,21 @@ await createNotification(
     return tags.filter(t => t.appId === appId);
   }, [tags]);
 
+  const addReport = useCallback(async (report: Omit<AppReport, 'id' | 'createdAt'>) => {
+    const reportId = `report-${Date.now()}`;
+    await setDoc(doc(db, 'reports', reportId), {
+      ...report,
+      id: reportId,
+      createdAt: serverTimestamp()
+    });
+    setReports(prev => [{ ...report, id: reportId, createdAt: new Date() }, ...prev]);
+  }, []);
+
+  const deleteReport = useCallback(async (reportId: string) => {
+    await deleteDoc(doc(db, 'reports', reportId));
+    setReports(prev => prev.filter(r => r.id !== reportId));
+  }, []);
+
   const addSprint = useCallback(async (sprint: Omit<Sprint, 'id' | 'createdAt'>) => {
     const sprintId = `sprint-${Date.now()}`;
     await setDoc(doc(db, 'sprints', sprintId), {
@@ -2235,6 +2265,9 @@ await createNotification(
         addTag,
         updateTag,
         deleteTag,
+        reports,
+        addReport,
+        deleteReport,
         getTagsForApp,
         sprints,
         addSprint,

@@ -4,7 +4,6 @@ import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard,
   Kanban,
-  Layers,
   Target,
   CheckSquare,
   LogOut,
@@ -44,7 +43,6 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         { id: 'defects', label: 'Defects', icon: Bug, show: true },
         { id: 'action-points', label: 'Action Points', icon: CheckSquare, show: true },
         { id: 'sprints', label: 'Sprints', icon: Rocket, show: hasPermission('view_all_apps') },
-        { id: 'portfolio', label: 'Portfolio', icon: BarChart3, show: hasPermission('view_all_apps') },
         { id: 'repositories', label: 'Repositories', icon: FolderKanban, show: hasPermission('view_all_apps') },
         { id: 'integrations', label: 'Integrations', icon: Plug, show: hasPermission('view_all_apps') },
         { id: 'insights', label: 'Insights', icon: Sparkles, show: true }
@@ -53,7 +51,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     {
       label: 'Management',
       items: [
-        { id: 'apps', label: 'Applications', icon: Layers, show: hasPermission('view_all_apps') },
+        { id: 'portfolio', label: 'Portfolio', icon: BarChart3, show: hasPermission('view_all_apps') },
         { id: 'goals', label: 'Goals', icon: Target, show: hasPermission('view_all_apps') },
         { id: 'tasks', label: 'Tasks', icon: ListTodo, show: hasPermission('view_all_apps') },
         { id: 'templates', label: 'Work Templates', icon: LayoutTemplate, show: hasPermission('view_all_apps') },

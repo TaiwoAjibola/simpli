@@ -21,12 +21,15 @@ import {
   ClipboardCheck,
   Code2,
   Server,
-  FileText
+  FileText,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { Phase } from '../types';
 import { EngineeringDocsSection } from './EngineeringDocsSection';
 import { OperationsProfileForm } from './OperationsProfileForm';
 import { ProductProfileForm } from './ProductProfileForm';
+import { buildReportSnapshot } from '../../utils/reportLogic';
 
 type AppDetailsPageProps = {
   appId: string;
@@ -34,7 +37,7 @@ type AppDetailsPageProps = {
 };
 
 export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
-  const { apps, phases, goals, tasks, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp } = useApp();
+  const { apps, phases, goals, tasks, defects, repositories, employees, activities, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp, reports, addReport, deleteReport } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
@@ -57,7 +60,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     deploymentTarget: ''
   });
   const [planningNotesText, setPlanningNotesText] = useState('');
-  const [activeProfileTab, setActiveProfileTab] = useState<'overview' | 'engineering' | 'operations' | 'product'>('overview');
+  const [activeProfileTab, setActiveProfileTab] = useState<'overview' | 'engineering' | 'operations' | 'product' | 'reports'>('overview');
 
   const handleSaveProfile = async (field: string, data: any) => {
     await updateApp(appId, { [field]: data });
@@ -167,8 +170,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     return (
       <div className="p-8 text-center">
         <p className="text-[#94A3B8]">App not found</p>
-        <button onClick={() => onNavigate('apps')} className="mt-4 text-[#22C55E] hover:underline">
-          Back to Apps
+        <button onClick={() => onNavigate('portfolio')} className="mt-4 text-[#22C55E] hover:underline">
+          Back to Portfolio
         </button>
       </div>
     );
@@ -178,7 +181,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     <div className="p-8">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => onNavigate('apps')}
+          onClick={() => onNavigate('portfolio')}
           className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"
         >
           <ArrowLeft className="w-5 h-5 text-[#F8FAFC]" />
@@ -198,7 +201,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
       {/* Tab navigation */}
       <div className="flex gap-1 mb-6 border-b border-[rgba(34,197,94,0.1)]">
-        {(['overview', 'engineering', 'operations', 'product'] as const).map(tab => (
+        {(['overview', 'engineering', 'operations', 'product', 'reports'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveProfileTab(tab)}
@@ -212,7 +215,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             {tab === 'engineering' && <Code2 className="w-4 h-4" />}
             {tab === 'operations' && <Server className="w-4 h-4" />}
             {tab === 'product' && <FileText className="w-4 h-4" />}
-            {tab === 'overview' ? 'Overview' : tab === 'engineering' ? 'Engineering' : tab === 'operations' ? 'Operations' : 'Product'}
+            {tab === 'reports' && <Sparkles className="w-4 h-4" />}
+            {tab === 'overview' ? 'Overview' : tab === 'engineering' ? 'Engineering' : tab === 'operations' ? 'Operations' : tab === 'product' ? 'Product' : 'Reports'}
           </button>
         ))}
       </div>
@@ -811,9 +815,191 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         <EngineeringDocsSection appId={appId} />
       ) : activeProfileTab === 'operations' ? (
         <OperationsProfileForm app={app} onSave={(data) => handleSaveProfile('operationsProfile', data)} />
-      ) : (
+      ) : activeProfileTab === 'product' ? (
         <ProductProfileForm app={app} onSave={(data) => handleSaveProfile('productProfile', data)} />
+      ) : (
+        <ReportsTab
+          appId={appId}
+          apps={apps}
+          goals={goals}
+          tasks={tasks}
+          defects={defects}
+          repositories={repositories}
+          employees={employees}
+          activities={activities}
+          reports={reports}
+          currentUserId={currentUser?.id}
+          addReport={addReport}
+          deleteReport={deleteReport}
+        />
       )}
+    </div>
+  );
+}
+
+function ReportsTab({
+  appId,
+  apps,
+  goals,
+  tasks,
+  defects,
+  repositories,
+  employees,
+  activities,
+  reports,
+  currentUserId,
+  addReport,
+  deleteReport
+}: {
+  appId: string;
+  apps: any[];
+  goals: any[];
+  tasks: any[];
+  defects: any[];
+  repositories: any[];
+  employees: any[];
+  activities: any[];
+  reports: any[];
+  currentUserId?: string;
+  addReport: (report: any) => Promise<void>;
+  deleteReport: (reportId: string) => Promise<void>;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const appName = apps.find(a => a.id === appId)?.name || 'App';
+  const appReports = reports.filter(r => r.appId === appId);
+
+  const generate = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const snapshot = buildReportSnapshot({
+        apps, goals, tasks, defects, repositories, employees, activities, selectedAppId: appId
+      });
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ snapshot })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Report generation failed');
+      await addReport({
+        appId,
+        title: `${appName} Report · ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+        content: data.report,
+        model: data.model || null,
+        generatedBy: currentUserId || 'unknown'
+      });
+    } catch (e: any) {
+      setError(e.message || 'Failed to generate report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderMarkdown = (md: string) => {
+    const blocks: React.ReactNode[] = [];
+    const lines = md.split('\n');
+    let list: string[] = [];
+    const flushList = (key: string) => {
+      if (list.length === 0) return;
+      blocks.push(
+        <ul key={key} className="space-y-1.5 my-3">
+          {list.map((li, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-[#CBD5E1]">
+              <span className="text-[#22C55E] mt-1.5 w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
+              <span>{li}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      list = [];
+    };
+    lines.forEach((raw, idx) => {
+      const line = raw.trimEnd();
+      if (line.trim() === '') { flushList(`l${idx}`); return; }
+      if (/^#{1,3}\s/.test(line)) {
+        flushList(`l${idx}`);
+        const level = line.match(/^#+/)?.[0].length || 1;
+        const text = line.replace(/^#+\s*/, '');
+        const Tag = level === 1 ? 'h2' : 'h3';
+        blocks.push(
+          <Tag key={`h${idx}`} className={`${Tag === 'h2' ? 'text-xl' : 'text-lg'} font-semibold text-[#F8FAFC] mt-6 mb-2 flex items-center gap-2`}>
+            <span className="w-1.5 h-5 bg-[#22C55E]" />
+            {text}
+          </Tag>
+        );
+      } else if (/^[-*]\s/.test(line)) {
+        list.push(line.replace(/^[-*]\s/, ''));
+      } else {
+        flushList(`l${idx}`);
+        const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#F8FAFC]">$1</strong>');
+        blocks.push(
+          <p key={`p${idx}`} className="text-sm text-[#CBD5E1] leading-relaxed my-2" dangerouslySetInnerHTML={{ __html: bolded }} />
+        );
+      }
+    });
+    flushList('final');
+    return blocks;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 glass-card">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h3 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#22C55E]" />
+              AI Progress Report
+            </h3>
+            <p className="text-sm text-[#94A3B8] mt-1">
+              Groq analyzes live data for <span className="text-[#22C55E]">{appName}</span> — health, what's working, risks, and recommendations.
+            </p>
+          </div>
+          <button
+            onClick={generate}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'Generating...' : 'Generate Report'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)] text-sm text-[#ff3b5c]">
+          {error}
+        </div>
+      )}
+
+      {appReports.length === 0 && !loading && (
+        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <Sparkles className="w-12 h-12 text-[#94A3B8] mx-auto mb-4" />
+          <p className="text-[#94A3B8]">No reports yet. Generate your first AI progress report for {appName}.</p>
+        </div>
+      )}
+
+      {appReports.map(report => (
+        <div key={report.id} className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[rgba(34,197,94,0.1)]">
+            <Sparkles className="w-4 h-4 text-[#22C55E]" />
+            <span className="font-medium text-[#F8FAFC]">{report.title}</span>
+            <span className="ml-auto text-xs text-[#94A3B8]">
+              {report.model ? `Generated by Groq · ${report.model} · ` : 'Generated by Groq · '}
+              {report.createdAt ? new Date(report.createdAt).toLocaleString() : ''}
+            </span>
+            <button
+              onClick={() => deleteReport(report.id)}
+              className="p-1 text-[#94A3B8] hover:text-[#ff3b5c]"
+              title="Delete report"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-1">{renderMarkdown(report.content)}</div>
+        </div>
+      ))}
     </div>
   );
 }

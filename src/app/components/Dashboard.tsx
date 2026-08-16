@@ -160,7 +160,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   icon={Layers}
                   label="Active Apps"
                   value={activeApps.length}
-                  onClick={() => onNavigate('apps')}
+                  onClick={() => onNavigate('portfolio')}
                 />
                 <QuickStat
                   icon={Target}
@@ -210,7 +210,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#F8FAFC]">Active Apps</h2>
 <button
-      onClick={() => onNavigate('apps')}
+      onClick={() => onNavigate('portfolio')}
       className="group text-sm text-[#22C55E] hover:text-[#16a34a] flex items-center gap-1 cursor-pointer"
     >
       View All <ArrowUpRight className="w-4 h-4 micro-slide" />
@@ -231,7 +231,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <div
                   key={app.id}
                   className="group p-4 border border-[rgba(34,197,94,0.1)] hover:border-[#22C55E] transition cursor-pointer bg-[#1E293B] card-lift"
-                  onClick={() => onNavigate('apps')}
+                  onClick={() => onNavigate('app-details', app.id)}
                 >
                   <h3 className="font-semibold text-[#F8FAFC] mb-2">{app.name}</h3>
                   <p className="text-sm text-[#94A3B8] mb-4 line-clamp-2">

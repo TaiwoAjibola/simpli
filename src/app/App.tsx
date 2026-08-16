@@ -11,7 +11,6 @@ const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ defau
 const KanbanBoard = lazy(() => import('./components/KanbanBoard').then(m => ({ default: m.KanbanBoard })));
 const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.MyWork })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const AppsModule = lazy(() => import('./components/AppsModule').then(m => ({ default: m.AppsModule })));
 const GoalsModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsModule })));
 const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
 const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({ default: m.InsightsPage })));
@@ -60,7 +59,6 @@ function AppContent() {
           {currentPage === 'kanban' && <KanbanBoard />}
           {currentPage === 'insights' && <InsightsPage />}
           {currentPage === 'defects' && <DefectDashboard />}
-          {currentPage === 'apps' && <AppsModule onNavigate={handleNavigate} />}
           {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
           {currentPage === 'goals' && <GoalsModule />}
           {currentPage === 'tasks' && <TasksModule />}

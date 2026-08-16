@@ -548,6 +548,16 @@ export type Automation = {
   updatedAt?: Date;
 };
 
+export type AppReport = {
+  id: string;
+  appId: string;
+  title: string;
+  content: string;
+  model?: string;
+  generatedBy: string;
+  createdAt: Date;
+};
+
 export type TechStackEntry = {
   language: string;
   version: string;
