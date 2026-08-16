@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getWorkTargetStates, canTransitionWork } from './workflow';
+import { getWorkTargetStates, canTransitionWork, isDevelopmentWork } from './workflow';
 
 const canAll = () => true;
 const canNone = () => false;
@@ -79,5 +79,17 @@ describe('canTransitionWork', () => {
   it('defect closed by non-manager blocked', () => {
     expect(canTransitionWork({ kind: 'defect', currentStatus: 'resolved', nextStatus: 'closed', workType: 'development', can: can('run_qa') })).toBe(false);
     expect(canTransitionWork({ kind: 'defect', currentStatus: 'resolved', nextStatus: 'closed', workType: 'development', can: can('verify_defects') })).toBe(true);
+  });
+});
+
+describe('isDevelopmentWork (Dev Workspace gating)', () => {
+  it('returns true only for development work type', () => {
+    expect(isDevelopmentWork('development')).toBe(true);
+    expect(isDevelopmentWork('non-development')).toBe(false);
+  });
+
+  it('treats missing/undefined work type as non-development (ops-safe default)', () => {
+    expect(isDevelopmentWork(undefined)).toBe(false);
+    expect(isDevelopmentWork(null)).toBe(false);
   });
 });

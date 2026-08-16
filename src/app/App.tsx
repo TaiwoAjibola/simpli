@@ -46,6 +46,11 @@ function AppContent() {
 
   return (
     <div className="h-screen flex bg-[#020617]">
+      <div className="aurora-bg">
+        <span className="aurora-orb aurora-orb-1" />
+        <span className="aurora-orb aurora-orb-2" />
+        <span className="aurora-orb aurora-orb-3" />
+      </div>
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
         <Suspense fallback={<PageLoader message="Loading..." />}>

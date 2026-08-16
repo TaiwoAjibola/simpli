@@ -25,7 +25,7 @@ import { Defect, DefectStatus, DefectResolution } from '../types';
 import { getAllowedDefectStatuses } from '../../utils/defectPermissions';
 import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
-import { GitHubPanel } from './GitHubPanel';
+import { DevelopmentWorkspace } from './DevelopmentWorkspace';
 
 type DefectDetailModalProps = {
   defect: Defect;
@@ -33,10 +33,11 @@ type DefectDetailModalProps = {
 };
 
 export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
-  const { employees, apps, defects, tasks, actionPoints, updateDefect, addDefectComment, sendDefectNotification } = useApp();
+  const { employees, apps, defects, tasks, actionPoints, repositories, updateDefect, addDefectComment, sendDefectNotification, updateWorkGithub } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [syncingIssue, setSyncingIssue] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reproduction' | 'attachments' | 'activity' | 'qa' | 'deps' | 'github'>('overview');
   const [commentText, setCommentText] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -63,20 +64,55 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
     minor: 'bg-[#eab308]'
   };
 
+  const linkedIssue = defect.github?.issue;
+  const linkedRepo = linkedIssue && defect.github?.repositoryId
+    ? repositories.find(r => `${r.owner}/${r.name}` === defect.github?.repositoryId || r.id === defect.github?.repositoryId)
+    : undefined;
+
+  const syncIssueState = async (newStatus: DefectStatus) => {
+    if (!currentUser || !linkedIssue || !linkedRepo) return;
+    setSyncingIssue(true);
+    try {
+      const targetState = newStatus === 'closed' ? 'closed' : newStatus === 'reopened' ? 'open' : 'open';
+      const res = await fetch('/api/github/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          owner: linkedRepo.owner,
+          repo: linkedRepo.name,
+          action: 'set_state',
+          issueNumber: linkedIssue.issueNumber,
+          state: targetState
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.state) {
+        await updateWorkGithub('defect', defect.id, { issue: { ...linkedIssue, state: data.state } });
+      }
+    } catch (e) {
+      console.warn('GitHub issue state sync failed', e);
+    } finally {
+      setSyncingIssue(false);
+    }
+  };
+
   const handleStatusChange = async (newStatus: DefectStatus) => {
     if (!currentUser) return;
     await updateDefect(defect.id, { status: newStatus }, currentUser.id, currentUser.name);
+    await syncIssueState(newStatus);
     setEditingField(null);
   };
 
   const handleVerifyFix = async () => {
     if (!currentUser) return;
     await updateDefect(defect.id, { fixVerified: true, status: 'closed' }, currentUser.id, currentUser.name);
+    await syncIssueState('closed');
   };
 
   const handleReopen = async () => {
     if (!currentUser) return;
     await updateDefect(defect.id, { status: 'reopened' }, currentUser.id, currentUser.name);
+    await syncIssueState('reopened');
   };
 
   const handleSendDefectEmail = async () => {
@@ -293,6 +329,37 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                   ))}
                 </div>
               </div>
+
+              <div>
+                <label className="text-xs text-[#94A3B8] uppercase tracking-wider mb-2 block">GitHub Issue</label>
+                {linkedIssue ? (
+                  <div className="flex items-center gap-3 p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+                    <span className={`text-xs px-2 py-1 ${linkedIssue.state === 'closed' ? 'bg-[#10b981]' : 'bg-[#22C55E]'} text-white`}>
+                      {linkedIssue.state}
+                    </span>
+                    <span className="text-sm text-[#F8FAFC] font-mono">#{linkedIssue.issueNumber}</span>
+                    <span className="text-sm text-[#F8FAFC] flex-1 truncate">{linkedIssue.title}</span>
+                    {linkedRepo && (
+                      <a href={linkedIssue.url} target="_blank" rel="noreferrer" className="text-[#22C55E] hover:opacity-80">
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                    {hasPermission('manage_defects') && (
+                      <button
+                        onClick={() => syncIssueState(defect.status === 'closed' ? 'reopened' : 'closed')}
+                        disabled={syncingIssue}
+                        className="text-xs px-3 py-1.5 bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] disabled:opacity-50"
+                      >
+                        {syncingIssue ? 'Syncing...' : linkedIssue.state === 'closed' ? 'Reopen issue' : 'Close issue'}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#94A3B8]">
+                    No GitHub issue linked. Create the defect with a linked repository to sync an issue.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -434,7 +501,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
           )}
 
           {activeTab === 'github' && (
-            <GitHubPanel workKind="defect" workId={defect.id} github={defect.github} />
+            <DevelopmentWorkspace workKind="defect" workId={defect.id} github={defect.github} />
           )}
         </div>
       </div>

@@ -24,11 +24,13 @@ export const INTEGRATIONS: IntegrationDef[] = [
     description: 'Repositories, branches, pull requests, CI checks, and merges.',
     implementation: 'real',
     connect: async () => {
-      const res = await fetch('/api/github/commits?owner=simpli&repo=simpli');
+      const res = await fetch('/api/github/status');
       if (!res.ok) throw new Error('GitHub connection failed');
+      const data = await res.json();
+      if (!data.login) throw new Error('GitHub connection failed: no authenticated account');
     },
     sync: async () => {
-      const res = await fetch('/api/github/commits?owner=simpli&repo=simpli');
+      const res = await fetch('/api/github/status');
       if (!res.ok) throw new Error('GitHub sync failed');
     },
     disconnect: noop

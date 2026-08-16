@@ -19,11 +19,13 @@ import {
 } from 'lucide-react';
 import { format, differenceInDays, isPast } from 'date-fns';
 import { deriveGoalStatus, isTaskDone } from '../../utils/goalStatus';
+import { buildReportSnapshot } from '../../utils/reportLogic';
+import { Sparkles, RefreshCw } from 'lucide-react';
 
-type Tab = 'analytics' | 'activities' | 'archive';
+type Tab = 'analytics' | 'activities' | 'archive' | 'ai';
 
 export function InsightsPage() {
-  const { apps, goals, tasks, subtasks, employees, activities } = useApp();
+  const { apps, goals, tasks, subtasks, employees, activities, defects, repositories } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [tab, setTab] = useState<Tab>('analytics');
   const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || 'all');
@@ -58,7 +60,8 @@ export function InsightsPage() {
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'activities', label: 'Activities', icon: ActivityIcon },
-    { id: 'archive', label: 'Archive', icon: Archive }
+    { id: 'archive', label: 'Archive', icon: Archive },
+    { id: 'ai', label: 'AI Report', icon: Sparkles }
   ];
 
   return (
@@ -71,7 +74,7 @@ export function InsightsPage() {
         <select
           value={selectedAppId}
           onChange={(e) => setSelectedAppId(e.target.value)}
-          className="px-4 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC]"
+          className="px-4 py-2 bg-[#0F172A]/70 backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] rounded-lg"
         >
           <option value="all">All Apps</option>
           {apps.map(app => (
@@ -80,7 +83,7 @@ export function InsightsPage() {
         </select>
       </div>
 
-      <div className="flex items-center bg-[#0F172A] border border-[rgba(34,197,94,0.1)] w-fit mb-6">
+      <div className="flex items-center glass w-fit mb-6 rounded-lg p-1">
         {tabs.map(t => {
           const Icon = t.icon;
           return (
@@ -119,6 +122,157 @@ export function InsightsPage() {
           employees={employees}
           selectedAppId={selectedAppId}
         />
+      )}
+      {tab === 'ai' && (
+        <AiReportTab
+          apps={apps}
+          goals={goals}
+          tasks={tasks}
+          defects={defects}
+          repositories={repositories}
+          employees={employees}
+          activities={activities}
+          selectedAppId={selectedAppId}
+        />
+      )}
+    </div>
+  );
+}
+
+function AiReportTab({ apps, goals, tasks, defects, repositories, employees, activities, selectedAppId }: {
+  apps: any[];
+  goals: any[];
+  tasks: any[];
+  defects: any[];
+  repositories: any[];
+  employees: any[];
+  activities: any[];
+  selectedAppId: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
+  const [model, setModel] = useState<string | null>(null);
+
+  const generate = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const snapshot = buildReportSnapshot({
+        apps, goals, tasks, defects, repositories, employees, activities, selectedAppId
+      });
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ snapshot })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Report generation failed');
+      setReport(data.report);
+      setModel(data.model || null);
+    } catch (e: any) {
+      setError(e.message || 'Failed to generate report');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderMarkdown = (md: string) => {
+    const blocks: React.ReactNode[] = [];
+    const lines = md.split('\n');
+    let list: string[] = [];
+    const flushList = (key: string) => {
+      if (list.length === 0) return;
+      blocks.push(
+        <ul key={key} className="space-y-1.5 my-3">
+          {list.map((li, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-[#CBD5E1]">
+              <span className="text-[#22C55E] mt-1.5 w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
+              <span>{li}</span>
+            </li>
+          ))}
+        </ul>
+      );
+      list = [];
+    };
+    lines.forEach((raw, idx) => {
+      const line = raw.trimEnd();
+      if (line.trim() === '') { flushList(`l${idx}`); return; }
+      if (/^#{1,3}\s/.test(line)) {
+        flushList(`l${idx}`);
+        const level = line.match(/^#+/)?.[0].length || 1;
+        const text = line.replace(/^#+\s*/, '');
+        const Tag = level === 1 ? 'h2' : 'h3';
+        blocks.push(
+          <Tag key={`h${idx}`} className={`${Tag === 'h2' ? 'text-xl' : 'text-lg'} font-semibold text-[#F8FAFC] mt-6 mb-2 flex items-center gap-2`}>
+            <span className="w-1.5 h-5 bg-[#22C55E]" />
+            {text}
+          </Tag>
+        );
+      } else if (/^[-*]\s/.test(line)) {
+        list.push(line.replace(/^[-*]\s/, ''));
+      } else {
+        flushList(`l${idx}`);
+        const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#F8FAFC]">$1</strong>');
+        blocks.push(
+          <p key={`p${idx}`} className="text-sm text-[#CBD5E1] leading-relaxed my-2" dangerouslySetInnerHTML={{ __html: bolded }} />
+        );
+      }
+    });
+    flushList('final');
+    return blocks;
+  };
+
+  const appName = selectedAppId === 'all' ? 'All Apps' : (apps.find(a => a.id === selectedAppId)?.name || 'App');
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h3 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#22C55E]" />
+              AI Progress Report
+            </h3>
+            <p className="text-sm text-[#94A3B8] mt-1">
+              Groq analyzes live Simpli data for <span className="text-[#22C55E]">{appName}</span> — health, what's working,
+              risks, and recommendations.
+            </p>
+          </div>
+          <button
+            onClick={generate}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? 'Generating...' : report ? 'Regenerate Report' : 'Generate Report'}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)] text-sm text-[#ff3b5c]">
+          {error}
+        </div>
+      )}
+
+      {report && (
+        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[rgba(34,197,94,0.1)]">
+            <Sparkles className="w-4 h-4 text-[#22C55E]" />
+            <span className="text-xs text-[#94A3B8]">
+              Generated by Groq {model ? `· ${model}` : ''} · {new Date().toLocaleString()}
+            </span>
+          </div>
+          <div className="space-y-1">{renderMarkdown(report)}</div>
+        </div>
+      )}
+
+      {!report && !error && !loading && (
+        <div className="text-center py-14 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+          <Sparkles className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
+          <p className="text-[#94A3B8]">No report yet. Hit "Generate Report" to get an AI analysis of this app's progress.</p>
+        </div>
       )}
     </div>
   );

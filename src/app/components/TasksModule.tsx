@@ -23,7 +23,8 @@ import {
   Paperclip,
   FileText,
   X,
-  Tag as TagIcon
+  Tag as TagIcon,
+  GitPullRequest
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
@@ -1221,6 +1222,22 @@ function TaskCard({
             }`}>
               {(task.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
             </span>
+
+            {task.github?.pullRequest?.prNumber && (
+              <span className={`text-xs font-medium px-2 py-1 inline-flex items-center gap-1 ${
+                task.github.pullRequest.state === 'merged'
+                  ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+                  : task.github.pullRequest.reviewState === 'approved' && task.github.pullRequest.checkStatus === 'success'
+                    ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                    : task.github.pullRequest.reviewState === 'changes_requested' ||
+                      task.github.pullRequest.checkStatus === 'failure'
+                      ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+                      : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+              }`}>
+                <GitPullRequest className="w-3 h-3" />
+                PR #{task.github.pullRequest.prNumber}
+              </span>
+            )}
 
             <select
               value={task.status}

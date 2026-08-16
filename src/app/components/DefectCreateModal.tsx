@@ -14,7 +14,7 @@ type DefectCreateModalProps = {
 };
 
 export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateModalProps) {
-  const { addDefect, updateDefect, apps, employees } = useApp();
+  const { addDefect, updateDefect, apps, employees, repositories, updateWorkGithub } = useApp();
   const { currentUser } = useAuth();
   const { showToast } = useToast();
   const isEditing = !!editDefect;
@@ -104,13 +104,45 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
       }
 
       setUploadStatus('Creating defect...');
-      await addDefect({
+      const created = await addDefect({
         ...formData,
         reportedBy: currentUser.id,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         status: 'open',
         attachments: attachmentUrls
       });
+
+      if (created) {
+        const repo = repositories.find(r => r.appId === created.applicationId && (r.connectionStatus === 'connected' || r.integrationStatus === 'synced'));
+        if (repo) {
+          setUploadStatus('Creating GitHub issue...');
+          try {
+            const res = await fetch('/api/github/issues', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                owner: repo.owner,
+                repo: repo.name,
+                action: 'create',
+                title: created.title,
+                description: `Reported via Simpli for ${created.defectCode}.\n\n${formData.description || ''}`,
+                labels: [created.severity, created.issueType].filter(Boolean)
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.issueNumber) {
+              await updateWorkGithub('defect', created.id, {
+                repositoryId: `${repo.owner}/${repo.name}`,
+                issue: { issueNumber: data.issueNumber, url: data.url, state: 'open', title: data.title },
+                status: 'not_started'
+              });
+            }
+          } catch (e) {
+            // Issue creation is best-effort; the defect still exists locally.
+            console.warn('GitHub issue creation failed', e);
+          }
+        }
+      }
 
       showToast({ type: 'success', title: 'Defect Created', message: `${formData.defectCode || formData.title} has been reported.` });
       onClose();

@@ -62,9 +62,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">Dashboard</h1>
-        <p className="text-[#94A3B8]">Welcome back, {currentUser?.name}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#F8FAFC] mb-1">Dashboard</h1>
+          <p className="text-[#94A3B8]">Welcome back, {currentUser?.name}</p>
+        </div>
+        <div className="hidden md:flex items-center gap-3 px-4 py-2 glass rounded-full text-sm text-[#94A3B8]">
+          <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+          Simpli is running smoothly
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -103,7 +109,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+        <div className="lg:col-span-2 glass-card rounded-xl p-6" style={{ animationDelay: '120ms' }}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#F8FAFC]">Recent Activity</h2>
 <button
@@ -147,7 +153,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
         <div className="space-y-6">
           {canViewAll && (
-            <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+            <div className="glass-card rounded-xl p-6">
               <h3 className="font-bold text-[#F8FAFC] mb-4">Quick Stats</h3>
               <div className="space-y-3">
                 <QuickStat
@@ -172,7 +178,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           )}
 
-          <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+          <div className="glass-card rounded-xl p-6">
             <h3 className="font-bold text-[#F8FAFC] mb-4">Urgent Tasks</h3>
             {priorityTasks.length > 0 ? (
               <div className="space-y-2">
@@ -200,7 +206,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {canViewAll && activeApps.length > 0 && (
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+        <div className="glass-card rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#F8FAFC]">Active Apps</h2>
 <button
@@ -280,7 +286,7 @@ function StatCard({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="group bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6 relative overflow-hidden card-lift hover:border-[rgba(34,197,94,0.3)] cursor-default">
+    <div className="group glass-card rounded-xl p-6 relative overflow-hidden hover:border-[rgba(34,197,94,0.3)] cursor-default">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10" style={{ background: `radial-gradient(circle, ${bg} 0%, transparent 70%)` }}></div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative">

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
 import { Task, TaskStatus, DefectStatus, Defect, WorkType } from '../types';
-import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon, FileText } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle, Star, User, Bug, ArrowUpDown, Mail, Tag as TagIcon, FileText, GitPullRequest } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
 import { DefectDetailModal } from './DefectDetailModal';
 import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
@@ -28,6 +28,41 @@ const OPS_TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'blocked', title: 'Blocked', color: '#ff3b5c' },
   { id: 'completed', title: 'Completed', color: '#22c55e' },
   { id: 'approved', title: 'Approved', color: '#10b981' }
+];
+
+const GH_LIFECYCLE_COLUMNS: { id: string; title: string; color: string; match: (t: any) => boolean }[] = [
+  { id: 'no_branch', title: 'No Branch', color: '#94A3B8', match: (t) => !t.github?.branchName },
+  {
+    id: 'branch_created',
+    title: 'Branch Created',
+    color: '#22C55E',
+    match: (t) => !!t.github?.branchName && ['not_started', 'branch_created'].includes(t.github?.status)
+  },
+  {
+    id: 'in_review',
+    title: 'In Review',
+    color: '#f59e0b',
+    match: (t) => !!t.github?.pullRequest?.prNumber && t.github?.pullRequest?.state === 'open'
+      && t.github?.status !== 'approved' && t.github?.status !== 'qa'
+  },
+  {
+    id: 'qa',
+    title: 'In QA',
+    color: '#8b5cf6',
+    match: (t) => t.github?.status === 'qa'
+  },
+  {
+    id: 'merged',
+    title: 'Merged',
+    color: '#8b5cf6',
+    match: (t) => t.github?.status === 'merged' || t.github?.pullRequest?.state === 'merged'
+  },
+  {
+    id: 'closed',
+    title: 'Closed / Done',
+    color: '#10b981',
+    match: (t) => ['approved', 'closed'].includes(t.github?.status)
+  }
 ];
 
 const DEFECT_COLUMNS: { id: DefectStatus; title: string; color: string }[] = [
@@ -59,6 +94,7 @@ function KanbanContent() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
   const [viewMode, setViewMode] = useState<'tasks' | 'defects'>('tasks');
+  const [boardMode, setBoardMode] = useState<'status' | 'github'>('status');
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [filterApp, setFilterApp] = useState<string>('all');
   const [filterTag, setFilterTag] = useState<string>('all');
@@ -134,15 +170,32 @@ function KanbanContent() {
             <h1 className="text-2xl lg:text-3xl font-bold text-[#F8FAFC] mb-1">Work Board</h1>
             <p className="text-sm text-[#94A3B8]">Track tasks and defects — switch tabs to view each board, drag cards to update status</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+          <div className="flex items-center gap-2 bg-[rgba(15,23,42,0.4)] p-1.5 rounded-xl border border-[rgba(34,197,94,0.1)] flex-wrap">
+            <div className="flex items-center bg-[#1E293B]/70 border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
               <button onClick={() => setViewMode('tasks')} className={`px-3 py-1.5 text-xs ${viewMode === 'tasks' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}>Tasks</button>
               <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}>Defects</button>
             </div>
+            {showTasks && (
+              <div className="flex items-center bg-[#1E293B]/70 border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setBoardMode('status')}
+                  className={`px-3 py-1.5 text-xs ${boardMode === 'status' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}
+                >
+                  Status
+                </button>
+                <button
+                  onClick={() => setBoardMode('github')}
+                  className={`px-3 py-1.5 text-xs ${boardMode === 'github' ? 'text-[#8b5cf6] bg-[rgba(139,92,246,0.1)]' : 'text-[#94A3B8]'}`}
+                  title="Group development tasks by GitHub lifecycle (branch → PR → review → QA → merged)"
+                >
+                  GitHub Lifecycle
+                </button>
+              </div>
+            )}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-1.5 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
             >
               <option value="default">Default</option>
               <option value="priority">Priority</option>
@@ -152,7 +205,7 @@ function KanbanContent() {
             <select
               value={filterApp}
               onChange={(e) => setFilterApp(e.target.value)}
-              className="px-3 py-1.5 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
             >
               <option value="all">All Apps</option>
               {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
@@ -160,7 +213,7 @@ function KanbanContent() {
             <select
               value={filterWorkType}
               onChange={(e) => setFilterWorkType(e.target.value as 'all' | WorkType)}
-              className="px-3 py-1.5 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
             >
               <option value="all">All Work Types</option>
               <option value="development">Development</option>
@@ -171,7 +224,7 @@ function KanbanContent() {
               <select
                 value={filterTag}
                 onChange={(e) => setFilterTag(e.target.value)}
-                className="px-3 py-1.5 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs"
+                className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
               >
                 <option value="all">All Tags</option>
                 {tags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
@@ -182,7 +235,25 @@ function KanbanContent() {
       </div>
 
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4">
-        {showTasks && activeTaskColumns.map((column) => {
+        {showTasks && boardMode === 'github' && GH_LIFECYCLE_COLUMNS.map((column) => {
+          const columnTasks = filteredTasks.filter(task => (task.workType || 'non-development') === 'development' && column.match(task));
+          return (
+            <KanbanColumn
+              key={`gh-${column.id}`}
+              column={column}
+              tasks={columnTasks}
+              onDrop={() => {}}
+              onCardClick={(task) => setSelectedTask(task as Task)}
+              getEmployeeById={getEmployeeById}
+              getGoalById={getGoalById}
+              getAppById={getAppById}
+              type="task"
+              readOnly
+              allTags={tags}
+            />
+          );
+        })}
+        {showTasks && boardMode === 'status' && activeTaskColumns.map((column) => {
           const columnTasks = filteredTasks.filter(task => task.status === column.id);
           return (
             <KanbanColumn
@@ -251,11 +322,12 @@ type KanbanColumnProps = {
   getAppById: (id: string) => any;
   type: 'task' | 'defect' | 'actionPoint';
   allTags: any[];
+  readOnly?: boolean;
 };
 
-function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type, allTags }: KanbanColumnProps) {
+function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, getGoalById, getAppById, type, allTags, readOnly }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop({
-    accept: type === 'task' ? 'TASK' : type === 'defect' ? 'DEFECT' : 'ACTION_POINT',
+    accept: readOnly ? 'none' : type === 'task' ? 'TASK' : type === 'defect' ? 'DEFECT' : 'ACTION_POINT',
     drop: (item: { taskId: string }) => {
       onDrop(item.taskId);
     },
@@ -269,11 +341,11 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
 
   return (
     <div
-      ref={drop}
-      className={`flex-shrink-0 w-72 lg:w-80 bg-[#0F172A] border-2 border-dashed transition ${
+      ref={readOnly ? undefined : drop}
+      className={`flex-shrink-0 w-72 lg:w-80 bg-[#0F172A] ${readOnly ? '' : 'border-2 border-dashed'} transition ${
         isOver ? 'border-[#22C55E] bg-[rgba(34,197,94,0.05)]' : `border-transparent hover:border-[${borderColor}]`
       }`}
-      style={{ borderColor: isOver ? '#22C55E' : borderColor }}
+      style={readOnly ? {} : { borderColor: isOver ? '#22C55E' : borderColor }}
     >
       <div className="p-3 lg:p-4 border-b border-[rgba(34,197,94,0.1)]">
         <div className="flex items-center justify-between">
@@ -379,6 +451,23 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
       <div className="mb-2">
         <TagBadges tagIds={task.tags} allTags={allTags} />
       </div>
+      {task.github?.pullRequest?.prNumber && (
+        <div className="mb-2">
+          <span className={`text-xs font-medium px-2 py-0.5 inline-flex items-center gap-1 ${
+            task.github.pullRequest.state === 'merged'
+              ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+              : task.github.pullRequest.reviewState === 'approved' && task.github.pullRequest.checkStatus === 'success'
+                ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                : task.github.pullRequest.reviewState === 'changes_requested' ||
+                  task.github.pullRequest.checkStatus === 'failure'
+                  ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+                  : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+          }`}>
+            <GitPullRequest className="w-3 h-3" />
+            PR #{task.github.pullRequest.prNumber}
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <span className={`text-xs font-medium px-2 py-1 ${priorityColors[task.priority]}`}>
           {task.priority.toUpperCase()}
@@ -534,6 +623,23 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
       <div className="mb-2">
         <TagBadges tagIds={(defect as any).tags} allTags={allTags} />
       </div>
+      {defect.github?.pullRequest?.prNumber && (
+        <div className="mb-2">
+          <span className={`text-xs font-medium px-2 py-0.5 inline-flex items-center gap-1 ${
+            defect.github.pullRequest.state === 'merged'
+              ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+              : defect.github.pullRequest.reviewState === 'approved' && defect.github.pullRequest.checkStatus === 'success'
+                ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                : defect.github.pullRequest.reviewState === 'changes_requested' ||
+                  defect.github.pullRequest.checkStatus === 'failure'
+                  ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+                  : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+          }`}>
+            <GitPullRequest className="w-3 h-3" />
+            PR #{defect.github.pullRequest.prNumber}
+          </span>
+        </div>
+      )}
       {defectApp && (
         <div className="mb-2 pt-2 border-t border-[rgba(220,38,38,0.15)]">
           <p className="text-xs text-[#94A3B8] truncate">{defectApp.name}</p>

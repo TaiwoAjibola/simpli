@@ -19,6 +19,7 @@ import { canTransitionWork } from '../../utils/workflow';
 import { getQaTransition, nextQaCycleNumber } from '../../utils/qa';
 import { evaluateAutomation, nextRunId } from '../../utils/automations';
 import { taskWorkType } from '../../utils/work';
+import { nextOccurrencePayload } from '../../utils/recurrence';
 import {
   createFirebaseUser,
   updateFirebaseUserPassword,
@@ -955,6 +956,25 @@ const sendActionPointNotification = useCallback(async (apId: string) => {
     await deleteDoc(doc(db, 'tasks', taskId));
   }, [subtasks]);
 
+  const spawnRecurringNext = useCallback(async (task: Task, doneAt: Date) => {
+    const next = nextOccurrencePayload(task as any, doneAt);
+    if (!next) return;
+    await addTask({
+      ...(next.payload as any),
+      status: 'not_started',
+      createdAt: new Date(),
+      dueDate: next.dueDate,
+      origin: next.origin
+    } as any);
+    const assigneeNames = task.assignedTo.map(id => employees.find(e => e.id === id)?.name || 'Unknown').join(', ');
+    await notifyWork(
+      'work_assigned',
+      'Recurring Task Recreated',
+      `Next occurrence of "${task.name}" was created for ${assigneeNames} (due ${next.dueDate?.toLocaleDateString?.() ?? ''})`,
+      task.assignedTo
+    );
+  }, [addTask, employees, notifyWork]);
+
   const runAutomationForEventRef = useRef<((evt: AutomationTriggerEvent, payload: {
     workKind: string;
     workId: string;
@@ -1020,12 +1040,13 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
         description: `completed task "${task.name}" and sent for testing`,
         relatedTo: { type: 'task', id: task.id, name: task.name }
       });
-      await createNotification(
+await createNotification(
         'task_ready_for_testing',
         'Task Ready for Testing',
         `${employee?.name} completed: ${task.name}. Ready for testing.`,
         { type: 'task', id: task.id }
       );
+      await spawnRecurringNext(task, new Date());
     }
 
     if (updates.status === 'approved' && task.status === 'completed') {
@@ -1082,7 +1103,7 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
         workType: task.workType || 'non-development'
       });
     }
-  }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies]);
+  }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies, spawnRecurringNext]);
 
   const approveTask = useCallback(async (taskId: string, approverId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -1108,7 +1129,10 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
       approvedAt: serverTimestamp(),
       approvedBy: approverId
     });
-  }, [tasks, employees, addActivity, createNotification]);
+    if (task.status !== 'completed') {
+      await spawnRecurringNext(task, new Date());
+    }
+  }, [tasks, employees, addActivity, createNotification, spawnRecurringNext]);
 
   const addSubtask = useCallback(async (subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>) => {
     const subtaskId = `subtask-${Date.now()}`;

@@ -17,6 +17,10 @@ export function getWorkStatuses(kind: WorkKind): string[] {
   return AP_STATUSES as string[];
 }
 
+export function isDevelopmentWork(workType: WorkType | undefined | null): boolean {
+  return workType === 'development';
+}
+
 /**
  * Allowed next statuses given current status + work type + permissions.
  * Pure engine — UI (kanban, modals) and AppContext writers both call this so

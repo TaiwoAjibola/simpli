@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import SimpliLogo from '../assets/Simpli.svg';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -39,27 +38,31 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#22C55E]/5 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#ff006e]/5 blur-3xl"></div>
+      <div className="aurora-bg">
+        <span className="aurora-orb aurora-orb-1" />
+        <span className="aurora-orb aurora-orb-2" />
+        <span className="aurora-orb aurora-orb-3" />
       </div>
 
       <div className="w-full max-w-md px-6 relative z-10">
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-8">
+        <div className="glass-strong p-8 rounded-2xl shimmer-border stagger-in">
           <div className="flex items-center justify-center mb-8">
-            <div className="relative">
-              <img src={SimpliLogo} alt="Simpli" className="w-20 h-20" style={{ filter: 'brightness(0) saturate(100%) invert(76%) sepia(68%) saturate(5493%) hue-rotate(165deg) brightness(101%) contrast(101%)' }} />
-              <div className="absolute -inset-2 border border-[rgba(34,197,94,0.2)]"></div>
+            <div className="brand-orb">
+              <span className="brand-orb-core" />
+              <span className="brand-orb-ring" />
+              <span className="brand-orb-sat" />
             </div>
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2 tracking-wide">Simpli</h1>
+            <h1 className="text-3xl font-bold mb-2 tracking-wide">
+              <span className="text-gradient">Simpli</span>
+            </h1>
             <p className="text-[#94A3B8]">Sign in to manage your applications</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)] flex items-start gap-3">
+            <div className="mb-6 p-4 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)] flex items-start gap-3 rounded-lg">
               <AlertCircle className="w-5 h-5 text-[#ff3b5c] mt-0.5" />
               <p className="text-sm text-[#ff3b5c]">{error}</p>
             </div>
@@ -76,7 +79,7 @@ export function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-4 py-3 bg-[#1E293B]/70 border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition rounded-lg"
                   placeholder="you@company.com"
                 />
               </div>
@@ -92,7 +95,7 @@ export function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition"
+                  className="w-full pl-11 pr-12 py-3 bg-[#1E293B]/70 border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none transition rounded-lg"
                   placeholder="Enter your password"
                 />
                 <button
@@ -108,7 +111,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition shadow-lg shadow-[#22C55E]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full btn-primary-glow text-[#020617] py-3 font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Signing in...' : 'Sign In'}
             </button>

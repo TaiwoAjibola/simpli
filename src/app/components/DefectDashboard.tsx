@@ -17,7 +17,8 @@ import {
   Download,
   Edit2,
   Trash2,
-  Mail
+  Mail,
+  GitPullRequest
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { Defect, DefectSeverity, DefectStatus } from '../types';
@@ -377,6 +378,21 @@ export function DefectDashboard() {
                       </td>
                       <td className="py-3 px-4">
                         <span className="text-[#F8FAFC] font-medium">{defect.title}</span>
+                        {defect.github?.pullRequest?.prNumber && (
+                          <span className={`ml-2 text-xs font-medium px-2 py-0.5 inline-flex items-center gap-1 ${
+                            defect.github.pullRequest.state === 'merged'
+                              ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+                              : defect.github.pullRequest.reviewState === 'approved' && defect.github.pullRequest.checkStatus === 'success'
+                                ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                                : defect.github.pullRequest.reviewState === 'changes_requested' ||
+                                  defect.github.pullRequest.checkStatus === 'failure'
+                                  ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+                                  : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+                          }`}>
+                            <GitPullRequest className="w-3 h-3" />
+                            PR #{defect.github.pullRequest.prNumber}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-[#94A3B8]">{defect.module}</td>
                       <td className="py-3 px-4">

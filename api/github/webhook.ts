@@ -1,8 +1,14 @@
-// GitHub webhook receiver: maps pull_request/check_run events onto Simpli work
-// items (tasks/defects linked by repository + branch name) idempotently via
-// `githubEventId` dedupe. The token is NOT required on this route; GitHub
-// signs payloads with a shared secret (GITHUB_WEBHOOK_SECRET).
+// GitHub webhook receiver: maps push / pull_request / pull_request_review /
+// check_run events onto Simpli work items (tasks/defects linked by repository +
+// branch name) idempotently via `githubEventId` dedupe. The token is NOT
+// required on this route; GitHub signs payloads with a shared secret
+// (GITHUB_WEBHOOK_SECRET).
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import {
+  resolveWebhookBranch,
+  resolveWebhookEventId,
+  computeWorkUpdate
+} from '../../src/utils/githubWebhookLogic';
 
 function verify(body: string, signatureHeader: string | undefined, secret: string): boolean {
   if (!signatureHeader || !secret) return false;
@@ -30,7 +36,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const event = req.body;
   const eventType = (req.headers['x-github-event'] as string) || '';
-  const githubEventId = `${eventType}:${event?.pull_request?.id || event?.check_run?.id || Date.now()}`;
+  const repo = event?.repository;
+  if (!repo) return res.status(200).json({ ack: true });
+
+  const repoName = repo.full_name;
+  const owner = repo.owner?.login || '';
+
+  const branchName = resolveWebhookBranch(eventType, event);
+  const githubEventId = resolveWebhookEventId(eventType, event);
 
   try {
     const { initializeApp, cert, getApps } = await import('firebase-admin/app');
@@ -48,46 +61,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     const db = getFirestore();
 
-    const pr = event?.pull_request;
-    const checkRun = event?.check_run;
-    const repo = event?.repository;
-    if (!repo) return res.status(200).json({ ack: true });
-
-    const repoName = repo.full_name;
-    const branchName = pr?.head?.ref || checkRun?.check_run?.head_branch || '';
-    const link = { owner: repo.owner?.login || '', repoName, branchName };
-
-    const workItems: { id?: string }[] = [];
+    // Fetch work items linked to this repo, then filter by branch in memory
+    // (Firestore equality on github.repositoryId == "owner/repo").
+    const repoRef = `${owner}/${repoName}`;
+    const workItems: any[] = [];
     const q = await db.collection('tasks')
-      .where('github.repositoryId', '==', `${link.owner}/${link.repoName}`)
+      .where('github.repositoryId', '==', repoRef)
       .get();
-    q.forEach(d => workItems.push({ id: d.id }));
+    q.forEach(d => workItems.push({ id: d.id, data: d.data() }));
     const q2 = await db.collection('defects')
-      .where('github.repositoryId', '==', `${link.owner}/${link.repoName}`)
+      .where('github.repositoryId', '==', repoRef)
       .get();
-    q2.forEach(d => workItems.push({ id: d.id }));
+    q2.forEach(d => workItems.push({ id: d.id, data: d.data() }));
 
-    for (const item of workItems) {
-      // Dedupe: only apply if this event wasn't already processed for this work item.
+    // Push events target a specific branch; others are branch-scoped too when known.
+    const scoped = branchName
+      ? workItems.filter(w => (w.data?.github?.branchName || '') === branchName)
+      : workItems;
+
+    let processed = 0;
+    for (const item of scoped) {
+      // Dedupe: only apply if this event wasn't already processed.
       const ref = db.collection('events').doc(githubEventId);
       const existing = await ref.get();
       if (existing.exists) continue;
 
-      let update: any = {};
-      if (eventType === 'pull_request') {
-        if (pr.state === 'open' && pr.draft === false) {
-          update['github.pullRequest'] = { prNumber: pr.number, url: pr.html_url, state: 'open', title: pr.title };
-          update['github.status'] = 'pr_open';
-        } else if (pr.merged) {
-          update['github.pullRequest'] = { prNumber: pr.number, url: pr.html_url, state: 'merged', title: pr.title };
-          update['github.status'] = 'merged';
-        } else if (pr.state === 'closed') {
-          update['github.status'] = 'closed';
-        }
-      } else if (eventType === 'check_run') {
-        const conclusion = checkRun?.conclusion;
-        update['github.pullRequest'] = { ...(item as any).github?.pullRequest, checkStatus: conclusion === 'success' ? 'success' : 'failure' };
-      }
+      const update = computeWorkUpdate(eventType, event, item.data?.github);
 
       if (Object.keys(update).length > 0) {
         await Promise.all([
@@ -95,10 +94,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           db.collection('defects').doc(item.id).update(update).catch(() => {})
         ]);
         await ref.set({ event: githubEventId, processedAt: new Date().toISOString() });
+        processed++;
       }
     }
 
-    return res.status(200).json({ ack: true, processed: workItems.length });
+    return res.status(200).json({ ack: true, processed, scoped: scoped.length });
   } catch (e: any) {
     return res.status(500).json({ error: e.message || 'Internal server error' });
   }

@@ -33,12 +33,22 @@ export type GithubPullRequest = {
   checkStatus?: 'pending' | 'success' | 'failure';
 };
 
+export type GithubIssue = {
+  issueNumber: number;
+  url: string;
+  state: 'open' | 'closed';
+  title: string;
+  labels?: string[];
+  updatedAt?: Date;
+};
+
 export type GithubSubDoc = {
   repositoryId?: string;
   branchName?: string;
   branchUrl?: string;
   commits?: GithubCommit[];
   pullRequest?: GithubPullRequest;
+  issue?: GithubIssue;
   status: 'not_started' | 'branch_created' | 'commits_pushed' | 'pr_open' | 'review' | 'qa' | 'approved' | 'merged' | 'closed';
 };
 export type DefectStatus = 'open' | 'in_progress' | 'pending_qa' | 'resolved' | 'closed' | 'reopened';
@@ -197,7 +207,7 @@ export type TaskOrigin =
   | { source: 'meeting' }
   | { source: 'review' }
   | { source: 'template'; templateId: string }
-  | { source: 'recurrence' }
+  | { source: 'recurrence'; parentTaskId?: string }
   | { source: 'form' };
 
 export type Task = {

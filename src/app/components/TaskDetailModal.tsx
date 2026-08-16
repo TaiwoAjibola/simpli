@@ -30,7 +30,8 @@ import { format } from 'date-fns';
 import { TagBadges } from './TagBadges';
 import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
-import { GitHubPanel } from './GitHubPanel';
+import { DevelopmentWorkspace } from './DevelopmentWorkspace';
+import { isDevelopmentWork } from '../../utils/workflow';
 
 type TaskDetailModalProps = {
   task: Task;
@@ -260,7 +261,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
               active={activeTab === 'github'}
               onClick={() => setActiveTab('github')}
               icon={Github}
-              label="GitHub"
+              label={isDevelopmentWork(task.workType) ? 'Dev Workspace' : 'GitHub'}
             />
           </div>
         </div>
@@ -346,7 +347,7 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
           )}
 
           {activeTab === 'github' && (
-            <GitHubPanel workKind="task" workId={task.id} github={task.github} />
+            <DevelopmentWorkspace workKind="task" workId={task.id} github={task.github} />
           )}
         </div>
       </div>
@@ -560,6 +561,9 @@ function DetailsTab({
           <div className="flex items-center gap-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3">
             <span className="text-sm text-[#F8FAFC] capitalize">
               Every {task.recurrence.interval} {task.recurrence.frequency}{task.recurrence.interval > 1 ? 's' : ''}
+            </span>
+            <span className="text-xs text-[#94A3B8]">
+              Next occurrence auto-created on completion
             </span>
             <button
               onClick={() => updateTask(task.id, { recurrence: undefined })}
