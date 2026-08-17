@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { GitBranch, GitPullRequest, Layers, Plus, RefreshCw, Trash2, ExternalLink, Github } from 'lucide-react';
+import { GitBranch, GitPullRequest, Layers, Plus, RefreshCw, Trash2, ExternalLink, Github, HelpCircle } from 'lucide-react';
 import { Repository } from '../types';
+import { parseGithubUrl } from '../../utils/githubApiLogic';
 
 export function RepositoriesPage() {
   const { repositories, apps, addRepository, updateRepository, deleteRepository, tasks } = useApp();
@@ -12,25 +13,36 @@ export function RepositoriesPage() {
   const canManage = hasPermission('manage_repositories') || hasPermission('view_all_apps');
 
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ appId: '', owner: '', name: '', defaultBranch: 'main', url: '' });
+  const [form, setForm] = useState({ appId: '', repoUrl: '', defaultBranch: 'main' });
   const [busy, setBusy] = useState<string | null>(null);
 
+  const parsed = parseGithubUrl(form.repoUrl);
+  const urlFromRepo = parsed?.url || form.repoUrl.trim();
+
   const handleAdd = async () => {
-    if (!form.appId || !form.owner || !form.name) {
-      showToast({ type: 'error', title: 'Missing fields', message: 'App, owner, and repo name are required.' });
+    if (!form.appId) {
+      showToast({ type: 'error', title: 'Missing app', message: 'Choose the application this repository belongs to.' });
+      return;
+    }
+    if (!parsed) {
+      showToast({
+        type: 'error',
+        title: 'Invalid GitHub URL',
+        message: 'Paste the full repo URL, e.g. https://github.com/owner/name or git@github.com:owner/name.git'
+      });
       return;
     }
     await addRepository({
       appId: form.appId,
       provider: 'github',
-      owner: form.owner.trim(),
-      name: form.name.trim(),
-      url: form.url.trim() || `https://github.com/${form.owner.trim()}/${form.name.trim()}`,
+      owner: parsed.owner,
+      name: parsed.name,
+      url: urlFromRepo,
       defaultBranch: form.defaultBranch || 'main',
       connectionStatus: 'not_connected',
       integrationStatus: 'configured'
     });
-    setForm({ appId: '', owner: '', name: '', defaultBranch: 'main', url: '' });
+    setForm({ appId: '', repoUrl: '', defaultBranch: 'main' });
     setShowForm(false);
     showToast({ type: 'success', title: 'Repository added', message: 'Repo saved. Connect on GitHub side to enable sync.' });
   };
@@ -72,38 +84,72 @@ export function RepositoriesPage() {
       </div>
 
       {showForm && (
-        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg mb-6 space-y-3">
-          <div className="grid grid-cols-2 gap-4">
-            <select
-              value={form.appId}
-              onChange={e => setForm({ ...form, appId: e.target.value })}
-              className="px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded"
-            >
-              <option value="">Select application...</option>
-              {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-            <input
-              value={form.owner}
-              onChange={e => setForm({ ...form, owner: e.target.value })}
-              placeholder="GitHub owner/org"
-              className="px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded"
-            />
-            <input
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="Repo name"
-              className="px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded"
-            />
-            <input
-              value={form.defaultBranch}
-              onChange={e => setForm({ ...form, defaultBranch: e.target.value })}
-              placeholder="Default branch (main)"
-              className="px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded"
-            />
+        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg mb-6 space-y-4">
+          <div>
+            <h3 className="font-semibold text-[#F8FAFC] mb-1">Link a GitHub repository</h3>
+            <p className="text-xs text-[#94A3B8]">
+              Connect an existing GitHub repository to an application so Simpli can track branches, commits, pull requests, and reviews.
+            </p>
           </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Application</label>
+              <select
+                value={form.appId}
+                onChange={e => setForm({ ...form, appId: e.target.value })}
+                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded"
+              >
+                <option value="">Select application...</option>
+                {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+              <p className="text-xs text-[#94A3B8] mt-1">Which application does this repo belong to? Work items from this app will link to it.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Git Repository URL</label>
+              <input
+                value={form.repoUrl}
+                onChange={e => setForm({ ...form, repoUrl: e.target.value })}
+                placeholder="https://github.com/owner/name"
+                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded font-mono"
+              />
+              <p className="text-xs text-[#94A3B8] mt-1 flex items-start gap-1">
+                <HelpCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                Paste the full repo URL — e.g. <span className="font-mono">https://github.com/acme/webapp</span>,{' '}
+                <span className="font-mono">git@github.com:acme/webapp.git</span>, or just <span className="font-mono">acme/webapp</span>.
+                The owner and repo name are read from the URL for you.
+              </p>
+              {parsed && (
+                <div className="mt-2 px-3 py-2 bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)] rounded text-sm flex items-center gap-2">
+                  <Github className="w-4 h-4 text-[#22C55E]" />
+                  <span className="text-[#F8FAFC]">Owner: <span className="font-mono text-[#22C55E]">{parsed.owner}</span></span>
+                  <span className="text-[#94A3B8]">/</span>
+                  <span className="text-[#F8FAFC]">Repo: <span className="font-mono text-[#22C55E]">{parsed.name}</span></span>
+                </div>
+              )}
+              {form.repoUrl && !parsed && (
+                <div className="mt-2 px-3 py-2 bg-[rgba(255,59,92,0.08)] border border-[rgba(255,59,92,0.2)] rounded text-sm text-[#ff3b5c]">
+                  Couldn't parse that URL. Use a format like <span className="font-mono">https://github.com/owner/name</span>.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Default branch</label>
+              <input
+                value={form.defaultBranch}
+                onChange={e => setForm({ ...form, defaultBranch: e.target.value })}
+                placeholder="main"
+                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm rounded font-mono"
+              />
+              <p className="text-xs text-[#94A3B8] mt-1">The branch Simpli treats as the default (usually <span className="font-mono">main</span>). Commits and PRs are based on it.</p>
+            </div>
+          </div>
+
           <button
             onClick={handleAdd}
-            disabled={!form.appId || !form.owner || !form.name}
+            disabled={!form.appId || !parsed}
             className="px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a] rounded disabled:opacity-50"
           >
             Add Repository
@@ -128,7 +174,14 @@ export function RepositoriesPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium text-[#F8FAFC]">{repo.owner}/{repo.name}</h3>
-                      <a href={repo.url} target="_blank" rel="noreferrer" className="text-[#94A3B8] hover:text-[#22C55E]">
+                      <span className="text-xs text-[#94A3B8] font-mono truncate max-w-[220px]">{repo.url}</span>
+                      <a
+                        href={repo.url || `https://github.com/${repo.owner}/${repo.name}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#94A3B8] hover:text-[#22C55E]"
+                        title={`Open ${repo.url || `https://github.com/${repo.owner}/${repo.name}`}`}
+                      >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>

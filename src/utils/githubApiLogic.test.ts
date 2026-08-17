@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterTreeFiles, mapCompareFiles, summarizeReviews, summarizeChecks } from './githubApiLogic';
+import { filterTreeFiles, mapCompareFiles, summarizeReviews, summarizeChecks, parseGithubUrl } from './githubApiLogic';
 
 describe('filterTreeFiles', () => {
   const tree = [
@@ -92,5 +92,34 @@ describe('summarizeChecks', () => {
   it('pending for in-flight checks or empty list', () => {
     expect(summarizeChecks({ check_runs: [{ name: 'a', status: 'in_progress', conclusion: null }] }).checkStatus).toBe('pending');
     expect(summarizeChecks(null).checkStatus).toBe('pending');
+  });
+});
+
+describe('parseGithubUrl', () => {
+  it('parses https URLs and strips .git / trailing slashes', () => {
+    expect(parseGithubUrl('https://github.com/acme/webapp')).toEqual({
+      owner: 'acme', name: 'webapp', url: 'https://github.com/acme/webapp'
+    });
+    expect(parseGithubUrl('https://github.com/acme/webapp.git/')).toEqual({
+      owner: 'acme', name: 'webapp', url: 'https://github.com/acme/webapp'
+    });
+  });
+
+  it('parses git@ SSH URLs', () => {
+    expect(parseGithubUrl('git@github.com:acme/webapp.git')).toEqual({
+      owner: 'acme', name: 'webapp', url: 'https://github.com/acme/webapp'
+    });
+  });
+
+  it('parses bare owner/name', () => {
+    expect(parseGithubUrl('acme/webapp')).toEqual({
+      owner: 'acme', name: 'webapp', url: 'https://github.com/acme/webapp'
+    });
+  });
+
+  it('returns null for invalid input', () => {
+    expect(parseGithubUrl('')).toBeNull();
+    expect(parseGithubUrl('not a github url')).toBeNull();
+    expect(parseGithubUrl('acme')).toBeNull();
   });
 });

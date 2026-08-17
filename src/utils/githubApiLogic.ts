@@ -12,6 +12,30 @@ export function filterTreeFiles(tree: any[]): any[] {
     .map((t: any) => ({ path: t.path, sha: t.sha, size: t.size }));
 }
 
+export function parseGithubUrl(input: string): { owner: string; name: string; url?: string } | null {
+  const raw = (input || '').trim();
+  if (!raw) return null;
+
+  const normalized = raw.replace(/\.git\/?$/, '').replace(/\/+$/, '');
+
+  let match = normalized.match(/^(?:https?:\/\/)?github\.com\/([^/]+)\/([^/]+)$/i);
+  if (match) {
+    return { owner: match[1], name: match[2], url: `https://github.com/${match[1]}/${match[2]}` };
+  }
+
+  match = normalized.match(/^git@github\.com:([^/]+)\/([^/]+)$/);
+  if (match) {
+    return { owner: match[1], name: match[2], url: `https://github.com/${match[1]}/${match[2]}` };
+  }
+
+  match = normalized.match(/^([^/]+)\/([^/]+)$/);
+  if (match && !/\s/.test(normalized)) {
+    return { owner: match[1], name: match[2], url: `https://github.com/${match[1]}/${match[2]}` };
+  }
+
+  return null;
+}
+
 export function mapCompareFiles(files: any[]): any[] {
   return (files || []).map((f: any) => ({
     filename: f.filename,
