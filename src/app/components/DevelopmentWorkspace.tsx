@@ -164,6 +164,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [branchName, setBranchName] = useState('');
   const [prTitle, setPrTitle] = useState('');
+  const [branchList, setBranchList] = useState<string[]>([]);
+  const [viewBranch, setViewBranch] = useState('');
   const loadedRef = useRef<string | null>(null);
 
   const work = workKind === 'task' ? tasks.find(t => t.id === workId) : defects.find(d => d.id === workId);
@@ -179,15 +181,41 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
     ? repositories.find(r => `${r.owner}/${r.name}` === g.repositoryId || r.id === g.repositoryId)
     : undefined;
 
-  const branch = g?.branchName;
+  const workBranch = g?.branchName;
   const defaultBranch = repo?.defaultBranch || 'main';
   const prNumber = g?.pullRequest?.prNumber;
+  const branch = viewBranch || workBranch || (repo ? defaultBranch : '');
 
   const canReview = hasPermission('review_code') || hasPermission('manage_workflow') || hasPermission('manage_repositories');
   const canMerge = hasPermission('develop_work') || hasPermission('manage_repositories') || hasPermission('manage_workflow');
   const canDev = hasPermission('develop_work') || hasPermission('manage_repositories') || hasPermission('manage_workflow');
 
   const params = repo ? `owner=${repo.owner}&repo=${repo.name}` : '';
+
+  const loadBranches = useCallback(async () => {
+    if (!params) {
+      setBranchList([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/github/branches?${params}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load branches');
+      const names = (data.branches || []).map((b: any) => b.name);
+      setBranchList(names);
+      if (!viewBranch && workBranch && names.length && !names.includes(workBranch)) {
+        setBranchList([workBranch, ...names]);
+      }
+    } catch (e) {
+      showToast({ type: 'error', title: 'Failed to load branches', message: String(e) });
+    }
+  }, [params, viewBranch, workBranch, showToast]);
+
+  useEffect(() => {
+    setViewBranch('');
+    loadBranches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repo?.id]);
 
   const loadTree = useCallback(async () => {
     if (!params || !branch) return;
@@ -595,6 +623,22 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               <option key={r.id} value={r.id}>{r.owner}/{r.name}</option>
             ))}
           </select>
+        )}
+        {repo && (
+          <div className="flex items-center gap-2 bg-[#020617] border border-[rgba(34,197,94,0.2)] rounded px-2">
+            <GitBranch className="w-3.5 h-3.5 text-[#22C55E] shrink-0" />
+            <select
+              value={branch}
+              onChange={e => setViewBranch(e.target.value)}
+              className="w-full bg-transparent text-[#F8FAFC] text-sm py-1.5 rounded outline-none"
+              title="Switch branch"
+            >
+              <option value={branch}>{branch}</option>
+              {branchList.filter(b => b !== branch).map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
         )}
         {canDev && repo && !g?.branchName && (
           <div className="flex gap-2">

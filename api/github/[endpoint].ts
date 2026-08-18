@@ -13,12 +13,25 @@ import { mapCompareFiles, filterTreeFiles, summarizeReviews, summarizeChecks } f
 
 const handlers: Record<string, GithubRouteHandler> = {
   branches: {
-    method: 'POST',
     run: async (body) => {
       const { owner, repo, name, baseBranch = 'main' } = body || {};
-      if (!owner || !repo || !name) {
-        return { status: 400, body: { error: 'owner, repo, and name are required' } };
+      if (!owner || !repo) return { status: 400, body: { error: 'owner and repo are required' } };
+
+      if (!name) {
+        const list = await githubApi(`/repos/${owner}/${repo}/branches?per_page=100`);
+        return {
+          status: 200,
+          body: {
+            branches: list.map((b: any) => ({
+              name: b.name,
+              sha: b.commit?.sha,
+              protected: !!b.protected,
+              html_url: b._links?.html
+            }))
+          }
+        };
       }
+
       const refEncoded = encodeURIComponent(`heads/${name}`);
       try {
         await githubApi(`/repos/${owner}/${repo}/git/ref/${refEncoded}`);
