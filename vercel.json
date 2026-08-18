@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/github/webhook", "destination": "/api/github/webhook" },
+    { "source": "/api/github/(.*)", "destination": "/api/github/[endpoint]?endpoint=$1" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
