@@ -117,7 +117,19 @@ export async function githubApi(path: string, options: { method?: string; body?:
   });
   if (!res.ok) {
     const text = await res.text();
-    const err: any = new Error(`GitHub API error ${res.status}: ${text}`);
+    let detail = text;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed?.message) {
+        detail = parsed.message;
+        if (parsed.errors?.length) {
+          detail += ` — ${parsed.errors.map((e: any) => e.message || JSON.stringify(e)).join('; ')}`;
+        }
+      }
+    } catch {
+      // non-JSON body, keep raw text
+    }
+    const err: any = new Error(`GitHub API error ${res.status}: ${detail}`);
     err.status = res.status;
     throw err;
   }

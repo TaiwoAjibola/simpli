@@ -68,10 +68,11 @@ export function RepositoriesPage() {
       await updateRepository(repo.id, { connectionStatus: 'connected', lastSyncedAt: new Date(), integrationStatus: 'synced' });
       showToast({ type: 'success', title: 'Sync complete', message: `Fetched ${data.commits?.length || 0} commits from ${repo.owner}/${repo.name}.` });
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       showToast({
         type: 'error',
         title: 'Could not sync',
-        message: `${repo.owner}/${repo.name} saved, but GitHub could not be reached. Check that a GitHub token is configured (Vercel env GITHUB_TOKEN) and that it has access to this repo.`
+        message: `${repo.owner}/${repo.name} saved, but GitHub could not be reached. ${errMsg}`
       });
     } finally {
       setBusy(null);
