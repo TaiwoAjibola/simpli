@@ -62,11 +62,30 @@ export function RepositoriesPage() {
   const handleSync = async (repo: Repository) => {
     setBusy(repo.id);
     try {
-      const res = await fetch(`/api/github/commits?owner=${repo.owner}&repo=${repo.name}&branch=${repo.defaultBranch}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Sync failed (${res.status})`);
-      await updateRepository(repo.id, { connectionStatus: 'connected', lastSyncedAt: new Date(), integrationStatus: 'synced' });
-      showToast({ type: 'success', title: 'Sync complete', message: `Fetched ${data.commits?.length || 0} commits from ${repo.owner}/${repo.name}.` });
+      const [commitsRes, branchesRes] = await Promise.all([
+        fetch(`/api/github/commits?owner=${repo.owner}&repo=${repo.name}&branch=${repo.defaultBranch}&per_page=10`),
+        fetch(`/api/github/branches?owner=${repo.owner}&repo=${repo.name}`)
+      ]);
+      const commitsData = await commitsRes.json();
+      const branchesData = await branchesRes.json();
+      if (!commitsRes.ok) throw new Error(commitsData.error || `Sync failed (${commitsRes.status})`);
+      if (!branchesRes.ok) throw new Error(branchesData.error || `Sync failed (${branchesRes.status})`);
+      const commits = (commitsData.commits || []).map((c: any) => ({
+        sha: c.sha,
+        message: c.message,
+        author: c.author,
+        date: c.date,
+        url: c.url
+      }));
+      const branches = (branchesData.branches || []).map((b: any) => b.name);
+      await updateRepository(repo.id, {
+        connectionStatus: 'connected',
+        lastSyncedAt: new Date(),
+        integrationStatus: 'synced',
+        branches,
+        commits
+      });
+      showToast({ type: 'success', title: 'Sync complete', message: `Fetched ${commits.length} commits and ${branches.length} branches from ${repo.owner}/${repo.name}.` });
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       showToast({
@@ -250,6 +269,41 @@ export function RepositoriesPage() {
                   {linked.length === 0 && <p className="text-xs text-[#94A3B8]">No work items linked to this repository yet.</p>}
                 </div>
               </div>
+
+              {repo.lastSyncedAt && (
+                <>
+                  <div className="mt-3 border-t border-[rgba(34,197,94,0.1)] pt-3">
+                    <p className="text-xs text-[#94A3B8] mb-2">
+                      Branches: <span className="text-[#F8FAFC]">{repo.branches?.length ?? 0}</span>
+                      <span className="text-[#64748B]"> · Last synced {new Date(repo.lastSyncedAt).toLocaleString()}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(repo.branches ?? []).map(b => (
+                        <span key={b} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-[#22C55E] bg-[rgba(34,197,94,0.1)] rounded">
+                          <GitBranch className="w-3 h-3" />
+                          {b}
+                        </span>
+                      ))}
+                      {(repo.branches ?? []).length === 0 && <p className="text-xs text-[#94A3B8]">No branches synced.</p>}
+                    </div>
+                  </div>
+                  {(repo.commits?.length ?? 0) > 0 && (
+                    <div className="mt-3 border-t border-[rgba(34,197,94,0.1)] pt-3">
+                      <p className="text-xs text-[#94A3B8] mb-2">Recent commits on {repo.defaultBranch}</p>
+                      <div className="max-h-28 overflow-y-auto space-y-1">
+                        {(repo.commits ?? []).map(c => (
+                          <div key={c.sha} className="flex items-center gap-2 text-sm text-[#CBD5E1]">
+                            <GitPullRequest className="w-3.5 h-3.5 text-[#22C55E]" />
+                            <span className="truncate">{c.message.split('\n')[0]}</span>
+                            <span className="ml-auto text-xs text-[#94A3B8] truncate">{c.author}</span>
+                            <span className="text-xs text-[#64748B]">{new Date(c.date).toLocaleDateString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           );
         })}

@@ -12,6 +12,8 @@ export type Repository = {
   connectionStatus: 'connected' | 'not_connected';
   lastSyncedAt?: Date;
   integrationStatus?: string;
+  branches?: string[];
+  commits?: { sha: string; message: string; author: string; date: string; url?: string }[];
   createdAt: Date;
 };
 
