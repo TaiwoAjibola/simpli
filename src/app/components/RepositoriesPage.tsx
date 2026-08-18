@@ -32,7 +32,7 @@ export function RepositoriesPage() {
       });
       return;
     }
-    await addRepository({
+    const repoId = await addRepository({
       appId: form.appId,
       provider: 'github',
       owner: parsed.owner,
@@ -44,17 +44,35 @@ export function RepositoriesPage() {
     });
     setForm({ appId: '', repoUrl: '', defaultBranch: 'main' });
     setShowForm(false);
-    showToast({ type: 'success', title: 'Repository added', message: 'Repo saved. Connect on GitHub side to enable sync.' });
+    showToast({ type: 'success', title: 'Repository added', message: 'Repo saved. Syncing now...' });
+    await handleSync({
+      id: repoId,
+      appId: form.appId,
+      provider: 'github',
+      owner: parsed.owner,
+      name: parsed.name,
+      url: urlFromRepo,
+      defaultBranch: form.defaultBranch || 'main',
+      connectionStatus: 'not_connected',
+      integrationStatus: 'configured',
+      createdAt: new Date()
+    });
   };
 
   const handleSync = async (repo: Repository) => {
     setBusy(repo.id);
     try {
-      const commits = await fetch(`/api/github/commits?owner=${repo.owner}&repo=${repo.name}&branch=${repo.defaultBranch}`).then(r => r.json());
-      updateRepository(repo.id, { connectionStatus: 'connected', lastSyncedAt: new Date(), integrationStatus: 'synced' });
-      showToast({ type: 'success', title: 'Sync complete', message: `Fetched ${commits.commits?.length || 0} commits from ${repo.owner}/${repo.name}.` });
+      const res = await fetch(`/api/github/commits?owner=${repo.owner}&repo=${repo.name}&branch=${repo.defaultBranch}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Sync failed (${res.status})`);
+      await updateRepository(repo.id, { connectionStatus: 'connected', lastSyncedAt: new Date(), integrationStatus: 'synced' });
+      showToast({ type: 'success', title: 'Sync complete', message: `Fetched ${data.commits?.length || 0} commits from ${repo.owner}/${repo.name}.` });
     } catch (e) {
-      showToast({ type: 'error', title: 'Sync failed', message: String(e) });
+      showToast({
+        type: 'error',
+        title: 'Could not sync',
+        message: `${repo.owner}/${repo.name} saved, but GitHub could not be reached. Check that a GitHub token is configured (Vercel env GITHUB_TOKEN) and that it has access to this repo.`
+      });
     } finally {
       setBusy(null);
     }

@@ -21,14 +21,14 @@ import {
   Rocket,
   Github
 } from 'lucide-react';
-import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { GithubSubDoc } from '../types';
 import { QaWorkPanel } from './QaWorkPanel';
+import javascriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import typescriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
 import jsxLang from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
 import tsxLang from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
-import typescriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
-import javascriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
 import jsonLang from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import cssLang from 'react-syntax-highlighter/dist/esm/languages/prism/css';
 import markupLang from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
@@ -40,10 +40,10 @@ import rustLang from 'react-syntax-highlighter/dist/esm/languages/prism/rust';
 import javaLang from 'react-syntax-highlighter/dist/esm/languages/prism/java';
 import sqlLang from 'react-syntax-highlighter/dist/esm/languages/prism/sql';
 
-SyntaxHighlighter.registerLanguage('typescript', typescriptLang);
-SyntaxHighlighter.registerLanguage('tsx', tsxLang);
 SyntaxHighlighter.registerLanguage('javascript', javascriptLang);
+SyntaxHighlighter.registerLanguage('typescript', typescriptLang);
 SyntaxHighlighter.registerLanguage('jsx', jsxLang);
+SyntaxHighlighter.registerLanguage('tsx', tsxLang);
 SyntaxHighlighter.registerLanguage('json', jsonLang);
 SyntaxHighlighter.registerLanguage('css', cssLang);
 SyntaxHighlighter.registerLanguage('scss', cssLang);
@@ -169,7 +169,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   const work = workKind === 'task' ? tasks.find(t => t.id === workId) : defects.find(d => d.id === workId);
   const g = work?.github || github;
 
-  const allRepos = repositories.filter(r => r.connectionStatus === 'connected' || r.integrationStatus === 'synced');
+  const allRepos = repositories;
   const appId = workKind === 'task' ? work?.appId : work?.applicationId;
   const appScoped = appId ? getRepositoriesForApp(appId) : [];
   const appRepos = appScoped.length

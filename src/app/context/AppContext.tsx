@@ -619,6 +619,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     relatedTo?: Notification['relatedTo'],
     recipientIds?: string[]
   ) => {
+    const singleRecipient = recipientIds && recipientIds.length === 1 ? recipientIds[0] : undefined;
     await addDoc(collection(db, 'notifications'), {
       type,
       title,
@@ -626,7 +627,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: serverTimestamp(),
       read: false,
       relatedTo,
-      recipientId: recipientIds && recipientIds.length === 1 ? recipientIds[0] : undefined
+      ...(singleRecipient ? { recipientId: singleRecipient } : {})
     });
 
     const matchingRules = notificationRules.filter(
