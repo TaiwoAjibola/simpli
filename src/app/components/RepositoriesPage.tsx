@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { GitBranch, GitPullRequest, Layers, Plus, RefreshCw, Trash2, ExternalLink, Github, HelpCircle } from 'lucide-react';
+import { GitBranch, GitPullRequest, Layers, Plus, RefreshCw, Trash2, ExternalLink, Github, HelpCircle, FolderKanban } from 'lucide-react';
 import { Repository } from '../types';
 import { parseGithubUrl } from '../../utils/githubApiLogic';
+import { RepositoryBrowser } from './RepositoryBrowser';
 
 export function RepositoriesPage() {
   const { repositories, apps, addRepository, updateRepository, deleteRepository, tasks } = useApp();
@@ -15,6 +16,7 @@ export function RepositoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ appId: '', repoUrl: '', defaultBranch: 'main' });
   const [busy, setBusy] = useState<string | null>(null);
+  const [browsing, setBrowsing] = useState<{ repo: Repository; branch?: string } | null>(null);
 
   const parsed = parseGithubUrl(form.repoUrl);
   const urlFromRepo = parsed?.url || form.repoUrl.trim();
@@ -195,15 +197,23 @@ export function RepositoriesPage() {
         </div>
       )}
 
+      {browsing && (
+        <RepositoryBrowser
+          repo={browsing.repo}
+          initialBranch={browsing.branch}
+          onBack={() => setBrowsing(null)}
+        />
+      )}
+
       <div className="space-y-4">
-        {repositories.length === 0 && (
+        {!browsing && repositories.length === 0 && (
           <p className="text-sm text-[#94A3B8]">No repositories yet. Add one to enable GitHub integration.</p>
         )}
         {repositories.map(repo => {
           const appName = apps.find(a => a.id === repo.appId)?.name || 'Unknown app';
           const linked = linkedTasks(repo);
           return (
-            <div key={repo.id} className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg">
+            <div key={repo.id} className={`bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg ${browsing ? 'hidden' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-[#020617] border border-[rgba(34,197,94,0.1)] rounded flex items-center justify-center">
@@ -237,6 +247,14 @@ export function RepositoriesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setBrowsing({ repo })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] rounded"
+                    title="Browse branches, code and commits"
+                  >
+                    <FolderKanban className="w-4 h-4" />
+                    Browse code
+                  </button>
                   <button
                     onClick={() => handleSync(repo)}
                     disabled={busy === repo.id}
@@ -279,10 +297,15 @@ export function RepositoriesPage() {
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {(repo.branches ?? []).map(b => (
-                        <span key={b} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-[#22C55E] bg-[rgba(34,197,94,0.1)] rounded">
+                        <button
+                          key={b}
+                          onClick={() => setBrowsing({ repo, branch: b })}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-[#22C55E] bg-[rgba(34,197,94,0.1)] hover:bg-[rgba(34,197,94,0.2)] rounded"
+                          title={`Browse ${b} branch code`}
+                        >
                           <GitBranch className="w-3 h-3" />
                           {b}
-                        </span>
+                        </button>
                       ))}
                       {(repo.branches ?? []).length === 0 && <p className="text-xs text-[#94A3B8]">No branches synced.</p>}
                     </div>
@@ -292,12 +315,17 @@ export function RepositoriesPage() {
                       <p className="text-xs text-[#94A3B8] mb-2">Recent commits on {repo.defaultBranch}</p>
                       <div className="max-h-28 overflow-y-auto space-y-1">
                         {(repo.commits ?? []).map(c => (
-                          <div key={c.sha} className="flex items-center gap-2 text-sm text-[#CBD5E1]">
+                          <button
+                            key={c.sha}
+                            onClick={() => setBrowsing({ repo })}
+                            className="w-full flex items-center gap-2 text-sm text-[#CBD5E1] hover:bg-[rgba(255,255,255,0.03)] rounded px-1"
+                            title={`Browse code (${repo.defaultBranch})`}
+                          >
                             <GitPullRequest className="w-3.5 h-3.5 text-[#22C55E]" />
                             <span className="truncate">{c.message.split('\n')[0]}</span>
                             <span className="ml-auto text-xs text-[#94A3B8] truncate">{c.author}</span>
                             <span className="text-xs text-[#64748B]">{new Date(c.date).toLocaleDateString()}</span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
