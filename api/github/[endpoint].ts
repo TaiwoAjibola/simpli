@@ -243,16 +243,28 @@ const handlers: Record<string, GithubRouteHandler> = {
       const { owner, repo } = body || {};
       if (!owner || !repo) return { status: 400, body: { error: 'owner, repo are required' } };
 
-      const { action, prNumber, title, head, base = 'main', body: prBody, reviewEvent, reviewComment } = body;
+      const { action, prNumber, title, head, base = 'main', body: prBody, reviewEvent, reviewComment, comments = [], commitId } = body;
 
       if (action === 'review') {
         if (!prNumber || !reviewEvent) return { status: 400, body: { error: 'review requires prNumber and reviewEvent' } };
+        const reviewBody: any = {
+          event: reviewEvent,
+          ...(reviewComment ? { body: reviewComment } : {})
+        };
+        if (commitId && comments.length > 0) {
+          // Attach inline line comments to the review. GitHub requires these to
+          // reference the PR head commit so they render on the code view.
+          reviewBody.commit_id = commitId;
+          reviewBody.comments = comments.map((c: any) => ({
+            path: c.path,
+            line: Number(c.line),
+            side: 'RIGHT',
+            body: c.body
+          }));
+        }
         await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}/reviews`, {
           method: 'POST',
-          body: {
-            event: reviewEvent,
-            ...(reviewComment ? { body: reviewComment } : {})
-          }
+          body: reviewBody
         });
         return { status: 200, body: { ok: true } };
       }
@@ -271,12 +283,16 @@ const handlers: Record<string, GithubRouteHandler> = {
         const pr = await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}`);
         let reviews: any[] = [];
         let checks: any = null;
+        let reviewComments: any[] = [];
         try {
           reviews = await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}/reviews`);
         } catch { /* reviews may be empty */ }
         try {
           checks = await githubApi(`/repos/${owner}/${repo}/commits/${pr.head.sha}/check-runs`);
         } catch { /* checks may not exist */ }
+        try {
+          reviewComments = await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}/comments`);
+        } catch { /* inline comments may be empty */ }
 
         const { reviewState, reviews: reviewerRows } = summarizeReviews(reviews || []);
         const { checkStatus, checks: checkRows } = summarizeChecks(checks);
@@ -291,6 +307,7 @@ const handlers: Record<string, GithubRouteHandler> = {
             description: pr.body || '',
             head: pr.head?.ref,
             base: pr.base?.ref,
+            headSha: pr.head?.sha,
             merged: pr.merged,
             mergedAt: pr.merged_at,
             createdAt: pr.created_at,
@@ -300,7 +317,16 @@ const handlers: Record<string, GithubRouteHandler> = {
             reviewState,
             checkStatus,
             reviewers: reviewerRows,
-            checks: checkRows
+            checks: checkRows,
+            reviewComments: (reviewComments || []).map((c: any) => ({
+              id: c.id,
+              path: c.path,
+              line: c.line || c.original_line,
+              body: c.body,
+              author: c.user?.login,
+              createdAt: c.created_at,
+              in_reply_to: c.in_reply_to_id || null
+            }))
           }
         };
       }

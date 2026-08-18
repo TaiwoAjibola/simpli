@@ -19,58 +19,14 @@ import {
   Loader2,
   GitCompareArrows,
   Rocket,
-  Github
+  Github,
+  MessageSquarePlus,
+  MessageSquare,
+  Send,
+  Trash2
 } from 'lucide-react';
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { GithubSubDoc } from '../types';
 import { QaWorkPanel } from './QaWorkPanel';
-import javascriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
-import typescriptLang from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
-import jsxLang from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
-import tsxLang from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
-import jsonLang from 'react-syntax-highlighter/dist/esm/languages/prism/json';
-import cssLang from 'react-syntax-highlighter/dist/esm/languages/prism/css';
-import markupLang from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
-import pythonLang from 'react-syntax-highlighter/dist/esm/languages/prism/python';
-import bashLang from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
-import yamlLang from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
-import goLang from 'react-syntax-highlighter/dist/esm/languages/prism/go';
-import rustLang from 'react-syntax-highlighter/dist/esm/languages/prism/rust';
-import javaLang from 'react-syntax-highlighter/dist/esm/languages/prism/java';
-import sqlLang from 'react-syntax-highlighter/dist/esm/languages/prism/sql';
-
-SyntaxHighlighter.registerLanguage('javascript', javascriptLang);
-SyntaxHighlighter.registerLanguage('typescript', typescriptLang);
-SyntaxHighlighter.registerLanguage('jsx', jsxLang);
-SyntaxHighlighter.registerLanguage('tsx', tsxLang);
-SyntaxHighlighter.registerLanguage('json', jsonLang);
-SyntaxHighlighter.registerLanguage('css', cssLang);
-SyntaxHighlighter.registerLanguage('scss', cssLang);
-SyntaxHighlighter.registerLanguage('markup', markupLang);
-SyntaxHighlighter.registerLanguage('html', markupLang);
-SyntaxHighlighter.registerLanguage('xml', markupLang);
-SyntaxHighlighter.registerLanguage('vue', markupLang);
-SyntaxHighlighter.registerLanguage('python', pythonLang);
-SyntaxHighlighter.registerLanguage('bash', bashLang);
-SyntaxHighlighter.registerLanguage('yaml', yamlLang);
-SyntaxHighlighter.registerLanguage('yml', yamlLang);
-SyntaxHighlighter.registerLanguage('go', goLang);
-SyntaxHighlighter.registerLanguage('rust', rustLang);
-SyntaxHighlighter.registerLanguage('java', javaLang);
-SyntaxHighlighter.registerLanguage('sql', sqlLang);
-
-function languageFor(path: string): string {
-  const ext = path.split('.').pop()?.toLowerCase() || '';
-  const map: Record<string, string> = {
-    ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx', json: 'json',
-    css: 'css', scss: 'scss', html: 'markup', md: 'markdown', py: 'python',
-    go: 'go', rs: 'rust', java: 'java', rb: 'ruby', php: 'php', sh: 'bash',
-    yml: 'yaml', yaml: 'yaml', xml: 'markup', sql: 'sql', swift: 'swift',
-    kt: 'kotlin', c: 'c', cpp: 'cpp', h: 'c', cs: 'csharp', vue: 'markup'
-  };
-  return map[ext] || 'text';
-}
 
 type WorkspaceTab = 'code' | 'changes' | 'commits' | 'pr' | 'issue' | 'qa' | 'deploys';
 
@@ -166,6 +122,10 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   const [prTitle, setPrTitle] = useState('');
   const [branchList, setBranchList] = useState<string[]>([]);
   const [viewBranch, setViewBranch] = useState('');
+  const [pendingComments, setPendingComments] = useState<{ id: string; path: string; line: number; body: string }[]>([]);
+  const [reviewSummary, setReviewSummary] = useState('');
+  const [commentComposer, setCommentComposer] = useState<{ path: string; line: number } | null>(null);
+  const [commentText, setCommentText] = useState('');
   const loadedRef = useRef<string | null>(null);
 
   const work = workKind === 'task' ? tasks.find(t => t.id === workId) : defects.find(d => d.id === workId);
@@ -447,27 +407,61 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
     if (!params || !prNumber) return;
     setBusy('review');
     try {
+      const comments = pendingComments.filter(c => c.body.trim());
       const res = await fetch('/api/github/pull-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'review', owner: repo?.owner, repo: repo?.name, prNumber, reviewEvent: event })
+        body: JSON.stringify({
+          action: 'review',
+          owner: repo?.owner,
+          repo: repo?.name,
+          prNumber,
+          reviewEvent: event,
+          reviewComment: reviewSummary.trim() || undefined,
+          commitId: prDetail?.headSha,
+          comments
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Review failed');
       await updateWorkGithub(workKind, workId, {
         pullRequest: {
           ...(g?.pullRequest || {}),
-          reviewState: event === 'APPROVE' ? 'approved' : 'changes_requested'
+          reviewState: event === 'APPROVE' ? 'approved' : event === 'REQUEST_CHANGES' ? 'changes_requested' : (g?.pullRequest?.reviewState || 'pending')
         } as any,
-        status: event === 'APPROVE' ? 'review' : 'review'
+        status: event === 'APPROVE' || event === 'REQUEST_CHANGES' ? 'review' : (g?.status || 'review')
       });
-      showToast({ type: 'success', title: event === 'APPROVE' ? 'Approved' : 'Changes requested', message: `PR #${prNumber} updated.` });
+      setPendingComments([]);
+      setReviewSummary('');
+      showToast({ type: 'success', title: event === 'APPROVE' ? 'Approved' : event === 'REQUEST_CHANGES' ? 'Changes requested' : 'Comment submitted', message: `PR #${prNumber} updated${comments.length ? ` with ${comments.length} inline comment${comments.length === 1 ? '' : 's'}` : ''}.` });
       loadPr();
     } catch (e) {
       showToast({ type: 'error', title: 'Review failed', message: String(e) });
     } finally {
       setBusy(null);
     }
+  };
+
+  const existingComments = useMemo(
+    () => (prDetail?.reviewComments || []).filter((c: any) => c.path === selectedFile),
+    [prDetail?.reviewComments, selectedFile]
+  );
+
+  const startComment = (line: number) => {
+    if (!selectedFile || !canReview) return;
+    setCommentComposer({ path: selectedFile, line });
+    setCommentText('');
+  };
+
+  const saveComment = (line: number) => {
+    if (!selectedFile || !commentText.trim()) return;
+    setPendingComments(prev => [...prev, { id: `draft-${Date.now()}`, path: selectedFile, line, body: commentText.trim() }]);
+    setCommentComposer(null);
+    setCommentText('');
+  };
+
+  const removeComment = (id: string) => {
+    setPendingComments(prev => prev.filter(c => c.id !== id));
   };
 
   const handleMerge = async () => {
@@ -720,20 +714,102 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 <div>
                   <div className="flex items-center justify-between px-3 py-1.5 border-b border-[rgba(34,197,94,0.1)] text-xs text-[#94A3B8] sticky top-0 bg-[#0F172A]">
                     <span className="font-mono">{selectedFile}</span>
-                    <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${branch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#22C55E] hover:opacity-80">
-                      <ExternalLink className="w-3 h-3" />
-                      View on GitHub
-                    </a>
+                    <div className="flex items-center gap-3">
+                      {canReview && prNumber && prDetail?.state === 'open' && (
+                        <span className="flex items-center gap-1 text-[#22C55E]">
+                          <MessageSquarePlus className="w-3 h-3" />
+                          Click a changed line to add a review comment
+                        </span>
+                      )}
+                      <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${branch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#22C55E] hover:opacity-80">
+                        <ExternalLink className="w-3 h-3" />
+                        View on GitHub
+                      </a>
+                    </div>
                   </div>
-                  <SyntaxHighlighter
-                    language={languageFor(selectedFile)}
-                    style={oneDark}
-                    customStyle={{ margin: 0, background: 'transparent', fontSize: 12, padding: '12px 16px' }}
-                    showLineNumbers
-                    codeTagProps={{ style: { fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" } }}
-                  >
-                    {fileContent || ''}
-                  </SyntaxHighlighter>
+                  {(fileContent || '').split('\n').map((line, i) => {
+                    const num = i + 1;
+                    const existing = existingComments.filter((c: any) => c.line === num);
+                    const pending = pendingComments.filter(c => c.path === selectedFile && c.line === num);
+                    const composing = commentComposer?.path === selectedFile && commentComposer.line === num;
+                    const commentable = canReview && prNumber && prDetail?.state === 'open';
+                    const hasComments = existing.length > 0 || pending.length > 0;
+                    return (
+                      <div key={num} className={hasComments ? 'bg-[rgba(250,204,21,0.04)]' : ''}>
+                        <div
+                          onClick={() => commentable && startComment(num)}
+                          className={`group flex items-start hover:bg-[rgba(255,255,255,0.03)] ${commentable ? 'cursor-pointer' : ''}`}
+                        >
+                          <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#facc15]' : 'text-[#334155]'} group-hover:text-[#94A3B8]`}>
+                            {hasComments && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#facc15] mr-2 align-middle" />}
+                            {num}
+                          </span>
+                          <span className="flex-1 whitespace-pre text-[12px] leading-5 py-px font-mono text-[#CBD5E1]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+                            {line || '\u00A0'}
+                          </span>
+                          {commentable && !composing && (
+                            <span className="opacity-0 group-hover:opacity-100 px-2 pt-px text-[#22C55E]">
+                              <MessageSquarePlus className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
+
+                        {existing.map((c: any) => (
+                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(250,204,21,0.15)] rounded p-2 text-xs">
+                            <div className="flex items-center gap-2 text-[#facc15]">
+                              <MessageSquare className="w-3 h-3" />
+                              <span className="font-medium">{c.author}</span>
+                              <span className="text-[#64748b]">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
+                            </div>
+                            <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                          </div>
+                        ))}
+
+                        {pending.map(c => (
+                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(34,197,94,0.25)] rounded p-2 text-xs">
+                            <div className="flex items-center gap-2 text-[#22C55E]">
+                              <MessageSquare className="w-3 h-3" />
+                              <span className="font-medium">You</span>
+                              <span className="text-[#64748b]">pending · line {c.line}</span>
+                              <button onClick={() => removeComment(c.id)} className="ml-auto text-[#94A3B8] hover:text-[#ef4444]">
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                          </div>
+                        ))}
+
+                        {composing && (
+                          <div className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(34,197,94,0.4)] rounded p-2">
+                            <textarea
+                              autoFocus
+                              value={commentText}
+                              onChange={e => setCommentText(e.target.value)}
+                              rows={2}
+                              placeholder={`Comment on line ${num}…`}
+                              className="w-full bg-transparent text-xs text-[#F8FAFC] outline-none resize-none placeholder:text-[#475569]"
+                            />
+                            <div className="flex items-center justify-end gap-2 mt-1">
+                              <button
+                                onClick={() => setCommentComposer(null)}
+                                className="text-xs text-[#94A3B8] hover:text-[#F8FAFC]"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => saveComment(num)}
+                                disabled={!commentText.trim()}
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-[#22C55E] text-[#020617] font-medium rounded disabled:opacity-40"
+                              >
+                                <Send className="w-3 h-3" />
+                                Add to review
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )
             ) : (
@@ -878,37 +954,65 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                   )}
                 </div>
                 {(canReview || canMerge) && prDetail.state === 'open' && (
-                  <div className="flex gap-2 pt-2 border-t border-[rgba(34,197,94,0.1)]">
+                  <div className="pt-2 border-t border-[rgba(34,197,94,0.1)]">
                     {canReview && (
-                      <button
-                        onClick={() => handleReview('APPROVE')}
-                        disabled={busy === 'review'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a] rounded disabled:opacity-50"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Approve Review
-                      </button>
+                      <>
+                        {pendingComments.length > 0 && (
+                          <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)] rounded text-xs text-[#22C55E]">
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span className="font-medium">{pendingComments.length} inline comment{pendingComments.length === 1 ? '' : 's'} ready</span>
+                            <button onClick={() => setTab('code')} className="ml-auto text-[#94A3B8] hover:text-[#22C55E] underline">Review on lines</button>
+                          </div>
+                        )}
+                        <textarea
+                          value={reviewSummary}
+                          onChange={e => setReviewSummary(e.target.value)}
+                          rows={2}
+                          placeholder={pendingComments.length ? 'Overall summary for this review…' : 'Review summary (optional)…'}
+                          className="w-full bg-[#020617] border border-[rgba(34,197,94,0.15)] text-sm text-[#F8FAFC] outline-none rounded p-2 resize-none placeholder:text-[#475569] focus:border-[#22C55E]"
+                        />
+                      </>
                     )}
-                    {canReview && (
-                      <button
-                        onClick={() => handleReview('REQUEST_CHANGES')}
-                        disabled={busy === 'review'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] text-white text-sm font-medium hover:bg-[#dc2626] rounded disabled:opacity-50"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Request Changes
-                      </button>
-                    )}
-                    {canMerge && prDetail.reviewState === 'approved' && (
-                      <button
-                        onClick={handleMerge}
-                        disabled={busy === 'merge'}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6] text-white text-sm font-medium hover:bg-[#7c3aed] rounded disabled:opacity-50"
-                      >
-                        <GitPullRequest className="w-4 h-4" />
-                        {busy === 'merge' ? 'Merging...' : 'Merge PR'}
-                      </button>
-                    )}
+                    <div className="flex gap-2 mt-2">
+                      {canReview && (
+                        <>
+                          <button
+                            onClick={() => handleReview('COMMENT')}
+                            disabled={busy === 'review'}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1E293B] border border-[rgba(148,163,184,0.2)] text-[#CBD5E1] text-sm font-medium hover:bg-[#273449] rounded disabled:opacity-50"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Comment
+                          </button>
+                          <button
+                            onClick={() => handleReview('APPROVE')}
+                            disabled={busy === 'review'}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a] rounded disabled:opacity-50"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Approve Review
+                          </button>
+                          <button
+                            onClick={() => handleReview('REQUEST_CHANGES')}
+                            disabled={busy === 'review'}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] text-white text-sm font-medium hover:bg-[#dc2626] rounded disabled:opacity-50"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Request Changes
+                          </button>
+                        </>
+                      )}
+                      {canMerge && prDetail.reviewState === 'approved' && (
+                        <button
+                          onClick={handleMerge}
+                          disabled={busy === 'merge'}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6] text-white text-sm font-medium hover:bg-[#7c3aed] rounded disabled:opacity-50"
+                        >
+                          <GitPullRequest className="w-4 h-4" />
+                          {busy === 'merge' ? 'Merging...' : 'Merge PR'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -945,6 +1049,27 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                               {r.submittedAt && <span className="text-[#64748b]">{new Date(r.submittedAt).toLocaleString()}</span>}
                             </div>
                             {r.body && <p className="text-xs text-[#CBD5E1] mt-1 whitespace-pre-wrap">{r.body}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {prDetail.reviewComments && prDetail.reviewComments.length > 0 && (
+                  <div className="pt-2 border-t border-[rgba(34,197,94,0.1)]">
+                    <p className="text-xs font-semibold text-[#94A3B8] mb-2">Comments on code</p>
+                    <div className="space-y-2">
+                      {prDetail.reviewComments.map((c: any) => (
+                        <div key={c.id} className="flex items-start gap-2 bg-[#0F172A] border border-[rgba(250,204,21,0.12)] p-2 rounded">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#facc15] mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-medium text-[#F8FAFC]">{c.author}</span>
+                              <span className="text-[#facc15] font-mono">{c.path}:{c.line}</span>
+                              {c.createdAt && <span className="text-[#64748b]">{new Date(c.createdAt).toLocaleString()}</span>}
+                            </div>
+                            <p className="text-xs text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
                           </div>
                         </div>
                       ))}
