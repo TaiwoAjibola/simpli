@@ -72,6 +72,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
   const [search, setSearch] = useState('');
   const [branchList, setBranchList] = useState<string[]>([]);
   const [viewBranch, setViewBranch] = useState(initialBranch || repo.defaultBranch || 'main');
+  const [ready, setReady] = useState(false);
   const [commits, setCommits] = useState<any[]>([]);
   const [commitsLoading, setCommitsLoading] = useState(false);
   const [diff, setDiff] = useState<any[]>([]);
@@ -87,10 +88,18 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
       if (!res.ok) throw new Error(data.error || 'Failed to load branches');
       const names = (data.branches || []).map((b: any) => b.name);
       setBranchList(names);
+      if (names.length && !names.includes(viewBranch)) {
+        // The requested branch (e.g. from a stale card chip) no longer
+        // exists on GitHub — fall back to a live branch instead of 404ing.
+        const fallback = names.includes(repo.defaultBranch) ? repo.defaultBranch : names[0];
+        setViewBranch(fallback);
+      }
+      setReady(names.length > 0);
     } catch (e) {
       showToast({ type: 'error', title: 'Failed to load branches', message: String(e) });
+      setReady(true);
     }
-  }, [params, showToast]);
+  }, [params, viewBranch, repo.defaultBranch, showToast]);
 
   const loadTree = useCallback(async () => {
     if (!viewBranch) return;
@@ -162,6 +171,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
   }, [repo.id]);
 
   useEffect(() => {
+    if (!ready || !viewBranch) return;
     loadTree();
     loadCommits();
     loadDiff();
@@ -169,7 +179,11 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
     setFileContent(null);
     setExpanded(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewBranch]);
+  }, [viewBranch, ready]);
+
+  useEffect(() => {
+    if (selectedFile) loadFile(selectedFile);
+  }, [selectedFile, loadFile]);
 
   const filteredTree = useMemo(() => {
     if (!tree) return null;

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics } from 'firebase/analytics';
 import { getStorage } from 'firebase/storage';
@@ -22,7 +22,15 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Force long-polling + persistent cache for Firestore: WebChannel's QUIC
+// streaming transport is flaky on some networks and throws
+// ERR_QUIC_PROTOCOL_ERROR on the /Listen channel. Long-polling is more
+// robust and avoids those transport errors entirely.
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false,
+  localCache: persistentLocalCache({ tabSettings: { cacheSizeBytes: 104857600 } })
+});
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
