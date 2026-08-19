@@ -466,12 +466,13 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
   const handleMerge = async () => {
     if (!params || !prNumber) return;
+    if (!window.confirm(`Merge PR #${prNumber} into ${prDetail?.base || 'base'}?`)) return;
     setBusy('merge');
     try {
       const res = await fetch('/api/github/merge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner: repo?.owner, repo: repo?.name, prNumber })
+        body: JSON.stringify({ owner: repo?.owner, repo: repo?.name, prNumber, method: 'merge' })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Merge failed');
@@ -479,7 +480,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
         pullRequest: { ...(g?.pullRequest || {}), state: 'merged' } as any,
         status: 'merged'
       });
-      showToast({ type: 'success', title: 'Merged', message: `PR #${prNumber} merged.` });
+      showToast({ type: 'success', title: 'Merged', message: `PR #${prNumber} merged into ${prDetail?.base || 'base'}.` });
       loadPr();
     } catch (e) {
       showToast({ type: 'error', title: 'Merge failed', message: String(e) });
@@ -1002,11 +1003,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           </button>
                         </>
                       )}
-                      {canMerge && prDetail.reviewState === 'approved' && (
+                      {canMerge && (
                         <button
                           onClick={handleMerge}
-                          disabled={busy === 'merge'}
+                          disabled={busy === 'merge' || prDetail.state === 'merged'}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6] text-white text-sm font-medium hover:bg-[#7c3aed] rounded disabled:opacity-50"
+                          title={prDetail.reviewState === 'approved' ? 'Merge this PR' : `Review not yet approved (${prDetail.reviewState}) — merge anyway?`}
                         >
                           <GitPullRequest className="w-4 h-4" />
                           {busy === 'merge' ? 'Merging...' : 'Merge PR'}
