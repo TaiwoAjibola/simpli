@@ -18,7 +18,7 @@ const roles = [
   {
     id: 'role-admin',
     name: 'Admin',
-    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules', 'manage_documents', 'develop_work', 'review_code', 'run_qa', 'manage_repositories', 'manage_sprints', 'manage_templates', 'manage_automations', 'manage_workflow', 'view_portfolio']
+    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules', 'manage_documents', 'develop_work', 'review_code', 'merge_code', 'run_qa', 'manage_repositories', 'manage_sprints', 'manage_templates', 'manage_automations', 'manage_workflow', 'view_portfolio']
   },
   {
     id: 'role-ceo',

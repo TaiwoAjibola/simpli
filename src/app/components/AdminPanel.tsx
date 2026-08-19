@@ -384,6 +384,7 @@ function RolesTab() {
     'manage_documents',
     'develop_work',
     'review_code',
+    'merge_code',
     'run_qa',
     'manage_repositories',
     'manage_sprints',

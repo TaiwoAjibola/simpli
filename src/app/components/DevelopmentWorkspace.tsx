@@ -147,7 +147,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   const branch = viewBranch || workBranch || (repo ? defaultBranch : '');
 
   const canReview = hasPermission('review_code') || hasPermission('manage_workflow') || hasPermission('manage_repositories');
-  const canMerge = hasPermission('develop_work') || hasPermission('manage_repositories') || hasPermission('manage_workflow');
+  const canMerge = hasPermission('merge_code') || hasPermission('develop_work') || hasPermission('manage_repositories') || hasPermission('manage_workflow');
   const canDev = hasPermission('develop_work') || hasPermission('manage_repositories') || hasPermission('manage_workflow');
 
   const params = repo ? `owner=${repo.owner}&repo=${repo.name}` : '';

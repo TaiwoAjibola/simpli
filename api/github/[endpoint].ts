@@ -245,6 +245,31 @@ const handlers: Record<string, GithubRouteHandler> = {
 
       const { action, prNumber, title, head, base = 'main', body: prBody, reviewEvent, reviewComment, comments = [], commitId } = body;
 
+      if (action === 'list') {
+        const state = body.state || 'open';
+        const per_page = body.per_page || 100;
+        const headFilter = body.head ? `&head=${encodeURIComponent(body.head)}` : '';
+        const prs = await githubApi(`/repos/${owner}/${repo}/pulls?state=${state}&per_page=${per_page}${headFilter}`);
+        return {
+          status: 200,
+          body: {
+            pullRequests: prs.map((p: any) => ({
+              prNumber: p.number,
+              url: p.html_url,
+              state: p.merged ? 'merged' : p.state,
+              title: p.title,
+              head: p.head?.ref,
+              base: p.base?.ref,
+              headSha: p.head?.sha,
+              user: p.user?.login || null,
+              draft: !!p.draft,
+              createdAt: p.created_at,
+              updatedAt: p.updated_at
+            }))
+          }
+        };
+      }
+
       if (action === 'review') {
         if (!prNumber || !reviewEvent) return { status: 400, body: { error: 'review requires prNumber and reviewEvent' } };
         const reviewBody: any = {
