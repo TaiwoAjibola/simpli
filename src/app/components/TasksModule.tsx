@@ -1117,10 +1117,11 @@ function TaskCard({
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
 
-  const statusConfig = {
+  const statusConfig: Record<TaskStatus, { icon: typeof XCircle; color: string; bg: string }> = {
     not_started: { icon: XCircle, color: 'text-[#94A3B8]', bg: 'bg-[rgba(107,107,128,0.05)]' },
     in_progress: { icon: Clock, color: 'text-[#22C55E]', bg: 'bg-[rgba(34,197,94,0.05)]' },
     blocked: { icon: AlertCircle, color: 'text-[#ff3b5c]', bg: 'bg-[rgba(255,59,92,0.05)]' },
+    pending_qa: { icon: Clock, color: 'text-[#8b5cf6]', bg: 'bg-[rgba(139,92,246,0.05)]' },
     completed: { icon: Clock, color: 'text-[#8b5cf6]', bg: 'bg-[rgba(139,92,246,0.05)]' },
     approved: { icon: CheckCircle, color: 'text-[#10b981]', bg: 'bg-[rgba(16,185,129,0.05)]' }
   };
@@ -1132,7 +1133,7 @@ function TaskCard({
     urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]'
   };
 
-  const config = statusConfig[task.status];
+  const config = statusConfig[task.status] ?? statusConfig.not_started;
   const Icon = config.icon;
 
   const availableStatuses = availableTaskStatuses(task);

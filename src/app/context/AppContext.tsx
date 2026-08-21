@@ -636,6 +636,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     if (matchingRules.length === 0) {
       console.log(`[Email] No matching notification rules for event: "${type}"`);
+      // Fallback: when no rules exist (common on fresh DB), email direct recipients so the "Send email" button always works
+      if (recipientIds && recipientIds.length > 0) {
+        const fallbackTo = recipientIds
+          .map(id => employees.find(e => e.id === id)?.email)
+          .filter(Boolean) as string[];
+        const uniqueFallback = [...new Set(fallbackTo)];
+        if (uniqueFallback.length > 0) {
+          await sendEmail({ to: uniqueFallback }, title, message.replace(/\n/g, '<br>'));
+          console.log(`[Email] Fallback direct send to:`, uniqueFallback, `| Subject:`, title);
+        } else {
+          console.log(`[Email] No fallback recipients resolved for "${type}"`);
+        }
+      }
     }
 
     for (const rule of matchingRules) {
@@ -646,9 +659,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? resolveRelatedEmails(relatedTo, primaryRecipients, ccRecipients)
         : { toEmails: [] as string[], ccEmails: [] as string[] };
 
-      const allRecipients = [...toEmails, ...ccEmails];
-      const uniqueRecipients = [...new Set(allRecipients)];
-
       if (recipientIds && recipientIds.length > 0) {
         recipientIds.forEach(id => {
           const u = employees.find(e => e.id === id);
@@ -656,7 +666,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      if (uniqueRecipients.length > 0 || toEmails.length > 0) {
+      const allRecipients = [...toEmails, ...ccEmails];
+      const uniqueRecipients = [...new Set(allRecipients)];
+
+      if (uniqueRecipients.length > 0) {
         let variables: Record<string, string> = {};
 
         if (relatedTo?.type === 'task') {
@@ -747,9 +760,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const statusToEvent: Record<string, string> = {
       not_started: 'task_assigned',
       in_progress: 'task_started',
+      blocked: 'task_blocked',
+      pending_qa: 'task_ready_for_testing',
       completed: 'task_ready_for_testing',
-      approved: 'task_approved',
-      blocked: 'task_blocked'
+      approved: 'task_approved'
     };
 
     const event = statusToEvent[task.status] || 'task_assigned';

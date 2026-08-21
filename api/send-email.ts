@@ -40,6 +40,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ success: true, message: 'Email sent' });
   } catch (error: any) {
     console.error('Email send error:', error);
-    res.status(500).json({ error: error.message });
+    const msg = error?.message || 'Unknown email error';
+    const hint = msg.includes('Username and Password not accepted') || msg.includes('Invalid login')
+      ? ' Gmail rejected the credentials. Regenerate a Gmail App Password (Google Account → Security → 2-Step Verification → App passwords → Mail) and update GMAIL_APP_PASSWORD on Vercel, then redeploy.'
+      : '';
+    res.status(500).json({ error: msg + hint });
   }
 }
