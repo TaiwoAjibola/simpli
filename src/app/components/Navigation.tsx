@@ -21,7 +21,8 @@ import {
   Sparkles,
   FolderKanban,
   CircleDot,
-  ListTodo
+  ListTodo,
+  ScrollText
 } from 'lucide-react';
 import { NotificationInbox } from './NotificationInbox';
 
@@ -62,7 +63,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     {
       label: 'Settings',
       items: [
-        { id: 'admin', label: 'Admin Panel', icon: Clock, show: hasPermission('manage_users') }
+        { id: 'admin', label: 'Admin Panel', icon: Clock, show: hasPermission('manage_users') },
+        { id: 'logs', label: 'System Logs', icon: ScrollText, show: hasPermission('manage_users') }
       ]
     }
   ];

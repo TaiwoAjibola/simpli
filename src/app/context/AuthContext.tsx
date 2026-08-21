@@ -114,6 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return currentRole.permissions.includes(permission as any);
   };
 
+  // Persist for logger (outside React) to pick up user identity without importing Auth
+  useEffect(() => {
+    try {
+      if (currentUser) localStorage.setItem('simpli_current_user', JSON.stringify({ id: currentUser.id, name: currentUser.name, email: currentUser.email }));
+      else localStorage.removeItem('simpli_current_user');
+    } catch {}
+  }, [currentUser]);
+
   return (
     <AuthContext.Provider
       value={{

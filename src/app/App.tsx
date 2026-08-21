@@ -23,6 +23,7 @@ const AutomationsPage = lazy(() => import('./components/AutomationsPage').then(m
 const PortfolioPage = lazy(() => import('./components/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
 const RepositoriesPage = lazy(() => import('./components/RepositoriesPage').then(m => ({ default: m.RepositoriesPage })));
 const IntegrationsPage = lazy(() => import('./components/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
+const LogsPage = lazy(() => import('./components/LogsPage').then(m => ({ default: m.LogsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -69,6 +70,7 @@ function AppContent() {
           {currentPage === 'portfolio' && <PortfolioPage onNavigate={handleNavigate} />}
           {currentPage === 'repositories' && <RepositoriesPage />}
           {currentPage === 'integrations' && <IntegrationsPage />}
+          {currentPage === 'logs' && <LogsPage />}
           {currentPage === 'admin' && <AdminPanel />}
           </div>
         </Suspense>
@@ -85,6 +87,15 @@ export default function App() {
     if (params.get('seed') === 'true') {
       setShowSeed(true);
     }
+  }, []);
+
+  // Global log handlers (UI errors, unhandled rejections)
+  useEffect(() => {
+    import('../utils/logger').then(({ attachGlobalLogHandlers }) => {
+      const detach = attachGlobalLogHandlers();
+      // keep for session
+      (window as any).__simpliDetachLogs = detach;
+    });
   }, []);
 
   if (showSeed) {

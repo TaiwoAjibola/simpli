@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { sendEmail } from '../../utils/sendEmail';
+import { logger } from '../../utils/logger';
 import { useAuth } from './AuthContext';
 import { canTransitionWork } from '../../utils/workflow';
 import { getQaTransition, nextQaCycleNumber } from '../../utils/qa';
@@ -647,6 +648,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           console.log(`[Email] Fallback direct send to:`, uniqueFallback, `| Subject:`, title);
         } else {
           console.log(`[Email] No fallback recipients resolved for "${type}"`);
+          logger.warn('email', `No fallback recipients for "${type}"`, { type, title, recipientIds });
         }
       }
     }
@@ -749,6 +751,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.log(`[Email] Sent to:`, toEmails, ccEmails.length > 0 ? ccEmails : undefined, `| Subject:`, emailSubject);
       } else {
         console.log(`[Email] No recipients resolved for rule:`, rule.event);
+        logger.warn('email', `No recipients resolved for rule "${rule.event}"`, { event: rule.event, relatedTo });
       }
     }
   }, [notificationRules, employees, tasks, goals, apps, subtasks, defects, actionPoints, resolveRelatedEmails]);
