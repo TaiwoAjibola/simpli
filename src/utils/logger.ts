@@ -63,6 +63,7 @@ function safeStringify(v: any, max = 4000): string | undefined {
 
 let lastLogKey = '';
 let lastLogTime = 0;
+let isLogging = false;
 
 export async function log(
   level: LogLevel,
@@ -70,6 +71,7 @@ export async function log(
   message: string,
   opts?: { details?: any; stack?: string; route?: string }
 ): Promise<void> {
+  if (isLogging) return; // prevent recursion when logger itself triggers console.error
   const key = `${level}:${source}:${message}`;
   const now = Date.now();
   // dedupe spam: same message within 3s
@@ -77,6 +79,7 @@ export async function log(
   lastLogKey = key;
   lastLogTime = now;
 
+  isLogging = true;
   const consoleFn =
     level === 'error' || level === 'critical'
       ? console.error
@@ -85,28 +88,35 @@ export async function log(
         : level === 'debug'
           ? console.debug
           : console.log;
-  consoleFn(`[${level.toUpperCase()}][${source}] ${message}`, opts?.details ?? '');
+  try {
+    consoleFn(`[${level.toUpperCase()}][${source}] ${message}`, opts?.details ?? '');
+  } catch {}
+  isLogging = false;
 
   const { userId, userName, userEmail } = getUserMeta();
-  const payload: Omit<LogEntry, 'id'> = {
+  const detailsStr = safeStringify(opts?.details);
+  const stackStr = opts?.stack?.slice(0, 4000);
+  const routeStr = opts?.route ?? getRoute();
+  // Firestore rejects undefined — build payload without undefined fields
+  const payload: Record<string, any> = {
     level,
     source,
     message: message.slice(0, 800),
-    details: safeStringify(opts?.details),
-    stack: opts?.stack?.slice(0, 4000),
-    route: opts?.route ?? getRoute(),
-    userId,
-    userName,
-    userEmail,
+    route: routeStr,
     createdAt: serverTimestamp(),
     resolved: false
   };
+  if (detailsStr !== undefined) payload.details = detailsStr;
+  if (stackStr !== undefined) payload.stack = stackStr;
+  if (userId) payload.userId = userId;
+  if (userName) payload.userName = userName;
+  if (userEmail) payload.userEmail = userEmail;
 
   try {
-    await addDoc(collection(db, 'systemLogs'), payload as any);
+    await addDoc(collection(db, 'systemLogs'), payload);
   } catch (e: any) {
-    // never throw — logging must not break the app
-    console.warn('[logger] Failed to persist log', e?.message);
+    // never throw — logging must not break the app; use warn without re-entering logger
+    try { console.warn('[logger] Failed to persist log', e?.message); } catch {}
   }
 }
 
@@ -134,14 +144,27 @@ export function attachGlobalLogHandlers(): () => void {
   window.addEventListener('error', onError);
   window.addEventListener('unhandledrejection', onRejection);
 
-  // wrap console.error to also log
+  // wrap console.error to also log — guarded against recursion and internal logger messages
   const origError = console.error;
+  let wrapping = false;
   console.error = (...args: any[]) => {
     origError(...args);
+    if (wrapping || isLogging) return;
+    wrapping = true;
     try {
       const msg = args.map(a => (typeof a === 'string' ? a : a?.message || JSON.stringify(a))).join(' ').slice(0, 500);
-      if (!msg.includes('[logger]')) log('error', 'ui', msg, { details: args[1], stack: args[0]?.stack });
+      if (msg.includes('[logger]') || msg.includes('[Email] API error')) {
+        wrapping = false;
+        return;
+      }
+      // only log unexpected UI errors, not every console.error
+      if (msg.startsWith('[ERROR]') || msg.startsWith('[WARN]')) {
+        wrapping = false;
+        return;
+      }
+      log('error', 'ui', msg, { details: args[1], stack: args[0]?.stack });
     } catch {}
+    wrapping = false;
   };
 
   return () => {
