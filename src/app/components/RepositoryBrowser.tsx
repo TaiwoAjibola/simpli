@@ -324,9 +324,18 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
 
   const handleReview = async (event: string) => {
     if (!prNumber || !prDetail) return;
+    const comments = pendingComments.filter(c => c.body.trim());
+    const summary = reviewSummary.trim();
+    if (event === 'REQUEST_CHANGES' && !summary) {
+      showToast({ type: 'error', title: 'Comment required', message: 'Requesting changes requires a comment explaining what needs to be changed.' });
+      return;
+    }
+    if (event === 'COMMENT' && !summary && comments.length === 0) {
+      showToast({ type: 'error', title: 'Comment required', message: 'Add a comment body or an inline line comment.' });
+      return;
+    }
     setBusy('review');
     try {
-      const comments = pendingComments.filter(c => c.body.trim());
       const res = await fetch('/api/github/pull-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -336,13 +345,19 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
           repo: repo.name,
           prNumber,
           reviewEvent: event,
-          reviewComment: reviewSummary.trim() || undefined,
+          reviewComment: summary || (comments.length ? 'Inline comments' : undefined),
           commitId: prDetail.headSha,
           comments
         })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Review failed');
+      if (!res.ok) {
+        let msg = data.error || 'Review failed';
+        if (msg.includes('Can not approve your own pull request')) msg = "You can't approve your own PR — GitHub blocks self-approvals. Ask another reviewer to approve.";
+        if (msg.includes('You need to leave a comment')) msg = 'Add a comment explaining the requested changes, then retry.';
+        if (/422/.test(msg) && !msg.trim()) msg = 'GitHub rejected the review — add a comment body or inline comment.';
+        throw new Error(msg);
+      }
       setPendingComments([]);
       setReviewSummary('');
       showToast({
@@ -352,8 +367,8 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
       });
       loadPr();
       loadPrs();
-    } catch (e) {
-      showToast({ type: 'error', title: 'Review failed', message: String(e) });
+    } catch (e: any) {
+      showToast({ type: 'error', title: 'Review failed', message: String(e.message || e) });
     } finally {
       setBusy(null);
     }

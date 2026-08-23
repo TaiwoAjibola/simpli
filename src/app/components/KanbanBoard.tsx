@@ -421,17 +421,27 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
     })
   });
 
-  const assignee = getEmployeeById(task.assignedTo);
+  const assignees: any[] = (Array.isArray(task.assignedTo) ? task.assignedTo : task.assignedTo ? [task.assignedTo] : [])
+    .map((id: string) => getEmployeeById(id))
+    .filter(Boolean);
   const goal = getGoalById(task.goalId);
   const app = goal ? getAppById(goal.appId) : null;
   const appColor = app?.color || '#22C55E';
   const cardStyle = app?.cardStyle || 'default';
+  const { sendTaskNotification } = useApp();
+  const { showToast } = useToast();
 
   const priorityColors: Record<string, string> = {
     low: 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]',
     medium: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]',
     high: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]',
     urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]'
+  };
+
+  const handleMailClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await sendTaskNotification(task.id);
+    showToast({ type: 'success', title: 'Email Sent', message: `Notification sent for "${task.name}"` });
   };
 
   return (
@@ -459,7 +469,7 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
               : task.github.pullRequest.reviewState === 'approved' && task.github.pullRequest.checkStatus === 'success'
                 ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
                 : task.github.pullRequest.reviewState === 'changes_requested' ||
-                  task.github.pullRequest.checkStatus === 'failure'
+                   task.github.pullRequest.checkStatus === 'failure'
                   ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                   : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
           }`}>
@@ -472,12 +482,25 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
         <span className={`text-xs font-medium px-2 py-1 ${priorityColors[task.priority]}`}>
           {task.priority.toUpperCase()}
         </span>
-        {assignee && (
-          <div className="flex items-center gap-1.5">
-            <User className="w-3 h-3 text-[#94A3B8]" />
-            <span className="text-xs text-[#94A3B8]">{assignee.name.split(' ')[0]}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {assignees.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <User className="w-3 h-3 text-[#94A3B8]" />
+              <span className="text-xs text-[#94A3B8]">{assignees[0].name.split(' ')[0]}{assignees.length > 1 ? ` +${assignees.length - 1}` : ''}</span>
+            </div>
+          )}
+          <button
+            onClick={handleMailClick}
+            className={`p-1 rounded transition ${
+              (task as any).lastEmailSentAt
+                ? 'text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)]'
+                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+            }`}
+            title={(task as any).lastEmailSentAt ? 'Resend email' : 'Send email'}
+          >
+            <Mail className="w-3 h-3" />
+          </button>
+        </div>
       </div>
       {goal && (
         <div className="mt-2 pt-2 border-t border-[rgba(34,197,94,0.1)]">

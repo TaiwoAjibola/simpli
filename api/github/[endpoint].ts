@@ -272,13 +272,22 @@ const handlers: Record<string, GithubRouteHandler> = {
 
       if (action === 'review') {
         if (!prNumber || !reviewEvent) return { status: 400, body: { error: 'review requires prNumber and reviewEvent' } };
+        // Normalize — GitHub 422s if REQUEST_CHANGES has no body or COMMENT has no body+no inline comments
+        let bodyText: string | undefined = reviewComment?.trim() || undefined;
+        if (!bodyText && (reviewEvent === 'REQUEST_CHANGES' || reviewEvent === 'COMMENT') && comments.length > 0) {
+          bodyText = 'Inline comments';
+        }
+        if (reviewEvent === 'REQUEST_CHANGES' && !bodyText) {
+          return { status: 400, body: { error: 'Requesting changes requires a comment explaining what needs to be changed.' } };
+        }
+        if (reviewEvent === 'COMMENT' && !bodyText && comments.length === 0) {
+          return { status: 400, body: { error: 'Add a comment body or an inline line comment.' } };
+        }
         const reviewBody: any = {
           event: reviewEvent,
-          ...(reviewComment ? { body: reviewComment } : {})
+          ...(bodyText ? { body: bodyText } : {})
         };
         if (commitId && comments.length > 0) {
-          // Attach inline line comments to the review. GitHub requires these to
-          // reference the PR head commit so they render on the code view.
           reviewBody.commit_id = commitId;
           reviewBody.comments = comments.map((c: any) => ({
             path: c.path,
@@ -287,10 +296,18 @@ const handlers: Record<string, GithubRouteHandler> = {
             body: c.body
           }));
         }
-        await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}/reviews`, {
-          method: 'POST',
-          body: reviewBody
-        });
+        try {
+          await githubApi(`/repos/${owner}/${repo}/pulls/${prNumber}/reviews`, {
+            method: 'POST',
+            body: reviewBody
+          });
+        } catch (e: any) {
+          const msg = e?.message || '';
+          if (msg.includes('Can not approve your own pull request')) {
+            return { status: 422, body: { error: "You can't approve your own PR — GitHub blocks self-approvals. Ask another reviewer." } };
+          }
+          throw e;
+        }
         return { status: 200, body: { ok: true } };
       }
 
