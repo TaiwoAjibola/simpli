@@ -313,11 +313,35 @@ const handlers: Record<string, GithubRouteHandler> = {
 
       if (action === 'open') {
         if (!title || !head) return { status: 400, body: { error: 'open requires title and head' } };
-        const pr = await githubApi(`/repos/${owner}/${repo}/pulls`, {
-          method: 'POST',
-          body: { title, head, base, body: prBody || '' }
-        });
-        return { status: 201, body: { prNumber: pr.number, url: pr.html_url, state: pr.state, title: pr.title } };
+        try {
+          const pr = await githubApi(`/repos/${owner}/${repo}/pulls`, {
+            method: 'POST',
+            body: { title, head, base, body: prBody || '' }
+          });
+          return { status: 201, body: { prNumber: pr.number, url: pr.html_url, state: pr.state, title: pr.title } };
+        } catch (e: any) {
+          const msg: string = e?.message || '';
+          if (msg.includes('No commits between')) {
+            return {
+              status: 422,
+              body: {
+                error: `No changes to merge — '${head}' is already up to date with '${base}'. Push new commits to '${head}' first or check the Changes tab (ahead_by = 0).`
+              }
+            };
+          }
+          if (msg.toLowerCase().includes('pull request already exists')) {
+            // Extract existing PR number if GitHub included it
+            const m = msg.match(/#(\d+)/);
+            const hint = m ? ` (existing PR #${m[1]})` : '';
+            return {
+              status: 422,
+              body: {
+                error: `A pull request already exists for '${head}' → '${base}'${hint}. Open the PR list and check Code Review.`
+              }
+            };
+          }
+          throw e;
+        }
       }
 
       if (action === 'get' || (!prNumber && body.state)) {

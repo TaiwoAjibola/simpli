@@ -301,22 +301,35 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
 
   const openPr = async () => {
     if (!viewBranch) return;
-    const title = window.prompt(`Open a pull request for ${viewBranch}?`, `Merge ${viewBranch} into ${repo.defaultBranch || 'main'}`);
+    const base = repo.defaultBranch || 'main';
+    if (viewBranch === base) {
+      showToast({ type: 'error', title: 'Same branch', message: `Can't open a PR from '${viewBranch}' into itself.` });
+      return;
+    }
+    if (diff.length === 0 && diffMeta && diffMeta.ahead_by === 0) {
+      showToast({
+        type: 'error',
+        title: 'Nothing to merge',
+        message: `No changes between '${base}' and '${viewBranch}' — '${viewBranch}' is already up to date with '${base}'. Push new commits to '${viewBranch}' first (check the Changes tab).`
+      });
+      return;
+    }
+    const title = window.prompt(`Open a pull request for ${viewBranch}?`, `Merge ${viewBranch} into ${base}`);
     if (!title) return;
     setBusy('openpr');
     try {
       const res = await fetch('/api/github/pull-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'open', owner: repo.owner, repo: repo.name, title, head: viewBranch, base: repo.defaultBranch || 'main' })
+        body: JSON.stringify({ action: 'open', owner: repo.owner, repo: repo.name, title, head: viewBranch, base })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to open PR');
       showToast({ type: 'success', title: 'PR opened', message: `PR #${data.prNumber} opened (${data.url})` });
       setPrNumber(data.prNumber);
       loadPrs();
-    } catch (e) {
-      showToast({ type: 'error', title: 'Open PR failed', message: String(e) });
+    } catch (e: any) {
+      showToast({ type: 'error', title: 'Open PR failed', message: String(e.message || e) });
     } finally {
       setBusy(null);
     }
