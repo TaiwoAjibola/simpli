@@ -718,7 +718,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
       {tab === 'code' && (
         <div className="grid grid-cols-[300px_1fr] border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden bg-[#0F172A] h-[540px]">
           {/* Sidebar: file tree */}
-          <div className="border-r border-[rgba(34,197,94,0.1)] flex flex-col">
+          <div className="border-r border-[rgba(34,197,94,0.1)] flex flex-col min-h-0 overflow-hidden">
             <div className="px-2.5 pt-2 pb-1.5 space-y-1.5 border-b border-[rgba(34,197,94,0.1)]">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Explorer</span>
@@ -739,7 +739,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto py-1.5">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-1.5 overscroll-contain [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#334155] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#475569]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#334155 transparent' }}>
               {treeLoading && !tree ? (
                 <div className="flex items-center gap-2 p-3 text-xs text-[#94A3B8]">
                   <Loader2 className="w-4 h-4 animate-spin text-[#22C55E]" />
