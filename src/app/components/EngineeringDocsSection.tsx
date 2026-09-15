@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Upload, Download, Trash2, FileText, Loader, Plus, X } from 'lucide-react';
+import { Upload, Download, Trash2, FileText, Loader, Plus, X, Folder } from 'lucide-react';
 import { storage } from '../../firebase/config';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 type Props = {
   appId: string;
@@ -20,9 +21,29 @@ export function EngineeringDocsSection({ appId }: Props) {
   const [docVersion, setDocVersion] = useState('');
   const [docFile, setDocFile] = useState<File | null>(null);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
 
   const docs = getDocumentsForApp(appId);
   const canUpload = hasPermission('manage_documents');
+
+  const handleDriveImport = async (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string }[]) => {
+    if (!currentUser) return;
+    for (const df of driveFiles) {
+      await addAppDocument({
+        appId,
+        name: df.name.replace(/\.[^/.]+$/, ''),
+        version: '1.0',
+        fileName: df.name,
+        fileUrl: df.webViewLink || `https://drive.google.com/file/d/${df.id}/view`,
+        fileSize: 0,
+        fileType: df.mimeType,
+        uploadedBy: currentUser.id,
+        uploadedByName: currentUser.name || 'Unknown'
+      });
+    }
+    showToast({ type: 'success', title: 'Imported', message: `${driveFiles.length} file(s) imported from Google Drive.` });
+    setShowDrivePicker(false);
+  };
 
   const handleUpload = async () => {
     if (!currentUser || !docFile || !docName.trim()) return;
@@ -83,14 +104,24 @@ export function EngineeringDocsSection({ appId }: Props) {
           <p className="text-[12px] text-[#787774] mt-0.5">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
         </div>
         {canUpload && (
-          <button
-            onClick={() => { setShowForm(!showForm); }}
-            className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
-            style={showForm ? { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' } : { background: '#2383E2', color: '#FFFFFF', border: '1px solid #2383E2' }}
-          >
-            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {showForm ? 'Cancel' : 'Upload document'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setShowDrivePicker(!showDrivePicker); setShowForm(false); }}
+              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
+              style={showDrivePicker ? { background: '#37352F', color: '#FFFFFF', border: '1px solid #37352F' } : { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' }}
+            >
+              <Folder className="w-4 h-4" />
+              {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+            </button>
+            <button
+              onClick={() => { setShowForm(!showForm); setShowDrivePicker(false); }}
+              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
+              style={showForm ? { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' } : { background: '#2383E2', color: '#FFFFFF', border: '1px solid #2383E2' }}
+            >
+              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {showForm ? 'Cancel' : 'Upload document'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -159,6 +190,10 @@ export function EngineeringDocsSection({ appId }: Props) {
             </button>
           </div>
         </div>
+      )}
+
+      {showDrivePicker && canUpload && (
+        <GoogleDrivePicker onSelect={handleDriveImport} onClose={() => setShowDrivePicker(false)} />
       )}
 
       {docs.length === 0 ? (

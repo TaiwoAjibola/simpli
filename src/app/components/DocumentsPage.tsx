@@ -15,7 +15,9 @@ import {
   Calendar,
   MoreHorizontal,
   Download,
+  Folder,
 } from 'lucide-react';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 type FileType = 'all' | 'document' | 'image' | 'code' | 'spreadsheet' | 'archive' | 'other';
 type ViewMode = 'grid' | 'list';
@@ -25,15 +27,39 @@ export function DocumentsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<FileType>('all');
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
+  const [driveFiles, setDriveFiles] = useState<{ id: string; name: string; mimeType: string; webViewLink?: string; size?: string; modifiedTime?: string }[]>([]);
 
-  const allFiles = appDocuments.map(doc => ({
+  const driveMapped = driveFiles.map(df => ({
+    id: df.id,
+    name: df.name,
+    type: df.mimeType?.includes('image') ? 'image' as const : df.mimeType?.includes('pdf') || df.mimeType?.includes('word') ? 'document' as const : df.mimeType?.includes('sheet') || df.mimeType?.includes('excel') ? 'spreadsheet' as const : 'document' as const,
+    size: df.size ? `${(parseInt(df.size, 10) / 1024).toFixed(1)} KB` : '-',
+    date: df.modifiedTime ? new Date(df.modifiedTime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    appId: apps[0]?.id || 'drive',
+    webViewLink: df.webViewLink || `https://drive.google.com/file/d/${df.id}/view`,
+  }));
+
+  const appMapped = appDocuments.map(doc => ({
     id: doc.id,
     name: doc.name || doc.fileName,
     type: doc.fileType?.includes('image') ? 'image' as const : doc.fileType?.includes('pdf') || doc.fileType?.includes('word') ? 'document' as const : doc.fileType?.includes('sheet') || doc.fileType?.includes('excel') ? 'spreadsheet' as const : 'document' as const,
     size: doc.fileSize ? `${(doc.fileSize / 1024).toFixed(1)} KB` : '-',
     date: doc.createdAt ? new Date(doc.createdAt).toISOString().split('T')[0] : '-',
     appId: doc.appId,
+    webViewLink: (doc as any).fileUrl,
   }));
+
+  const allFiles = [...appMapped, ...driveMapped];
+
+  const handleDriveSelect = (files: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string; modifiedTime?: string }[]) => {
+    setDriveFiles(prev => {
+      const existing = new Set(prev.map(f => f.id));
+      const fresh = files.filter(f => !existing.has(f.id));
+      return [...prev, ...fresh];
+    });
+    setShowDrivePicker(false);
+  };
 
   const filteredFiles = allFiles.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -60,11 +86,23 @@ export function DocumentsPage() {
           <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Documents & Files</h1>
           <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{allFiles.length} files across {apps.length} projects</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1a6fc7] rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
-          <Upload className="w-4 h-4" />
-          Upload
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowDrivePicker(!showDrivePicker)} className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E9E9E7] text-[#37352F] font-medium text-sm hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <Folder className="w-4 h-4 text-[#787774]" />
+            {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1a6fc7] rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <Upload className="w-4 h-4" />
+            Upload
+          </button>
+        </div>
       </div>
+
+      {showDrivePicker && (
+        <div className="mb-6">
+          <GoogleDrivePicker onSelect={handleDriveSelect} onClose={() => setShowDrivePicker(false)} />
+        </div>
+      )}
 
       <div className="flex items-center gap-3 mb-6">
         <div className="flex-1 relative">
@@ -117,7 +155,7 @@ export function DocumentsPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFiles.map(file => (
-            <div key={file.id} className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer group">
+            <div key={file.id} onClick={() => (file as any).webViewLink && window.open((file as any).webViewLink, '_blank')} className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer group">
               <div className="flex items-start justify-between mb-3">
                 <div className="p-2.5 bg-[#F7F7F5] rounded-md border border-[#E9E9E7]">
                   {getFileIcon(file.type)}
@@ -151,7 +189,7 @@ export function DocumentsPage() {
             </thead>
             <tbody className="divide-y divide-[#E9E9E7]">
               {filteredFiles.map(file => (
-                <tr key={file.id} className="hover:bg-[#F7F7F5] transition-colors duration-150">
+                <tr key={file.id} onClick={() => (file as any).webViewLink && window.open((file as any).webViewLink, '_blank')} className="hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-[#F7F7F5] rounded-md border border-[#E9E9E7]">
