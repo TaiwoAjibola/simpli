@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
 import {
   ArrowLeft,
   Plus,
@@ -76,6 +77,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [planningNotesText, setPlanningNotesText] = useState('');
   const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Team' | 'Client' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity'>('Overview');
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [activityFilter, setActivityFilter] = useState<'all' | 'task' | 'app' | 'goal'>('all');
   const [overviewEditing, setOverviewEditing] = useState(false);
   const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '' });
   const [overviewSaving, setOverviewSaving] = useState(false);
@@ -83,10 +85,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [extraTeamIds, setExtraTeamIds] = useState<string[]>([]);
   const [clientLinkId, setClientLinkId] = useState('');
   const [clientLinkSaving, setClientLinkSaving] = useState(false);
-
-  const handleSaveProfile = async (field: string, data: any) => {
-    await updateApp(appId, { [field]: data });
-  };
 
   const app = apps.find(a => a.id === appId);
   const appPhases = phases.filter(p => p.appId === appId);
@@ -1632,33 +1630,94 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           </div>
         )}
 
-        {activeProfileTab === 'Activity' && (
+        {activeProfileTab === 'Activity' && (() => {
+          const taskIdsForApp = new Set(appTasks.map(t => t.id));
+          const projectActivities = activities.filter(a => {
+            const rt = a.relatedTo;
+            if (!rt) return false;
+            if (rt.type === 'app' && rt.id === appId) return true;
+            if (rt.type === 'goal' && appGoalIds.has(rt.id)) return true;
+            if (rt.type === 'task' && taskIdsForApp.has(rt.id)) return true;
+            if (rt.type === 'goal') {
+              const g = goals.find(g => g.id === rt.id);
+              if (g && g.appId === appId) return true;
+            }
+            return false;
+          }).slice(0, 50);
+          const filteredActivities = activityFilter === 'all' ? projectActivities : projectActivities.filter(a => a.relatedTo?.type === activityFilter);
+          const getInitial = (name: string) => (name || '?').trim().charAt(0).toUpperCase();
+          const formatActivityTime = (d: any) => {
+            const dt = d instanceof Date ? d : d?.toDate ? d.toDate() : new Date(d);
+            if (!dt || isNaN(dt.getTime())) return '';
+            try { return formatDistanceToNow(dt, { addSuffix: true }); } catch { return formatDate(dt); }
+          };
+          const typeLabel: Record<string, string> = {
+            task_created: 'task',
+            task_completed: 'task',
+            task_approved: 'task',
+            app_created: 'app',
+            goal_created: 'goal'
+          };
+          return (
           <div className="space-y-4">
-            <h2 className="text-[18px] font-semibold text-[#37352F]">Activity History</h2>
-            <div className="space-y-3">
-              {activities.length === 0 ? (
-                <div className="text-center py-12 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
-                  <Activity className="w-12 h-12 text-[#9B9A97] mx-auto mb-3" />
-                  <p className="text-[#787774] text-sm">No activity recorded yet.</p>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-[18px] font-semibold text-[#37352F] tracking-tight">Activity</h2>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium">{projectActivities.length}</span>
+                <div className="ml-auto flex items-center p-1 bg-[#E9E9E7] rounded-[8px] gap-1">
+                  {([
+                    { key: 'all', label: 'All' },
+                    { key: 'task', label: 'Tasks' },
+                    { key: 'app', label: 'App' },
+                    { key: 'goal', label: 'Goals' }
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setActivityFilter(opt.key as any)}
+                      className={`px-3 py-1.5 text-[13px] font-medium rounded-[6px] transition-colors duration-150 cursor-pointer border ${activityFilter === opt.key ? 'bg-white text-[#37352F] border-[#E9E9E7]' : 'bg-transparent text-[#787774] border-transparent hover:text-[#37352F]'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {activities.map(act => (
-                    <div key={act.id} className="bg-white border border-[#E9E9E7] rounded-[8px] p-4 shadow-none">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px]">
-                          <Activity className="w-4 h-4 text-[#787774]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-[#37352F] text-[14px]">{act.description}</p>
-                          <p className="text-xs text-[#9B9A97] mt-0.5">{act.userName} · {formatDate(act.timestamp)}</p>
+              </div>
+              <p className="text-[13px] text-[#787774]">History for this project — tasks, goals, and app events. Newest first.</p>
+            </div>
+            {projectActivities.length === 0 ? (
+              <div className="text-center py-12 bg-white border border-[#E9E9E7] rounded-[8px]">
+                <Activity className="w-10 h-10 text-[#787774] mx-auto mb-3" />
+                <p className="text-[14px] font-medium text-[#37352F]">No activity yet</p>
+                <p className="text-[13px] text-[#787774] mt-1 max-w-md mx-auto">No activity yet for this project — create a task or phase to see history</p>
+              </div>
+            ) : filteredActivities.length === 0 ? (
+              <div className="text-center py-10 bg-white border border-[#E9E9E7] rounded-[8px]">
+                <Activity className="w-8 h-8 text-[#787774] mx-auto mb-2" />
+                <p className="text-[13px] text-[#787774]">No {activityFilter} activity for this project</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredActivities.map(act => {
+                  const initial = getInitial(act.userName);
+                  const relType = act.relatedTo?.type || typeLabel[act.type] || act.type;
+                  const timeStr = formatActivityTime(act.timestamp);
+                  return (
+                    <div key={act.id} className="flex items-center gap-3 p-4 bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-colors duration-150">
+                      <div className="w-8 h-8 rounded-full bg-[#E9E9E7] flex items-center justify-center text-[12px] font-semibold text-[#37352F] shrink-0">
+                        {initial}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-medium text-[#37352F] leading-relaxed truncate">{act.description}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-[12px] px-2 py-0.5 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium capitalize">{relType}</span>
+                          {act.relatedTo?.name && <span className="text-[12px] text-[#787774] truncate max-w-[180px]">{act.relatedTo.name}</span>}
+                          <span className="text-[12px] text-[#9B9A97]">{act.userName} · {timeStr}</span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  );
+                })}
+              </div>
+            )}
             <div className="mt-8 border-t border-[#E9E9E7] pt-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -1682,7 +1741,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               />
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
