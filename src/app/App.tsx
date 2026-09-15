@@ -21,6 +21,7 @@ const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m =
 const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.MyWork })));
 const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
+const LogsPage = lazy(() => import('./components/LogsPage').then(m => ({ default: m.LogsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -61,6 +62,7 @@ function AppContent() {
             {currentPage === 'reports' && <ReportsPage />}
             {currentPage === 'notifications' && <NotificationsPage />}
             {currentPage === 'admin' && <AdminPanel />}
+            {currentPage === 'logs' && <LogsPage />}
           </div>
         </Suspense>
       </main>
