@@ -48,7 +48,7 @@ type AppDetailsPageProps = {
 };
 
 export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
-  const { apps, phases, goals, tasks, defects, repositories, employees, activities, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp, reports, addReport, deleteReport, sprints, addSprint, updateSprint, deleteSprint, getSprintsForApp, getDefectsForApp, getDocumentsForApp } = useApp();
+  const { apps, phases, goals, tasks, defects, repositories, employees, clients, activities, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp, reports, addReport, deleteReport, sprints, addSprint, updateSprint, deleteSprint, getSprintsForApp, getDefectsForApp, getDocumentsForApp } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
@@ -73,6 +73,9 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [planningNotesText, setPlanningNotesText] = useState('');
   const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity'>('Overview');
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [overviewEditing, setOverviewEditing] = useState(false);
+  const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '' });
+  const [overviewSaving, setOverviewSaving] = useState(false);
 
   const handleSaveProfile = async (field: string, data: any) => {
     await updateApp(appId, { [field]: data });
@@ -91,8 +94,23 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   useEffect(() => {
     if (app) {
       setPlanningNotesText(app.planningNotes || '');
+      if (!overviewEditing) {
+        const toInputDate = (d: any) => {
+          if (!d) return '';
+          const dt = d instanceof Date ? d : new Date(d);
+          if (isNaN(dt.getTime())) return '';
+          return dt.toISOString().split('T')[0];
+        };
+        setOverviewForm({
+          clientId: app.clientId || '',
+          projectManagerId: app.projectManagerId || '',
+          techStack: app.techStack || '',
+          projectType: app.projectType || '',
+          expectedCompletionDate: toInputDate(app.expectedCompletionDate)
+        });
+      }
     }
-  }, [app]);
+  }, [app, overviewEditing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,8 +265,184 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           ))}
         </div>
 
-        {activeProfileTab === 'Overview' && (
+        {activeProfileTab === 'Overview' && (() => {
+          const client = clients.find(c => c.id === app.clientId);
+          const pm = employees.find(e => e.id === app.projectManagerId);
+          const techPills = app.techStack ? app.techStack.split(',').map(s => s.trim()).filter(Boolean) : [];
+          const expectedDateObj = (() => {
+            const v: any = app.expectedCompletionDate;
+            if (!v) return undefined;
+            if (v instanceof Date) return v;
+            if (typeof v.toDate === 'function') return v.toDate();
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? undefined : d;
+          })();
+          const expectedDateStr = expectedDateObj ? formatDate(expectedDateObj) : '—';
+          return (
           <div className="space-y-6">
+            <div className="p-6 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[15px] font-semibold text-[#37352F]">Project Details</h3>
+                <button
+                  onClick={() => {
+                    if (overviewEditing) {
+                      const toInputDate = (d: any) => {
+                        if (!d) return '';
+                        const dt = d instanceof Date ? d : typeof d.toDate === 'function' ? d.toDate() : new Date(d);
+                        if (isNaN(dt.getTime())) return '';
+                        return dt.toISOString().split('T')[0];
+                      };
+                      setOverviewForm({
+                        clientId: app.clientId || '',
+                        projectManagerId: app.projectManagerId || '',
+                        techStack: app.techStack || '',
+                        projectType: app.projectType || '',
+                        expectedCompletionDate: toInputDate(app.expectedCompletionDate)
+                      });
+                      setOverviewEditing(false);
+                    } else {
+                      setOverviewEditing(true);
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-[6px] border transition-colors duration-150 cursor-pointer ${overviewEditing ? 'bg-white text-[#37352F] border-[#E9E9E7] hover:bg-[#F7F7F5]' : 'bg-white text-[#787774] border-[#E9E9E7] hover:bg-[#F7F7F5] hover:text-[#37352F]'}`}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  {overviewEditing ? 'Cancel' : 'Edit'}
+                </button>
+              </div>
+              {overviewEditing ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Client</label>
+                      <select
+                        value={overviewForm.clientId}
+                        onChange={e => setOverviewForm({ ...overviewForm, clientId: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      >
+                        <option value="">No client</option>
+                        {clients.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}{c.company ? ` — ${c.company}` : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Project Manager</label>
+                      <select
+                        value={overviewForm.projectManagerId}
+                        onChange={e => setOverviewForm({ ...overviewForm, projectManagerId: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      >
+                        <option value="">No PM</option>
+                        {employees.map(emp => (
+                          <option key={emp.id} value={emp.id}>{emp.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Tech Stack</label>
+                      <input
+                        type="text"
+                        value={overviewForm.techStack}
+                        onChange={e => setOverviewForm({ ...overviewForm, techStack: e.target.value })}
+                        placeholder="e.g. React, Node, Postgres"
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Project Type</label>
+                      <input
+                        type="text"
+                        value={overviewForm.projectType}
+                        onChange={e => setOverviewForm({ ...overviewForm, projectType: e.target.value })}
+                        placeholder="e.g. Web App, API"
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Expected Completion Date</label>
+                      <input
+                        type="date"
+                        value={overviewForm.expectedCompletionDate}
+                        onChange={e => setOverviewForm({ ...overviewForm, expectedCompletionDate: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Status</label>
+                      <div className="px-3 py-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-[14px] text-[#37352F]">{app.status}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        setOverviewSaving(true);
+                        await updateApp(appId, {
+                          clientId: overviewForm.clientId || '',
+                          projectManagerId: overviewForm.projectManagerId || '',
+                          techStack: overviewForm.techStack.trim(),
+                          projectType: overviewForm.projectType.trim(),
+                          expectedCompletionDate: overviewForm.expectedCompletionDate ? new Date(overviewForm.expectedCompletionDate) : null as any
+                        } as any);
+                        setOverviewSaving(false);
+                        setOverviewEditing(false);
+                      }}
+                      disabled={overviewSaving}
+                      className="px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium hover:bg-[#1A6FBF] disabled:opacity-50 transition-colors duration-150 cursor-pointer rounded-[6px] border border-[#2383E2] shadow-none"
+                    >
+                      {overviewSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => setOverviewEditing(false)}
+                      className="px-4 py-2 bg-white text-[#37352F] border border-[#E9E9E7] text-[14px] font-medium hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer rounded-[6px] shadow-none"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Client</p>
+                    <p className="text-[14px] font-medium text-[#37352F]">{client ? client.name : <span className="text-[#787774]">—</span>}</p>
+                    {client?.company && <p className="text-[12px] text-[#787774]">{client.company}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Project Manager</p>
+                    <p className="text-[14px] font-medium text-[#37352F]">{pm ? pm.name : <span className="text-[#787774]">—</span>}</p>
+                    {pm?.email && <p className="text-[12px] text-[#787774]">{pm.email}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Tech Stack</p>
+                    {techPills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {techPills.map((t, i) => (
+                          <span key={i} className="text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774]">{t}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[14px] text-[#787774]">—</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Project Type</p>
+                    {app.projectType ? (
+                      <span className="inline-flex text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774]">{app.projectType}</span>
+                    ) : (
+                      <p className="text-[14px] text-[#787774]">—</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Expected Completion</p>
+                    <p className="text-[14px] font-medium text-[#37352F]">{expectedDateStr}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Status</p>
+                    <span className="inline-flex text-xs px-2.5 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium">{app.status}</span>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="p-6 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
               <h3 className="text-[15px] font-semibold text-[#37352F] mb-4">Planning Notes</h3>
               <textarea
@@ -340,7 +534,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {activeProfileTab === 'Phases' && (
           <>

@@ -181,7 +181,8 @@ function docToApp(doc: any): App {
   return {
     id: doc.id,
     ...data,
-    createdAt: safeDate(data.createdAt) || new Date()
+    createdAt: safeDate(data.createdAt) || new Date(),
+    expectedCompletionDate: safeDate(data.expectedCompletionDate)
   };
 }
 

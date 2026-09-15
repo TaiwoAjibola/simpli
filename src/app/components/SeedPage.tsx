@@ -73,12 +73,10 @@ export function SeedPage() {
       const db = getFirestore(app);
       const auth = getAuth(app);
 
-      // Seed roles
       for (const role of roles) {
         await setDoc(doc(db, 'roles', role.id), role);
       }
 
-      // Check if admin exists
       const employeesRef = collection(db, 'employees');
       const snapshot = await getDocs(employeesRef);
       const existingAdmin = snapshot.docs.find(d => d.data().email === adminUser.email);
@@ -87,7 +85,6 @@ export function SeedPage() {
         try {
           await createUserWithEmailAndPassword(auth, adminUser.email, adminUser.password);
         } catch (e) {
-          // Auth user might already exist
         }
 
         await setDoc(doc(db, 'employees', adminUser.id), {
@@ -101,50 +98,52 @@ export function SeedPage() {
 
       setStatus('success');
       setMessage('Database seeded successfully!');
-    } catch (error) {
+    } catch (error: any) {
       setStatus('error');
       setMessage(`Error: ${error.message}`);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-8 max-w-md w-full">
-        <h1 className="text-2xl font-bold text-foreground mb-4">Seed Database</h1>
-        <p className="text-muted-foreground mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-8 max-w-[400px] w-full">
+        <h1 className="text-[16px] font-semibold text-[#37352F] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Seed Database</h1>
+        <p className="text-sm text-[#787774] mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
           This will create the initial roles and admin user in Firebase.
         </p>
 
         {status === 'idle' && (
           <button
             onClick={handleSeed}
-            className="w-full bg-[#7C3AED] text-[#020617] py-3 font-medium hover:bg-[#6D28D9] transition"
+            className="w-full bg-[#2383E2] text-white py-2 rounded-[6px] font-medium text-sm hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer"
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             Seed Database
           </button>
         )}
 
         {status === 'loading' && (
-          <div className="flex items-center gap-3 text-foreground">
-            <Loader className="w-5 h-5 animate-spin" />
+          <div className="flex items-center gap-3 text-[#37352F] text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <Loader className="w-5 h-5 animate-spin text-[#787774]" />
             <span>{message}</span>
           </div>
         )}
 
         {status === 'success' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-[#A78BFA]">
+            <div className="flex items-center gap-2 text-[#0F7B6C] text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
               <CheckCircle className="w-5 h-5" />
               <span>{message}</span>
             </div>
-            <div className="bg-white border border-[rgba(124,58,237,0.1)] p-4">
-              <p className="text-sm text-foreground mb-2">Admin credentials:</p>
-              <p className="text-sm text-muted-foreground">Email: <span className="text-[#7C3AED]">{adminUser.email}</span></p>
-              <p className="text-sm text-muted-foreground">Password: <span className="text-[#7C3AED]">{adminUser.password}</span></p>
+            <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">
+              <p className="text-sm text-[#37352F] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Admin credentials:</p>
+              <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Email: <span className="text-[#37352F] font-medium">{adminUser.email}</span></p>
+              <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Password: <span className="text-[#37352F] font-medium">{adminUser.password}</span></p>
             </div>
             <a
               href="/"
-              className="block text-center bg-[#7C3AED] text-[#020617] py-3 font-medium hover:bg-[#6D28D9] transition"
+              className="block text-center bg-[#2383E2] text-white py-2 rounded-[6px] font-medium text-sm hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer"
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Go to Login
             </a>
@@ -152,7 +151,7 @@ export function SeedPage() {
         )}
 
         {status === 'error' && (
-          <div className="flex items-center gap-3 text-[#7C3AED]">
+          <div className="flex items-center gap-2 text-[#EB5757] text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             <AlertCircle className="w-5 h-5" />
             <span>{message}</span>
           </div>

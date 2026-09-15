@@ -43,7 +43,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen flex bg-[#FAF5FF]">
+    <div className="h-screen flex bg-[#FFFFFF]">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
         <Suspense fallback={<PageLoader message="Loading..." />}>
