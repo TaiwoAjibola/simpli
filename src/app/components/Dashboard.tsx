@@ -105,6 +105,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       overallColor = 'yellow';
       overallLabel = 'At risk';
     }
+    const budgetApps = apps.filter((a: any) => typeof a.budgetAmount === 'number');
+    const totalBudget = budgetApps.reduce((sum: number, a: any) => sum + (a.budgetAmount || 0), 0);
+    const avgBudget = budgetApps.length > 0 ? Math.round(totalBudget / budgetApps.length) : 0;
     return {
       blockedWork,
       openDefectsAging,
@@ -112,9 +115,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       upcomingDeadlines,
       overallLabel,
       overallColor,
-      openDefectsCount: openDefectsAll.length
+      openDefectsCount: openDefectsAll.length,
+      totalBudget,
+      avgBudget,
+      budgetCount: budgetApps.length
     };
-  }, [tasks, defects]);
+  }, [tasks, defects, apps]);
 
   const portfolioRows = React.useMemo(() => {
     return apps.map(app => {
@@ -352,6 +358,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <p className="text-sm text-[#787774] mb-4 line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {app.description}
                   </p>
+                  {(app as any).budgetAmount !== undefined && (app as any).budgetAmount !== null && (
+                    <div className="mb-3">
+                      <span className="inline-flex text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774] font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {(() => {
+                          const amt = (app as any).budgetAmount as number;
+                          const cur = (app as any).budgetCurrency || 'USD';
+                          const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', NGN: '₦' };
+                          const sym = symbols[cur] || cur;
+                          return `${sym} ${amt.toLocaleString()} ${cur}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-xs mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
                     <span className="text-[#787774]">
                       {appGoals.length} goals
@@ -394,7 +413,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150">
             <p className="text-[12px] font-medium tracking-wider uppercase text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Blocked Work</p>
             <p className="text-[20px] font-semibold text-[#37352F] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{portfolioMetrics.blockedWork}</p>
@@ -415,6 +434,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <p className="text-[20px] font-semibold text-[#37352F] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{portfolioMetrics.upcomingDeadlines}</p>
             <p className="text-xs text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Due within 7 days</p>
           </div>
+          <div className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150">
+            <p className="text-[12px] font-medium tracking-wider uppercase text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Total Budget</p>
+            <p className="text-[20px] font-semibold text-[#37352F] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>${portfolioMetrics.totalBudget.toLocaleString()}</p>
+            <p className="text-xs text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{portfolioMetrics.budgetCount > 0 ? `${portfolioMetrics.budgetCount} projects · avg $${portfolioMetrics.avgBudget.toLocaleString()}` : 'No budgets yet'}</p>
+          </div>
         </div>
 
         <div className="overflow-x-auto border border-[#E9E9E7] rounded-lg">
@@ -426,13 +450,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <th className="text-left text-[12px] font-medium tracking-wider uppercase text-[#787774] px-4 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Open Defects</th>
                 <th className="text-left text-[12px] font-medium tracking-wider uppercase text-[#787774] px-4 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Blocked</th>
                 <th className="text-left text-[12px] font-medium tracking-wider uppercase text-[#787774] px-4 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Pending QA</th>
+                <th className="text-left text-[12px] font-medium tracking-wider uppercase text-[#787774] px-4 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Budget</th>
                 <th className="text-left text-[12px] font-medium tracking-wider uppercase text-[#787774] px-4 py-3" style={{ fontFamily: 'Inter, sans-serif' }}>Health</th>
               </tr>
             </thead>
             <tbody>
               {portfolioRows.length === 0 ? (
                 <tr className="bg-white">
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>No projects</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>No projects</td>
                 </tr>
               ) : portfolioRows.map(row => (
                 <tr
@@ -496,6 +521,21 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     >
                       {row.pendingQa}{row.pendingQaAging > 0 ? ` • ${row.pendingQaAging} >3d` : ''}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {(row.app as any).budgetAmount !== undefined && (row.app as any).budgetAmount !== null ? (
+                      <span className="inline-flex text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774] font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        {(() => {
+                          const amt = (row.app as any).budgetAmount as number;
+                          const cur = (row.app as any).budgetCurrency || 'USD';
+                          const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', NGN: '₦' };
+                          const sym = symbols[cur] || cur;
+                          return `${sym} ${amt.toLocaleString()} ${cur}`;
+                        })()}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span

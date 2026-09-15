@@ -19,6 +19,9 @@ export function ProjectsPage({ onNavigate }: Props) {
   const [formTechStack, setFormTechStack] = useState('');
   const [formProjectType, setFormProjectType] = useState('');
   const [formExpectedDate, setFormExpectedDate] = useState('');
+  const [budgetAmount, setBudgetAmount] = useState('');
+  const [budgetCurrency, setBudgetCurrency] = useState('USD');
+  const [budgetNotes, setBudgetNotes] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +36,9 @@ export function ProjectsPage({ onNavigate }: Props) {
       techStack: formTechStack || undefined,
       projectType: formProjectType || undefined,
       expectedCompletionDate: formExpectedDate ? new Date(formExpectedDate) : undefined,
+      budgetAmount: budgetAmount ? Number(budgetAmount) : undefined,
+      budgetCurrency: budgetCurrency || undefined,
+      budgetNotes: budgetNotes.trim() || undefined,
     });
     setFormName('');
     setFormDesc('');
@@ -41,6 +47,9 @@ export function ProjectsPage({ onNavigate }: Props) {
     setFormTechStack('');
     setFormProjectType('');
     setFormExpectedDate('');
+    setBudgetAmount('');
+    setBudgetCurrency('USD');
+    setBudgetNotes('');
     setShowForm(false);
   };
 
@@ -51,6 +60,13 @@ export function ProjectsPage({ onNavigate }: Props) {
   const getAppTasks = (appId: string) => {
     const appGoalIds = new Set(goals.filter(g => g.appId === appId).map(g => g.id));
     return tasks.filter(t => appGoalIds.has(t.goalId || ''));
+  };
+
+  const formatBudget = (amount: number, currency?: string) => {
+    const cur = currency || 'USD';
+    const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', NGN: '₦' };
+    const sym = symbols[cur] || cur;
+    return `${sym} ${amount.toLocaleString()} ${cur}`;
   };
 
   return (
@@ -128,7 +144,33 @@ export function ProjectsPage({ onNavigate }: Props) {
                 onChange={e => setFormExpectedDate(e.target.value)}
                 className="px-3 py-2 bg-[#FFFFFF] border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] rounded-[6px] transition-colors duration-150"
               />
-              <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={100}
+                min={0}
+                value={budgetAmount}
+                onChange={e => setBudgetAmount(e.target.value)}
+                className="px-3 py-2 bg-[#FFFFFF] border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] rounded-[6px] placeholder:text-[#9B9A97] transition-colors duration-150"
+                placeholder="Amount"
+              />
+              <select
+                value={budgetCurrency}
+                onChange={e => setBudgetCurrency(e.target.value)}
+                className="px-3 py-2 bg-[#FFFFFF] border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] rounded-[6px] transition-colors duration-150"
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="NGN">NGN</option>
+              </select>
+              <input
+                type="text"
+                value={budgetNotes}
+                onChange={e => setBudgetNotes(e.target.value)}
+                className="md:col-span-2 px-3 py-2 bg-[#FFFFFF] border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] rounded-[6px] placeholder:text-[#9B9A97] transition-colors duration-150"
+                placeholder="Budget notes (optional)"
+              />
+              <div className="flex items-center gap-2 md:col-span-2">
                 <button type="submit" className="px-5 py-2 bg-[#2383E2] text-white font-medium text-[14px] hover:bg-[#1A6FBF] transition-colors duration-150 cursor-pointer rounded-[6px] border border-[#2383E2] shadow-none">
                   Create
                 </button>
@@ -183,6 +225,12 @@ export function ProjectsPage({ onNavigate }: Props) {
                     </div>
                   )}
                   {pm && <p className="text-xs text-[#787774] mb-2">PM: <span className="font-medium text-[#37352F]">{pm.name}</span></p>}
+                  {app.budgetAmount !== undefined && app.budgetAmount !== null && (
+                    <div className="mb-3">
+                      <span className="inline-flex text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774] font-medium">{formatBudget(app.budgetAmount, app.budgetCurrency)}</span>
+                      {app.budgetNotes && <p className="text-xs text-[#787774] mt-1 line-clamp-1">{app.budgetNotes}</p>}
+                    </div>
+                  )}
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-[#9B9A97]" />

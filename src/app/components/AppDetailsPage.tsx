@@ -79,7 +79,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [activityFilter, setActivityFilter] = useState<'all' | 'task' | 'app' | 'goal'>('all');
   const [overviewEditing, setOverviewEditing] = useState(false);
-  const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '' });
+  const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '', budgetAmount: '', budgetCurrency: 'USD', budgetNotes: '' });
   const [overviewSaving, setOverviewSaving] = useState(false);
   const [teamSelectId, setTeamSelectId] = useState('');
   const [extraTeamIds, setExtraTeamIds] = useState<string[]>([]);
@@ -111,7 +111,10 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
           projectManagerId: app.projectManagerId || '',
           techStack: app.techStack || '',
           projectType: app.projectType || '',
-          expectedCompletionDate: toInputDate(app.expectedCompletionDate)
+          expectedCompletionDate: toInputDate(app.expectedCompletionDate),
+          budgetAmount: app.budgetAmount !== undefined && app.budgetAmount !== null ? String(app.budgetAmount) : '',
+          budgetCurrency: app.budgetCurrency || 'USD',
+          budgetNotes: app.budgetNotes || ''
         });
       }
     }
@@ -303,7 +306,10 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                         projectManagerId: app.projectManagerId || '',
                         techStack: app.techStack || '',
                         projectType: app.projectType || '',
-                        expectedCompletionDate: toInputDate(app.expectedCompletionDate)
+                        expectedCompletionDate: toInputDate(app.expectedCompletionDate),
+                        budgetAmount: (app as any).budgetAmount !== undefined && (app as any).budgetAmount !== null ? String((app as any).budgetAmount) : '',
+                        budgetCurrency: (app as any).budgetCurrency || 'USD',
+                        budgetNotes: (app as any).budgetNotes || ''
                       });
                       setOverviewEditing(false);
                     } else {
@@ -375,6 +381,41 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                       />
                     </div>
                     <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Budget Amount</label>
+                      <input
+                        type="number"
+                        step={100}
+                        min={0}
+                        value={overviewForm.budgetAmount}
+                        onChange={e => setOverviewForm({ ...overviewForm, budgetAmount: e.target.value })}
+                        placeholder="Amount"
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Currency</label>
+                      <select
+                        value={overviewForm.budgetCurrency}
+                        onChange={e => setOverviewForm({ ...overviewForm, budgetCurrency: e.target.value })}
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      >
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="NGN">NGN</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Budget Notes</label>
+                      <input
+                        type="text"
+                        value={overviewForm.budgetNotes}
+                        onChange={e => setOverviewForm({ ...overviewForm, budgetNotes: e.target.value })}
+                        placeholder="Budget notes (optional)"
+                        className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] outline-none rounded-[6px] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-[13px] font-medium text-[#37352F] mb-1.5">Status</label>
                       <div className="px-3 py-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-[14px] text-[#37352F]">{app.status}</div>
                     </div>
@@ -388,7 +429,10 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                           projectManagerId: overviewForm.projectManagerId || '',
                           techStack: overviewForm.techStack.trim(),
                           projectType: overviewForm.projectType.trim(),
-                          expectedCompletionDate: overviewForm.expectedCompletionDate ? new Date(overviewForm.expectedCompletionDate) : null as any
+                          expectedCompletionDate: overviewForm.expectedCompletionDate ? new Date(overviewForm.expectedCompletionDate) : null as any,
+                          budgetAmount: overviewForm.budgetAmount ? Number(overviewForm.budgetAmount) : undefined,
+                          budgetCurrency: overviewForm.budgetCurrency || 'USD',
+                          budgetNotes: overviewForm.budgetNotes.trim() || undefined
                         } as any);
                         setOverviewSaving(false);
                         setOverviewEditing(false);
@@ -445,6 +489,23 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                   <div className="space-y-1">
                     <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Status</p>
                     <span className="inline-flex text-xs px-2.5 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium">{app.status}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Budget</p>
+                    {(app as any).budgetAmount !== undefined && (app as any).budgetAmount !== null ? (
+                      <span className="inline-flex text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774] font-medium">
+                        {(() => {
+                          const amt = (app as any).budgetAmount as number;
+                          const cur = (app as any).budgetCurrency || 'USD';
+                          const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', NGN: '₦' };
+                          const sym = symbols[cur] || cur;
+                          return `${sym} ${amt.toLocaleString()} ${cur}`;
+                        })()}
+                      </span>
+                    ) : (
+                      <p className="text-[14px] text-[#787774]">—</p>
+                    )}
+                    {(app as any).budgetNotes && <p className="text-[12px] text-[#787774] mt-1">{(app as any).budgetNotes}</p>}
                   </div>
                 </div>
               )}

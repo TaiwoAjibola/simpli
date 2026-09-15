@@ -141,6 +141,9 @@ export type App = {
   techStack?: string;
   projectType?: string;
   expectedCompletionDate?: Date;
+  budgetAmount?: number;
+  budgetCurrency?: string;
+  budgetNotes?: string;
 };
 
 export type AppDocument = {
