@@ -20,8 +20,8 @@ type CalendarEvent = {
 };
 
 const EVENT_COLORS: Record<CalendarEvent['type'], string> = {
-  task_due: '#ff3b5c',
-  task_start: '#22C55E',
+  task_due: '#7C3AED',
+  task_start: '#7C3AED',
   goal_start: '#8b5cf6',
   goal_end: '#8b5cf6',
   phase_start: '#3b82f6',
@@ -99,19 +99,19 @@ export function CalendarPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#4C1D95]">Calendar</h1>
-          <p className="text-[#6D28D9] mt-1">Cross-project timeline view</p>
+          <h1 className="text-3xl font-bold text-foreground">Calendar</h1>
+          <p className="text-foreground mt-1">Cross-project timeline view</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"><ChevronLeft className="w-5 h-5 text-[#4C1D95]" /></button>
-          <span className="text-lg font-semibold text-[#4C1D95] min-w-[180px] text-center">{MONTH_NAMES[month]} {year}</span>
-          <button onClick={nextMonth} className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"><ChevronRight className="w-5 h-5 text-[#4C1D95]" /></button>
+          <button onClick={prevMonth} className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"><ChevronLeft className="w-5 h-5 text-foreground" /></button>
+          <span className="text-lg font-semibold text-foreground min-w-[180px] text-center">{MONTH_NAMES[month]} {year}</span>
+          <button onClick={nextMonth} className="p-2 hover:bg-[rgba(255,255,255,0.05)] rounded"><ChevronRight className="w-5 h-5 text-foreground" /></button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-[rgba(34,197,94,0.08)]">
+      <div className="grid grid-cols-7 gap-px bg-[rgba(124,58,237,0.08)]">
         {DAY_NAMES.map(d => (
-          <div key={d} className="bg-white p-2 text-center text-xs font-semibold text-[#6D28D9] uppercase">{d}</div>
+          <div key={d} className="bg-white p-2 text-center text-xs font-semibold text-foreground uppercase">{d}</div>
         ))}
         {Array.from({ length: firstDay }).map((_, i) => (
           <div key={`empty-${i}`} className="bg-[#FAF5FF] min-h-[100px]" />
@@ -125,16 +125,16 @@ export function CalendarPage() {
             <div
               key={day}
               onClick={() => setSelectedDay(new Date(year, month, day))}
-              className={`bg-white min-h-[100px] p-2 cursor-pointer hover:bg-[rgba(34,197,94,0.03)] transition-colors ${isSelected ? 'ring-1 ring-[#22C55E]' : ''}`}
+              className={`bg-white min-h-[100px] p-2 cursor-pointer hover:bg-[rgba(124,58,237,0.03)] transition-colors ${isSelected ? 'ring-1 ring-[#7C3AED]' : ''}`}
             >
-              <div className={`text-sm font-medium mb-1 ${isToday ? 'text-[#7C3AED]' : 'text-[#4C1D95]'}`}>{day}</div>
+              <div className={`text-sm font-medium mb-1 ${isToday ? 'text-[#7C3AED]' : 'text-foreground'}`}>{day}</div>
               <div className="space-y-0.5">
                 {dayEvents.slice(0, 3).map(evt => (
                   <div key={evt.id} className="text-[10px] px-1 py-0.5 truncate rounded" style={{ backgroundColor: `${evt.color}20`, color: evt.color }}>
                     {evt.title}
                   </div>
                 ))}
-                {dayEvents.length > 3 && <div className="text-[9px] text-[#6D28D9]">+{dayEvents.length - 3} more</div>}
+                {dayEvents.length > 3 && <div className="text-[9px] text-foreground">+{dayEvents.length - 3} more</div>}
               </div>
             </div>
           );
@@ -143,17 +143,17 @@ export function CalendarPage() {
 
       {selectedDay && (
         <div className="mt-6 p-6 bg-white border border-[#E9D5FF]">
-          <h3 className="text-lg font-semibold text-[#4C1D95] mb-3">{selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-3">{selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3>
           {selectedEvents.length === 0 ? (
-            <p className="text-sm text-[#6D28D9]">No events on this day.</p>
+            <p className="text-sm text-foreground">No events on this day.</p>
           ) : (
             <div className="space-y-2">
               {selectedEvents.map(evt => (
                 <div key={evt.id} className="flex items-center gap-3 p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: evt.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#4C1D95] truncate">{evt.title}</p>
-                    <p className="text-xs text-[#6D28D9]">{evt.type.replace(/_/g, ' ')}{evt.projectName ? ` · ${evt.projectName}` : ''}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{evt.title}</p>
+                    <p className="text-xs text-foreground">{evt.type.replace(/_/g, ' ')}{evt.projectName ? ` · ${evt.projectName}` : ''}</p>
                   </div>
                 </div>
               ))}
@@ -164,7 +164,7 @@ export function CalendarPage() {
 
       <div className="mt-4 flex flex-wrap gap-4">
         {Object.entries(EVENT_COLORS).map(([type, color]) => (
-          <div key={type} className="flex items-center gap-2 text-xs text-[#6D28D9]">
+          <div key={type} className="flex items-center gap-2 text-xs text-foreground">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
             {type.replace(/_/g, ' ')}
           </div>

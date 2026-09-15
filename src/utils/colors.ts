@@ -4,16 +4,16 @@ export const PRIORITY_COLORS: Record<string, string> = {
   low: '#6D28D9',
   medium: '#7C3AED',
   high: '#F97316',
-  urgent: '#DC2626'
+  urgent: '#7C3AED'
 };
 
 export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
   not_started: '#6D28D9',
   in_progress: '#7C3AED',
-  blocked: '#DC2626',
+  blocked: '#7C3AED',
   pending_qa: '#F97316',
   completed: '#3B82F6',
-  approved: '#10B981'
+  approved: '#A78BFA'
 };
 
 export const TASK_STATUS_BG: Record<TaskStatus, string> = {
@@ -26,17 +26,17 @@ export const TASK_STATUS_BG: Record<TaskStatus, string> = {
 };
 
 export const DEFECT_STATUS_COLORS: Record<DefectStatus, string> = {
-  open: '#DC2626',
+  open: '#7C3AED',
   in_progress: '#F97316',
   pending_qa: '#7C3AED',
   resolved: '#3B82F6',
-  closed: '#10B981',
+  closed: '#A78BFA',
   reopened: '#991B1B'
 };
 
 export const DEFECT_SEVERITY_COLORS: Record<DefectSeverity, string> = {
   blocker: '#991B1B',
-  critical: '#DC2626',
+  critical: '#7C3AED',
   major: '#F97316',
   minor: '#F59E0B'
 };

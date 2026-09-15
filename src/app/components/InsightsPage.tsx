@@ -68,13 +68,13 @@ export function InsightsPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#F8FAFC] mb-2">Insights</h1>
-          <p className="text-[#94A3B8]">Performance, activity, and history in one place</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Insights</h1>
+          <p className="text-muted-foreground">Performance, activity, and history in one place</p>
         </div>
         <select
           value={selectedAppId}
           onChange={(e) => setSelectedAppId(e.target.value)}
-          className="px-4 py-2 bg-[#0F172A]/70 backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] rounded-lg"
+          className="px-4 py-2 bg-[#0F172A]/70 backdrop-blur border border-[rgba(124,58,237,0.12)] text-foreground rounded-lg"
         >
           <option value="all">All Apps</option>
           {apps.map(app => (
@@ -92,8 +92,8 @@ export function InsightsPage() {
               onClick={() => setTab(t.id)}
               className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition ${
                 tab === t.id
-                  ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]'
-                  : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                  ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -187,7 +187,7 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
         <ul key={key} className="space-y-1.5 my-3">
           {list.map((li, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-[#CBD5E1]">
-              <span className="text-[#22C55E] mt-1.5 w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
+              <span className="text-[#7C3AED] mt-1.5 w-1.5 h-1.5 rounded-full bg-[#7C3AED] flex-shrink-0" />
               <span>{li}</span>
             </li>
           ))}
@@ -204,8 +204,8 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
         const text = line.replace(/^#+\s*/, '');
         const Tag = level === 1 ? 'h2' : 'h3';
         blocks.push(
-          <Tag key={`h${idx}`} className={`${Tag === 'h2' ? 'text-xl' : 'text-lg'} font-semibold text-[#F8FAFC] mt-6 mb-2 flex items-center gap-2`}>
-            <span className="w-1.5 h-5 bg-[#22C55E]" />
+          <Tag key={`h${idx}`} className={`${Tag === 'h2' ? 'text-xl' : 'text-lg'} font-semibold text-foreground mt-6 mb-2 flex items-center gap-2`}>
+            <span className="w-1.5 h-5 bg-[#7C3AED]" />
             {text}
           </Tag>
         );
@@ -213,7 +213,7 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
         list.push(line.replace(/^[-*]\s/, ''));
       } else {
         flushList(`l${idx}`);
-        const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-[#F8FAFC]">$1</strong>');
+        const bolded = line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>');
         blocks.push(
           <p key={`p${idx}`} className="text-sm text-[#CBD5E1] leading-relaxed my-2" dangerouslySetInnerHTML={{ __html: bolded }} />
         );
@@ -227,22 +227,22 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h3 className="text-lg font-semibold text-[#F8FAFC] flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#22C55E]" />
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#7C3AED]" />
               AI Progress Report
             </h3>
-            <p className="text-sm text-[#94A3B8] mt-1">
-              Groq analyzes live Simpli data for <span className="text-[#22C55E]">{appName}</span> — health, what's working,
+            <p className="text-sm text-muted-foreground mt-1">
+              Groq analyzes live Simpli data for <span className="text-[#7C3AED]">{appName}</span> — health, what's working,
               risks, and recommendations.
             </p>
           </div>
           <button
             onClick={generate}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {loading ? 'Generating...' : report ? 'Regenerate Report' : 'Generate Report'}
@@ -251,16 +251,16 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
       </div>
 
       {error && (
-        <div className="p-4 bg-[rgba(255,59,92,0.1)] border border-[rgba(255,59,92,0.2)] text-sm text-[#ff3b5c]">
+        <div className="p-4 bg-[rgba(124,58,237,0.1)] border border-[rgba(255,59,92,0.2)] text-sm text-[#7C3AED]">
           {error}
         </div>
       )}
 
       {report && (
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[rgba(34,197,94,0.1)]">
-            <Sparkles className="w-4 h-4 text-[#22C55E]" />
-            <span className="text-xs text-[#94A3B8]">
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[rgba(124,58,237,0.1)]">
+            <Sparkles className="w-4 h-4 text-[#7C3AED]" />
+            <span className="text-xs text-muted-foreground">
               Generated by Groq {model ? `· ${model}` : ''} · {new Date().toLocaleString()}
             </span>
           </div>
@@ -269,9 +269,9 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
       )}
 
       {!report && !error && !loading && (
-        <div className="text-center py-14 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
-          <Sparkles className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
-          <p className="text-[#94A3B8]">No report yet. Hit "Generate Report" to get an AI analysis of this app's progress.</p>
+        <div className="text-center py-14 bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
+          <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground">No report yet. Hit "Generate Report" to get an AI analysis of this app's progress.</p>
         </div>
       )}
     </div>
@@ -349,52 +349,52 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
     .slice(0, 5);
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'text-[#10b981]';
-    if (progress >= 50) return 'text-[#22C55E]';
+    if (progress >= 80) return 'text-[#A78BFA]';
+    if (progress >= 50) return 'text-[#7C3AED]';
     if (progress >= 25) return 'text-[#f59e0b]';
-    return 'text-[#ff3b5c]';
+    return 'text-[#7C3AED]';
   };
 
   const getProgressBg = (progress: number) => {
-    if (progress >= 80) return 'bg-[#10b981]';
-    if (progress >= 50) return 'bg-[#22C55E]';
+    if (progress >= 80) return 'bg-[#A78BFA]';
+    if (progress >= 50) return 'bg-[#7C3AED]';
     if (progress >= 25) return 'bg-[#f59e0b]';
-    return 'bg-[#ff3b5c]';
+    return 'bg-[#7C3AED]';
   };
 
   const statCards = [
-    { icon: CheckCircle, label: 'Completion Rate', value: `${completionRate}%`, subtext: `${completedTasks} of ${totalTasks} tasks`, color: 'text-[#10b981]', bgColor: 'bg-[rgba(16,185,129,0.1)]' },
-    { icon: Clock, label: 'In Progress', value: inProgressTasks.toString(), subtext: `${blockedTasks} blocked`, color: 'text-[#22C55E]', bgColor: 'bg-[rgba(34,197,94,0.1)]' },
-    { icon: AlertCircle, label: 'Overdue', value: overdueTasks.toString(), subtext: `${dueThisWeek} due this week`, color: 'text-[#ff3b5c]', bgColor: 'bg-[rgba(255,59,92,0.1)]' },
+    { icon: CheckCircle, label: 'Completion Rate', value: `${completionRate}%`, subtext: `${completedTasks} of ${totalTasks} tasks`, color: 'text-[#A78BFA]', bgColor: 'bg-[rgba(124,58,237,0.1)]' },
+    { icon: Clock, label: 'In Progress', value: inProgressTasks.toString(), subtext: `${blockedTasks} blocked`, color: 'text-[#7C3AED]', bgColor: 'bg-[rgba(124,58,237,0.1)]' },
+    { icon: AlertCircle, label: 'Overdue', value: overdueTasks.toString(), subtext: `${dueThisWeek} due this week`, color: 'text-[#7C3AED]', bgColor: 'bg-[rgba(124,58,237,0.1)]' },
     { icon: Target, label: 'Subtask Progress', value: `${subtaskCompletionRate}%`, subtext: `${completedSubtasks} of ${totalSubtasks}`, color: 'text-[#8b5cf6]', bgColor: 'bg-[rgba(139,92,246,0.1)]' }
   ];
 
   const statusColors: Record<string, string> = {
     not_started: 'bg-[#94A3B8]',
-    in_progress: 'bg-[#22C55E]',
-    blocked: 'bg-[#ff3b5c]',
+    in_progress: 'bg-[#7C3AED]',
+    blocked: 'bg-[#7C3AED]',
     completed: 'bg-[#8b5cf6]',
-    approved: 'bg-[#10b981]'
+    approved: 'bg-[#A78BFA]'
   };
 
   const priorityColorMap: Record<string, string> = {
-    urgent: 'text-[#ff3b5c]',
+    urgent: 'text-[#7C3AED]',
     high: 'text-[#f59e0b]',
-    medium: 'text-[#22C55E]',
-    low: 'text-[#94A3B8]'
+    medium: 'text-[#7C3AED]',
+    low: 'text-muted-foreground'
   };
   const priorityBgMap: Record<string, string> = {
-    urgent: 'bg-[rgba(255,59,92,0.1)]',
+    urgent: 'bg-[rgba(124,58,237,0.1)]',
     high: 'bg-[rgba(245,158,11,0.1)]',
-    medium: 'bg-[rgba(34,197,94,0.1)]',
+    medium: 'bg-[rgba(124,58,237,0.1)]',
     low: 'bg-[rgba(107,107,128,0.1)]'
   };
 
   if (apps.length === 0) {
     return (
-      <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
-        <BarChart3 className="w-16 h-16 text-[#94A3B8] mx-auto mb-4" />
-        <p className="text-[#94A3B8]">No apps yet — create an app to see analytics</p>
+      <div className="text-center py-12 bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
+        <BarChart3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground">No apps yet — create an app to see analytics</p>
       </div>
     );
   }
@@ -405,31 +405,31 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
         {statCards.map(card => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
+            <div key={card.label} className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
               <div className={`p-2 mb-3 w-fit ${card.bgColor}`}>
                 <Icon className={`w-5 h-5 ${card.color}`} />
               </div>
-              <p className="text-2xl font-bold text-[#F8FAFC]">{card.value}</p>
-              <p className="text-sm text-[#94A3B8] mt-1">{card.label}</p>
-              <p className="text-xs text-[#94A3B8] mt-1">{card.subtext}</p>
+              <p className="text-2xl font-bold text-foreground">{card.value}</p>
+              <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{card.subtext}</p>
             </div>
           );
         })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-          <h3 className="text-lg font-semibold text-[#F8FAFC] mb-4">Task Status Distribution</h3>
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Task Status Distribution</h3>
           <div className="space-y-3">
             {Object.entries(statusDistribution).map(([status, count]) => {
               const pct = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
               return (
                 <div key={status}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-[#F8FAFC] capitalize">{status.replace('_', ' ')}</span>
-                    <span className="text-sm text-[#94A3B8]">{count} ({pct}%)</span>
+                    <span className="text-sm text-foreground capitalize">{status.replace('_', ' ')}</span>
+                    <span className="text-sm text-muted-foreground">{count} ({pct}%)</span>
                   </div>
-                  <div className="w-full h-2 bg-[#1E293B]">
+                  <div className="w-full h-2 bg-white">
                     <div className={`h-2 ${statusColors[status]}`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
@@ -438,13 +438,13 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
           </div>
         </div>
 
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-          <h3 className="text-lg font-semibold text-[#F8FAFC] mb-4">Priority Distribution</h3>
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Priority Distribution</h3>
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(priorityDistribution).map(([priority, count]) => (
-              <div key={priority} className={`p-4 ${priorityBgMap[priority]} border border-[rgba(34,197,94,0.1)]`}>
+              <div key={priority} className={`p-4 ${priorityBgMap[priority]} border border-[rgba(124,58,237,0.1)]`}>
                 <p className={`text-2xl font-bold ${priorityColorMap[priority]}`}>{count}</p>
-                <p className="text-sm text-[#94A3B8] capitalize">{priority}</p>
+                <p className="text-sm text-muted-foreground capitalize">{priority}</p>
               </div>
             ))}
           </div>
@@ -452,37 +452,37 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-          <h3 className="text-lg font-semibold text-[#F8FAFC] mb-4">Goal Progress</h3>
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Goal Progress</h3>
           <div className="space-y-4">
-            {goalProgress.length === 0 && <p className="text-sm text-[#94A3B8]">No goals yet</p>}
+            {goalProgress.length === 0 && <p className="text-sm text-muted-foreground">No goals yet</p>}
             {goalProgress.map((goal) => (
               <div key={goal.name}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-[#F8FAFC]">{goal.name}</span>
+                  <span className="text-sm text-foreground">{goal.name}</span>
                   <span className={`text-sm font-medium ${getProgressColor(goal.progress)}`}>{goal.progress}%</span>
                 </div>
-                <div className="w-full h-2 bg-[#1E293B]">
+                <div className="w-full h-2 bg-white">
                   <div className={`h-2 ${getProgressBg(goal.progress)}`} style={{ width: `${goal.progress}%` }} />
                 </div>
-                <p className="text-xs text-[#94A3B8] mt-1">{goal.completed} of {goal.total} tasks completed</p>
+                <p className="text-xs text-muted-foreground mt-1">{goal.completed} of {goal.total} tasks completed</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-          <h3 className="text-lg font-semibold text-[#F8FAFC] mb-4">Team Workload</h3>
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Team Workload</h3>
           <div className="space-y-3">
-            {employeeWorkload.length === 0 && <p className="text-sm text-[#94A3B8]">No assignments yet</p>}
+            {employeeWorkload.length === 0 && <p className="text-sm text-muted-foreground">No assignments yet</p>}
             {employeeWorkload.map((emp) => (
-              <div key={emp.name} className="flex items-center gap-3 p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#22C55E] to-[#8b5cf6] flex items-center justify-center text-[#020617] font-bold">
+              <div key={emp.name} className="flex items-center gap-3 p-3 bg-white border border-[rgba(124,58,237,0.1)]">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#7C3AED] to-[#8b5cf6] flex items-center justify-center text-[#020617] font-bold">
                   {emp.name.charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-[#F8FAFC]">{emp.name}</p>
-                  <p className="text-xs text-[#94A3B8]">{emp.total} tasks · {emp.completed} completed · {emp.inProgress} in progress</p>
+                  <p className="text-sm font-medium text-foreground">{emp.name}</p>
+                  <p className="text-xs text-muted-foreground">{emp.total} tasks · {emp.completed} completed · {emp.inProgress} in progress</p>
                 </div>
               </div>
             ))}
@@ -490,27 +490,27 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
         </div>
       </div>
 
-      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-6">
-        <h3 className="text-lg font-semibold text-[#F8FAFC] mb-4">Upcoming Deadlines</h3>
+      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Upcoming Deadlines</h3>
         <div className="space-y-3">
-          {upcomingDeadlines.length === 0 && <p className="text-sm text-[#94A3B8]">No upcoming deadlines</p>}
+          {upcomingDeadlines.length === 0 && <p className="text-sm text-muted-foreground">No upcoming deadlines</p>}
           {upcomingDeadlines.map((task) => {
             const daysLeft = task.dueDate ? differenceInDays(task.dueDate, new Date()) : 0;
             const isOverdue = daysLeft < 0;
             const isDueToday = daysLeft === 0;
             return (
-              <div key={task.id} className="flex items-center justify-between p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+              <div key={task.id} className="flex items-center justify-between p-3 bg-white border border-[rgba(124,58,237,0.1)]">
                 <div className="flex items-center gap-3">
-                  {isOverdue ? <XCircle className="w-5 h-5 text-[#ff3b5c]" /> : isDueToday ? <AlertCircle className="w-5 h-5 text-[#f59e0b]" /> : <Calendar className="w-5 h-5 text-[#22C55E]" />}
+                  {isOverdue ? <XCircle className="w-5 h-5 text-[#7C3AED]" /> : isDueToday ? <AlertCircle className="w-5 h-5 text-[#f59e0b]" /> : <Calendar className="w-5 h-5 text-[#7C3AED]" />}
                   <div>
-                    <p className="text-sm font-medium text-[#F8FAFC]">{task.name}</p>
-                    <p className="text-xs text-[#94A3B8]">{task.dueDate ? format(task.dueDate, 'MMM d, yyyy') : 'No date'}</p>
+                    <p className="text-sm font-medium text-foreground">{task.name}</p>
+                    <p className="text-xs text-muted-foreground">{task.dueDate ? format(task.dueDate, 'MMM d, yyyy') : 'No date'}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-medium px-2 py-1 ${
-                  isOverdue ? 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]' :
+                  isOverdue ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]' :
                   isDueToday ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]' :
-                  'bg-[rgba(34,197,94,0.1)] text-[#22C55E]'
+                  'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]'
                 }`}>
                   {isOverdue ? `${Math.abs(daysLeft)}d overdue` : isDueToday ? 'Due today' : `${daysLeft}d left`}
                 </span>
@@ -526,28 +526,28 @@ function AnalyticsTab({ apps, selectedAppId, appGoals, appTasks, appSubtasks, em
 function ActivitiesTab({ activities }: { activities: any[] }) {
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'task_approved': return 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border-[rgba(16,185,129,0.2)]';
-      case 'task_completed': return 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border-[rgba(34,197,94,0.2)]';
+      case 'task_approved': return 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA] border-[rgba(124,58,237,0.2)]';
+      case 'task_completed': return 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED] border-[rgba(124,58,237,0.2)]';
       case 'task_created': return 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border-[rgba(245,158,11,0.2)]';
-      case 'app_created': return 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border-[rgba(34,197,94,0.2)]';
-      case 'goal_created': return 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border-[rgba(16,185,129,0.2)]';
-      default: return 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8] border-[rgba(107,107,128,0.2)]';
+      case 'app_created': return 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED] border-[rgba(124,58,237,0.2)]';
+      case 'goal_created': return 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA] border-[rgba(124,58,237,0.2)]';
+      default: return 'bg-[rgba(107,107,128,0.1)] text-muted-foreground border-[rgba(107,107,128,0.2)]';
     }
   };
 
   const getTypeLabel = (type: string) => type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
 
   return (
-    <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+    <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
       {activities.length > 0 ? (
-        <div className="divide-y divide-[rgba(34,197,94,0.1)]">
+        <div className="divide-y divide-[rgba(124,58,237,0.1)]">
           {activities.map((activity) => (
-            <div key={activity.id} className="flex items-start gap-4 p-5 hover:bg-[rgba(255,255,255,0.02)] transition">
+            <div key={activity.id} className="flex items-start gap-4 p-5 hover:bg-[rgba(124,58,237,0.05)] transition">
               <div className={`w-10 h-10 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 ${
-                activity.type === 'task_approved' ? 'bg-[#10b981]' :
-                activity.type === 'task_completed' ? 'bg-[#22C55E]' :
+                activity.type === 'task_approved' ? 'bg-[#A78BFA]' :
+                activity.type === 'task_completed' ? 'bg-[#7C3AED]' :
                 activity.type === 'task_created' ? 'bg-[#f59e0b]' :
-                activity.type === 'app_created' ? 'bg-[#22C55E]' :
+                activity.type === 'app_created' ? 'bg-[#7C3AED]' :
                 'bg-[#94A3B8]'
               }`}>
                 {activity.userName.charAt(0)}
@@ -555,12 +555,12 @@ function ActivitiesTab({ activities }: { activities: any[] }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <p className="text-[#F8FAFC]">
+                    <p className="text-foreground">
                       <span className="font-medium">{activity.userName}</span>{' '}
                       {activity.description}
                     </p>
                     {activity.relatedTo && (
-                      <p className="text-xs text-[#94A3B8] mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {activity.relatedTo.type}: {activity.relatedTo.name}
                       </p>
                     )}
@@ -569,7 +569,7 @@ function ActivitiesTab({ activities }: { activities: any[] }) {
                     {getTypeLabel(activity.type)}
                   </span>
                 </div>
-                <p className="text-xs text-[#94A3B8]">
+                <p className="text-xs text-muted-foreground">
                   {format(activity.timestamp, 'MMM d, yyyy · h:mm a')}
                 </p>
               </div>
@@ -578,9 +578,9 @@ function ActivitiesTab({ activities }: { activities: any[] }) {
         </div>
       ) : (
         <div className="text-center py-16">
-          <ActivityIcon className="w-16 h-16 text-[#94A3B8] mx-auto mb-4" />
-          <p className="text-[#94A3B8] text-lg mb-2">No activities yet</p>
-          <p className="text-[#94A3B8] text-sm">Activities will appear here as you work on tasks</p>
+          <ActivityIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg mb-2">No activities yet</p>
+          <p className="text-muted-foreground text-sm">Activities will appear here as you work on tasks</p>
         </div>
       )}
     </div>
@@ -720,21 +720,21 @@ function ArchiveTab({ apps, goals, tasks, employees, selectedAppId }: {
     <>
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search completed items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-sm focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
           />
         </div>
-        <div className="flex items-center bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+        <div className="flex items-center bg-white border border-[rgba(124,58,237,0.1)]">
           {(['all', 'goal', 'task'] as const).map(t => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`px-4 py-2 text-sm capitalize ${filterType === t ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}
+              className={`px-4 py-2 text-sm capitalize ${filterType === t ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]' : 'text-muted-foreground'}`}
             >
               {t}
             </button>
@@ -743,70 +743,70 @@ function ArchiveTab({ apps, goals, tasks, employees, selectedAppId }: {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[rgba(139,92,246,0.1)]">
               <Target className="w-5 h-5 text-[#8b5cf6]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#F8FAFC]">{completedGoals.length}</p>
-              <p className="text-sm text-[#94A3B8]">Completed Goals</p>
+              <p className="text-2xl font-bold text-foreground">{completedGoals.length}</p>
+              <p className="text-sm text-muted-foreground">Completed Goals</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[rgba(34,197,94,0.1)]">
-              <CheckCircle className="w-5 h-5 text-[#22C55E]" />
+            <div className="p-2 bg-[rgba(124,58,237,0.1)]">
+              <CheckCircle className="w-5 h-5 text-[#7C3AED]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#F8FAFC]">{completedTasks.length}</p>
-              <p className="text-sm text-[#94A3B8]">Completed Tasks</p>
+              <p className="text-2xl font-bold text-foreground">{completedTasks.length}</p>
+              <p className="text-sm text-muted-foreground">Completed Tasks</p>
             </div>
           </div>
         </div>
-        <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
+        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[rgba(16,185,129,0.1)]">
-              <FileText className="w-5 h-5 text-[#10b981]" />
+            <div className="p-2 bg-[rgba(124,58,237,0.1)]">
+              <FileText className="w-5 h-5 text-[#A78BFA]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#F8FAFC]">{completedSubtaskCount}</p>
-              <p className="text-sm text-[#94A3B8]">Completed Subtasks</p>
+              <p className="text-2xl font-bold text-foreground">{completedSubtaskCount}</p>
+              <p className="text-sm text-muted-foreground">Completed Subtasks</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
         {filteredItems.length === 0 && (
           <div className="p-12 text-center">
-            <Archive className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
-            <p className="text-[#94A3B8]">No completed items found</p>
+            <Archive className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No completed items found</p>
           </div>
         )}
         {filteredItems.map(item => {
           const isExpanded = expandedItems.has(item.id);
           const duration = getDuration(item.startDate, item.endDate);
           return (
-            <div key={item.id} className="border-b border-[rgba(34,197,94,0.05)] last:border-b-0">
-              <button onClick={() => toggleExpand(item.id)} className="w-full flex items-center gap-4 p-4 hover:bg-[rgba(255,255,255,0.02)] text-left">
+            <div key={item.id} className="border-b border-[rgba(124,58,237,0.05)] last:border-b-0">
+              <button onClick={() => toggleExpand(item.id)} className="w-full flex items-center gap-4 p-4 hover:bg-[rgba(124,58,237,0.05)] text-left">
                 <div className="flex-shrink-0">
-                  {isExpanded ? <ChevronDown className="w-5 h-5 text-[#94A3B8]" /> : <ChevronRight className="w-5 h-5 text-[#94A3B8]" />}
+                  {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
                 </div>
-                <div className={`p-2 ${item.type === 'goal' ? 'bg-[rgba(139,92,246,0.1)]' : 'bg-[rgba(34,197,94,0.1)]'}`}>
-                  {item.type === 'goal' ? <Target className="w-4 h-4 text-[#8b5cf6]" /> : <CheckCircle className="w-4 h-4 text-[#22C55E]" />}
+                <div className={`p-2 ${item.type === 'goal' ? 'bg-[rgba(139,92,246,0.1)]' : 'bg-[rgba(124,58,237,0.1)]'}`}>
+                  {item.type === 'goal' ? <Target className="w-4 h-4 text-[#8b5cf6]" /> : <CheckCircle className="w-4 h-4 text-[#7C3AED]" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-[#F8FAFC] truncate">{item.name}</p>
+                    <p className="font-medium text-foreground truncate">{item.name}</p>
                     <span className={`text-xs px-2 py-0.5 ${
-                      item.status === 'approved' ? 'bg-[rgba(16,185,129,0.1)] text-[#10b981]' : 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
+                      item.status === 'approved' ? 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]' : 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
                     }`}>
                       {item.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-xs text-[#94A3B8]">
+                  <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(item.startDate)} → {formatDate(item.endDate)}
@@ -830,26 +830,26 @@ function ArchiveTab({ apps, goals, tasks, employees, selectedAppId }: {
                 <div className="px-4 pb-4 pl-14">
                   {item.description && (
                     <div className="mb-4">
-                      <p className="text-sm text-[#94A3B8] mb-1">Description</p>
-                      <p className="text-sm text-[#F8FAFC]">{item.description}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Description</p>
+                      <p className="text-sm text-foreground">{item.description}</p>
                     </div>
                   )}
                   {item.subtasks && item.subtasks.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium text-[#F8FAFC] mb-2">Subtasks ({item.subtasks.length})</p>
+                      <p className="text-sm font-medium text-foreground mb-2">Subtasks ({item.subtasks.length})</p>
                       <div className="space-y-1">
                         {item.subtasks.map((subtask, idx) => (
                           <div key={idx} className="flex items-center gap-2 text-sm py-1">
                             {(subtask.status === 'approved' || subtask.status === 'completed') ? (
-                              <CheckCircle className="w-4 h-4 text-[#10b981]" />
+                              <CheckCircle className="w-4 h-4 text-[#A78BFA]" />
                             ) : (
                               <div className="w-4 h-4 border border-[#94A3B8]" />
                             )}
-                            <span className={subtask.status === 'approved' || subtask.status === 'completed' ? 'text-[#94A3B8] line-through' : 'text-[#F8FAFC]'}>
+                            <span className={subtask.status === 'approved' || subtask.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}>
                               {subtask.name}
                             </span>
                             {subtask.assignedTo && subtask.assignedTo.length > 0 && (
-                              <span className="text-xs text-[#94A3B8] ml-auto">
+                              <span className="text-xs text-muted-foreground ml-auto">
                                 {subtask.assignedTo.map(getEmployeeName).join(', ')}
                               </span>
                             )}
@@ -859,8 +859,8 @@ function ArchiveTab({ apps, goals, tasks, employees, selectedAppId }: {
                     </div>
                   )}
                   {item.completedAt && (
-                    <div className="mt-4 pt-3 border-t border-[rgba(34,197,94,0.1)]">
-                      <p className="text-xs text-[#94A3B8]">Completed on {formatDate(item.completedAt)}</p>
+                    <div className="mt-4 pt-3 border-t border-[rgba(124,58,237,0.1)]">
+                      <p className="text-xs text-muted-foreground">Completed on {formatDate(item.completedAt)}</p>
                     </div>
                   )}
                 </div>

@@ -13,7 +13,7 @@ const ICONS: Record<string, any> = {
 };
 
 const STATUS_STYLES: Record<IntegrationStatus, string> = {
-  connected: 'bg-[rgba(16,185,129,0.12)] text-[#10b981]',
+  connected: 'bg-[rgba(124,58,237,0.12)] text-[#A78BFA]',
   configured: 'bg-[rgba(245,158,11,0.12)] text-[#f59e0b]',
   error: 'bg-[rgba(239,68,68,0.12)] text-[#ef4444]'
 };
@@ -45,11 +45,11 @@ export function IntegrationsPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#F8FAFC] flex items-center gap-2">
-          <Plug className="w-6 h-6 text-[#22C55E]" />
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Plug className="w-6 h-6 text-[#7C3AED]" />
           Integrations
         </h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Connect Simpli to external tools.</p>
+        <p className="text-sm text-muted-foreground mt-1">Connect Simpli to external tools.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -57,15 +57,15 @@ export function IntegrationsPage() {
           const Icon = ICONS[def.type] || Plug;
           const status = integrationStatusOf(def.type, connectedRepos);
           return (
-            <div key={def.type} className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-5 rounded-lg">
+            <div key={def.type} className="bg-white border border-[rgba(124,58,237,0.1)] p-5 rounded-lg">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#020617] border border-[rgba(34,197,94,0.1)] rounded flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-[#22C55E]" />
+                  <div className="w-10 h-10 bg-[#020617] border border-[rgba(124,58,237,0.1)] rounded flex items-center justify-center">
+                    <Icon className="w-5 h-5 text-[#7C3AED]" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-[#F8FAFC]">{def.name}</h3>
-                    <p className="text-xs text-[#94A3B8] mt-0.5">{def.description}</p>
+                    <h3 className="font-medium text-foreground">{def.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{def.description}</p>
                   </div>
                 </div>
                 <span className={`px-2 py-0.5 text-xs font-medium rounded ${STATUS_STYLES[status]}`}>
@@ -73,19 +73,19 @@ export function IntegrationsPage() {
                 </span>
               </div>
               <div className="mt-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 text-xs text-[#94A3B8]">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                   {def.implementation === 'real'
-                    ? <CheckCircle className="w-3 h-3 text-[#10b981]" />
-                    : <XCircle className="w-3 h-3 text-[#94A3B8]" />}
+                    ? <CheckCircle className="w-3 h-3 text-[#A78BFA]" />
+                    : <XCircle className="w-3 h-3 text-muted-foreground" />}
                   {def.implementation === 'real' ? 'Implemented' : 'Planned'}
                 </span>
                 {def.type === 'github' && connectedRepos > 0 && (
-                  <span className="text-xs text-[#94A3B8]">{connectedRepos} repo{connectedRepos === 1 ? '' : 's'} connected</span>
+                  <span className="text-xs text-muted-foreground">{connectedRepos} repo{connectedRepos === 1 ? '' : 's'} connected</span>
                 )}
                 <button
                   onClick={() => handleConnect(def.type)}
                   disabled={busy === def.type}
-                  className="ml-auto flex items-center gap-1 px-3 py-1.5 text-sm bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] rounded disabled:opacity-50"
+                  className="ml-auto flex items-center gap-1 px-3 py-1.5 text-sm bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded disabled:opacity-50"
                 >
                   {busy === def.type ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
                   {status === 'connected' && def.type !== 'email' ? 'Re-test' : 'Test'}

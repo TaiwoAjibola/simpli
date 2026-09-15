@@ -54,8 +54,8 @@ export function MilestonesPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#4C1D95]">Milestones</h1>
-          <p className="text-[#6D28D9] mt-1">Track project progress and key milestones</p>
+          <h1 className="text-3xl font-bold text-foreground">Milestones</h1>
+          <p className="text-foreground mt-1">Track project progress and key milestones</p>
         </div>
       </div>
 
@@ -66,19 +66,19 @@ export function MilestonesPage() {
               <TrendingUp className="w-6 h-6 text-[#7C3AED]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#4C1D95]">{overallProgress}%</p>
-              <p className="text-sm text-[#6D28D9]">Overall Progress</p>
+              <p className="text-2xl font-bold text-foreground">{overallProgress}%</p>
+              <p className="text-sm text-foreground">Overall Progress</p>
             </div>
           </div>
         </div>
         <div className="glass-card rounded-xl p-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-[rgba(16,185,129,0.1)] rounded-lg">
-              <CheckCircle className="w-6 h-6 text-[#10b981]" />
+            <div className="p-3 bg-[rgba(124,58,237,0.1)] rounded-lg">
+              <CheckCircle className="w-6 h-6 text-[#A78BFA]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#4C1D95]">{totalCompleted}</p>
-              <p className="text-sm text-[#6D28D9]">Tasks Completed</p>
+              <p className="text-2xl font-bold text-foreground">{totalCompleted}</p>
+              <p className="text-sm text-foreground">Tasks Completed</p>
             </div>
           </div>
         </div>
@@ -88,8 +88,8 @@ export function MilestonesPage() {
               <Clock className="w-6 h-6 text-[#F59E0B]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#4C1D95]">{totalTasks - totalCompleted}</p>
-              <p className="text-sm text-[#6D28D9]">Tasks Remaining</p>
+              <p className="text-2xl font-bold text-foreground">{totalTasks - totalCompleted}</p>
+              <p className="text-sm text-foreground">Tasks Remaining</p>
             </div>
           </div>
         </div>
@@ -108,7 +108,7 @@ export function MilestonesPage() {
             className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
               activeTab === tab.key
                 ? 'bg-[#7C3AED] text-white'
-                : 'bg-white text-[#6D28D9] border border-[#E9D5FF] hover:border-[#7C3AED]'
+                : 'bg-white text-foreground border border-[#E9D5FF] hover:border-[#7C3AED]'
             }`}
           >
             {tab.label}
@@ -117,11 +117,11 @@ export function MilestonesPage() {
       </div>
 
       <div className="space-y-4 mb-8">
-        <h2 className="text-xl font-bold text-[#4C1D95]">Milestone Timeline</h2>
+        <h2 className="text-xl font-bold text-foreground">Milestone Timeline</h2>
         {milestones.map((milestone, index) => {
           const isExpanded = expandedItems.has(milestone.id);
           const statusColors = {
-            completed: 'bg-[rgba(16,185,129,0.1)] text-[#10b981]',
+            completed: 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]',
             in_progress: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
             pending: 'bg-[rgba(245,158,11,0.1)] text-[#F59E0B]'
           };
@@ -130,7 +130,7 @@ export function MilestonesPage() {
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
                   {milestone.status === 'completed' ? (
-                    <CheckCircle className="w-6 h-6 text-[#10b981]" />
+                    <CheckCircle className="w-6 h-6 text-[#A78BFA]" />
                   ) : milestone.status === 'in_progress' ? (
                     <Clock className="w-6 h-6 text-[#7C3AED]" />
                   ) : (
@@ -139,33 +139,33 @@ export function MilestonesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-[#4C1D95]">{milestone.title}</h3>
+                    <h3 className="font-semibold text-foreground">{milestone.title}</h3>
                     <span className={`text-xs px-2 py-0.5 ${statusColors[milestone.status]}`}>
                       {milestone.status.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-[#6D28D9]">
+                  <div className="flex items-center gap-3 mt-1 text-sm text-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> {milestone.date}
                     </span>
-                    <span className="text-xs text-[#94A3B8]">{milestone.type}</span>
+                    <span className="text-xs text-muted-foreground">{milestone.type}</span>
                   </div>
                 </div>
                 <button onClick={() => toggleExpand(milestone.id)}>
-                  {isExpanded ? <ChevronDown className="w-5 h-5 text-[#6D28D9]" /> : <ChevronRight className="w-5 h-5 text-[#6D28D9]" />}
+                  {isExpanded ? <ChevronDown className="w-5 h-5 text-foreground" /> : <ChevronRight className="w-5 h-5 text-foreground" />}
                 </button>
               </div>
               {isExpanded && (
                 <div className="mt-4 pt-4 border-t border-[#E9D5FF]">
-                  <p className="text-sm text-[#6D28D9]">Milestone details and associated tasks will appear here.</p>
+                  <p className="text-sm text-foreground">Milestone details and associated tasks will appear here.</p>
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-[#10b981]" />
-                      <span className="text-[#4C1D95]">Prerequisites completed</span>
+                      <CheckCircle className="w-4 h-4 text-[#A78BFA]" />
+                      <span className="text-foreground">Prerequisites completed</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-[#F59E0B]" />
-                      <span className="text-[#4C1D95]">Pending review</span>
+                      <span className="text-foreground">Pending review</span>
                     </div>
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export function MilestonesPage() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-[#4C1D95] mb-4">Goals & Milestones</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">Goals & Milestones</h2>
         <GoalsMilestonesModule />
       </div>
     </div>

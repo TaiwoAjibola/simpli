@@ -6,19 +6,19 @@ export function getCardClasses(style: CardStyle, color: string, compact = false)
 
   switch (style) {
     case 'rounded':
-      return `${base} bg-[#0F172A] border border-[rgba(34,197,94,0.1)] rounded-xl shadow-sm hover:shadow-md ${common}`;
+      return `${base} bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded-xl shadow-sm hover:shadow-md ${common}`;
 
     case 'stroked':
       return `${base} bg-[#0F172A] border-2 ${compact ? '' : 'shadow-sm'} ${common}`;
 
     case 'elevated':
-      return `${base} bg-[#0F172A] border border-transparent hover:border-[rgba(34,197,94,0.2)] shadow-lg ${common}`;
+      return `${base} bg-[#0F172A] border border-transparent hover:border-[rgba(124,58,237,0.2)] shadow-lg ${common}`;
 
     case 'minimal':
-      return `${base} bg-transparent border border-transparent border-b hover:border-b-[rgba(34,197,94,0.3)] ${common}`;
+      return `${base} bg-transparent border border-transparent border-b hover:border-b-[rgba(124,58,237,0.3)] ${common}`;
 
     default:
-      return `${base} bg-[#0F172A] border border-[rgba(34,197,94,0.1)] hover:shadow-lg ${common}`;
+      return `${base} bg-[#0F172A] border border-[rgba(124,58,237,0.1)] hover:shadow-lg ${common}`;
   }
 }
 

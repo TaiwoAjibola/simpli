@@ -1,22 +1,24 @@
 @custom-variant dark (&:is(.dark *));
 
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700|Fira+Sans:wght@300;400;500;600;700&display=swap');
+
 :root {
   --font-size: 16px;
   --background: #FAF5FF;
-  --foreground: #4C1D95;
-  --card: #FFFFFF;
-  --card-foreground: #4C1D95;
+  --foreground: #0F172A;
+  --card: rgba(255, 255, 255, 0.95);
+  --card-foreground: #0F172A;
   --popover: #FFFFFF;
-  --popover-foreground: #4C1D95;
+  --popover-foreground: #0F172A;
   --primary: #7C3AED;
   --primary-foreground: #FFFFFF;
   --secondary: #F3E8FF;
   --secondary-foreground: #5B21B6;
   --muted: #F5F3FF;
-  --muted-foreground: #6D28D9;
+  --muted-foreground: #475569;
   --accent: #F97316;
   --accent-foreground: #FFFFFF;
-  --destructive: #DC2626;
+  --destructive: #7C3AED;
   --destructive-foreground: #FFFFFF;
   --border: #E9D5FF;
   --input: #F5F3FF;
@@ -24,15 +26,18 @@
   --switch-background: #DDD6FE;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+  --font-family: 'Fira Sans', sans-serif;
+  --font-heading: 'Fira Sans', sans-serif;
+  --font-code: 'Fira Code', monospace;
   --ring: rgba(124, 58, 237, 0.4);
   --chart-1: #7C3AED;
   --chart-2: #F97316;
-  --chart-3: #10B981;
+  --chart-3: #A78BFA;
   --chart-4: #3B82F6;
   --chart-5: #EC4899;
   --radius: 12px;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #4C1D95;
+  --sidebar-foreground: #0F172A;
   --sidebar-primary: #7C3AED;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F3E8FF;
@@ -68,6 +73,9 @@
   --switch-background: #4C1D95;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+  --font-family: 'Fira Sans', sans-serif;
+  --font-heading: 'Fira Sans', sans-serif;
+  --font-code: 'Fira Code', monospace;
   --ring: rgba(167, 139, 250, 0.4);
   --chart-1: #A78BFA;
   --chart-2: #FB923C;
@@ -188,5 +196,9 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+
+  code {
+    font-family: var(--font-code);
   }
 }

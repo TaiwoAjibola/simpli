@@ -31,10 +31,10 @@ function safeDate(v: any): Date | undefined {
 
 const levelMeta: Record<LogLevel, { label: string; icon: any; bg: string; text: string; border: string }> = {
   critical: { label: 'Critical', icon: AlertOctagon, bg: 'bg-[rgba(239,68,68,0.15)]', text: 'text-[#ef4444]', border: 'border-[#ef4444]/30' },
-  error: { label: 'Error', icon: AlertTriangle, bg: 'bg-[rgba(255,59,92,0.12)]', text: 'text-[#ff3b5c]', border: 'border-[#ff3b5c]/25' },
+  error: { label: 'Error', icon: AlertTriangle, bg: 'bg-[rgba(255,59,92,0.12)]', text: 'text-[#7C3AED]', border: 'border-[#7C3AED]/25' },
   warn: { label: 'Warn', icon: AlertTriangle, bg: 'bg-[rgba(245,158,11,0.12)]', text: 'text-[#f59e0b]', border: 'border-[#f59e0b]/25' },
-  info: { label: 'Info', icon: Info, bg: 'bg-[rgba(34,197,94,0.10)]', text: 'text-[#22C55E]', border: 'border-[#22C55E]/20' },
-  debug: { label: 'Debug', icon: Bug, bg: 'bg-[rgba(100,116,139,0.12)]', text: 'text-[#94A3B8]', border: 'border-[#64748b]/20' }
+  info: { label: 'Info', icon: Info, bg: 'bg-[rgba(124,58,237,0.10)]', text: 'text-[#7C3AED]', border: 'border-[#7C3AED]/20' },
+  debug: { label: 'Debug', icon: Bug, bg: 'bg-[rgba(100,116,139,0.12)]', text: 'text-muted-foreground', border: 'border-[#64748b]/20' }
 };
 
 export function LogsPage() {
@@ -161,24 +161,24 @@ export function LogsPage() {
     <div className="p-8">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#F8FAFC]">System Logs</h1>
-          <p className="text-[#94A3B8] mt-1">
+          <h1 className="text-3xl font-bold text-foreground">System Logs</h1>
+          <p className="text-muted-foreground mt-1">
             {stats.shown} of {stats.total} logs · {stats.errors24} errors (24h) · {stats.unresolved} unresolved
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-sm text-[#F8FAFC] cursor-pointer">
-            <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} className="accent-[#22C55E]" />
-            <RefreshCw className={`w-4 h-4 ${live ? 'text-[#22C55E] animate-spin' : 'text-[#94A3B8]'}`} />
+          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-foreground cursor-pointer">
+            <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} className="accent-[#7C3AED]" />
+            <RefreshCw className={`w-4 h-4 ${live ? 'text-[#7C3AED] animate-spin' : 'text-muted-foreground'}`} />
             Live
           </label>
-          <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-sm text-[#F8FAFC] hover:border-[#22C55E]/30">
+          <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-foreground hover:border-[#7C3AED]/30">
             <Download className="w-4 h-4" /> Export CSV
           </button>
-          <button onClick={clearResolved} className="px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-sm text-[#94A3B8] hover:text-[#F8FAFC]">
+          <button onClick={clearResolved} className="px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-muted-foreground hover:text-foreground">
             Clear resolved
           </button>
-          <button onClick={clearAll} className="flex items-center gap-1.5 px-3 py-2 bg-[rgba(255,59,92,0.12)] border border-[#ff3b5c]/25 text-sm text-[#ff3b5c]">
+          <button onClick={clearAll} className="flex items-center gap-1.5 px-3 py-2 bg-[rgba(255,59,92,0.12)] border border-[#7C3AED]/25 text-sm text-[#7C3AED]">
             <Trash2 className="w-4 h-4" /> Clear all
           </button>
         </div>
@@ -188,23 +188,23 @@ export function LogsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total', value: stats.total, sub: `${filtered.length} shown` },
-          { label: 'Errors (24h)', value: stats.errors24, sub: 'error + critical', tone: stats.errors24 > 0 ? 'text-[#ff3b5c]' : 'text-[#22C55E]' },
-          { label: 'Warnings (24h)', value: stats.warns24, sub: 'warn', tone: stats.warns24 > 0 ? 'text-[#f59e0b]' : 'text-[#94A3B8]' },
-          { label: 'Unresolved', value: stats.unresolved, sub: 'needs attention', tone: stats.unresolved > 0 ? 'text-[#ef4444]' : 'text-[#94A3B8]' }
+          { label: 'Errors (24h)', value: stats.errors24, sub: 'error + critical', tone: stats.errors24 > 0 ? 'text-[#7C3AED]' : 'text-[#7C3AED]' },
+          { label: 'Warnings (24h)', value: stats.warns24, sub: 'warn', tone: stats.warns24 > 0 ? 'text-[#f59e0b]' : 'text-muted-foreground' },
+          { label: 'Unresolved', value: stats.unresolved, sub: 'needs attention', tone: stats.unresolved > 0 ? 'text-[#ef4444]' : 'text-muted-foreground' }
         ].map(s => (
-          <div key={s.label} className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-4">
-            <p className="text-xs uppercase tracking-wider text-[#94A3B8]">{s.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${s.tone || 'text-[#F8FAFC]'}`}>{s.value}</p>
-            <p className="text-xs text-[#64748b] mt-1">{s.sub}</p>
+          <div key={s.label} className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${s.tone || 'text-foreground'}`}>{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-4 p-4 bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
+      <div className="flex flex-wrap items-center gap-3 mb-4 p-4 bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#94A3B8]" />
-          <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as any)} className="bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-sm px-3 py-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
             <option value="all">All levels</option>
             <option value="critical">Critical</option>
             <option value="error">Error</option>
@@ -212,33 +212,33 @@ export function LogsPage() {
             <option value="info">Info</option>
             <option value="debug">Debug</option>
           </select>
-          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value as any)} className="bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-sm px-3 py-2">
+          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
             <option value="all">All sources</option>
             {(['email','github','api','firestore','auth','ui','workflow','report','system','task','defect','action-point','general'] as const).map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          <select value={timeFilter} onChange={e => setTimeFilter(e.target.value as any)} className="bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-sm px-3 py-2">
+          <select value={timeFilter} onChange={e => setTimeFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
             <option value="all">All time</option>
             <option value="1h">Last hour</option>
             <option value="24h">Last 24h</option>
             <option value="7d">Last 7 days</option>
           </select>
-          <label className="flex items-center gap-1.5 text-sm text-[#94A3B8] ml-2">
-            <input type="checkbox" checked={showResolved} onChange={e => setShowResolved(e.target.checked)} className="accent-[#22C55E]" />
+          <label className="flex items-center gap-1.5 text-sm text-muted-foreground ml-2">
+            <input type="checkbox" checked={showResolved} onChange={e => setShowResolved(e.target.checked)} className="accent-[#7C3AED]" />
             Resolved
           </label>
         </div>
         <div className="flex-1 min-w-[220px] max-w-md ml-auto relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search message, details, route…"
-            className="w-full pl-9 pr-9 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-sm placeholder:text-[#64748b] focus:border-[#22C55E]/40 outline-none"
+            className="w-full pl-9 pr-9 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm placeholder:text-muted-foreground focus:border-[#7C3AED]/40 outline-none"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#94A3B8] hover:text-[#F8FAFC]">
+            <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -247,11 +247,11 @@ export function LogsPage() {
 
       {/* List */}
       <div className="space-y-2">
-        {loading && <div className="p-8 text-center text-[#94A3B8]">Loading logs…</div>}
+        {loading && <div className="p-8 text-center text-muted-foreground">Loading logs…</div>}
         {!loading && filtered.length === 0 && (
-          <div className="p-12 text-center bg-[#0F172A] border border-[rgba(34,197,94,0.1)]">
-            <p className="text-[#94A3B8]">No logs match your filters.</p>
-            <p className="text-xs text-[#64748b] mt-2">Logs are written by the app on errors, email failures, GitHub/API issues, and unhandled exceptions.</p>
+          <div className="p-12 text-center bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
+            <p className="text-muted-foreground">No logs match your filters.</p>
+            <p className="text-xs text-muted-foreground mt-2">Logs are written by the app on errors, email failures, GitHub/API issues, and unhandled exceptions.</p>
           </div>
         )}
         {filtered.map(l => {
@@ -259,9 +259,9 @@ export function LogsPage() {
           const Icon = meta.icon;
           const isExpanded = expanded === l.id;
           return (
-            <div key={l.id} className={`bg-[#0F172A] border ${l.resolved ? 'border-[rgba(34,197,94,0.15)] opacity-75' : meta.border} overflow-hidden`}>
+            <div key={l.id} className={`bg-[#0F172A] border ${l.resolved ? 'border-[rgba(124,58,237,0.15)] opacity-75' : meta.border} overflow-hidden`}>
               <div
-                className="flex items-start gap-3 p-4 cursor-pointer hover:bg-[rgba(255,255,255,0.02)]"
+                className="flex items-start gap-3 p-4 cursor-pointer hover:bg-[rgba(124,58,237,0.05)]"
                 onClick={() => setExpanded(isExpanded ? null : l.id)}
               >
                 <span className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${meta.bg} ${meta.text}`}>
@@ -270,48 +270,48 @@ export function LogsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`text-xs font-bold px-2 py-0.5 ${meta.bg} ${meta.text}`}>{meta.label}</span>
-                    <span className="text-xs px-2 py-0.5 bg-[#1E293B] text-[#94A3B8] border border-[rgba(34,197,94,0.08)]">{l.source}</span>
-                    {l.route && <span className="text-xs text-[#64748b] truncate max-w-[220px]">{l.route}</span>}
-                    {l.resolved && <span className="text-xs px-2 py-0.5 bg-[rgba(34,197,94,0.12)] text-[#22C55E] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> resolved</span>}
-                    <span className="text-xs text-[#64748b] ml-auto flex items-center gap-1">
+                    <span className="text-xs px-2 py-0.5 bg-white text-muted-foreground border border-[rgba(124,58,237,0.08)]">{l.source}</span>
+                    {l.route && <span className="text-xs text-muted-foreground truncate max-w-[220px]">{l.route}</span>}
+                    {l.resolved && <span className="text-xs px-2 py-0.5 bg-[rgba(124,58,237,0.12)] text-[#7C3AED] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> resolved</span>}
+                    <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {l.createdAt ? format(l.createdAt, 'MMM d, HH:mm:ss') : '—'}
                     </span>
                   </div>
-                  <p className="text-sm text-[#F8FAFC] mt-1.5 break-words">{l.message}</p>
-                  <p className="text-xs text-[#94A3B8] mt-1">
+                  <p className="text-sm text-foreground mt-1.5 break-words">{l.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {l.userName || l.userEmail ? `${l.userName || ''}${l.userName && l.userEmail ? ' · ' : ''}${l.userEmail || ''} · ` : ''}
                     {l.details ? `${l.details.slice(0, 140)}${l.details.length > 140 ? '…' : ''}` : ''}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => copyDetails(l)} title="Copy" className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[rgba(255,255,255,0.06)]">
+                  <button onClick={() => copyDetails(l)} title="Copy" className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-[rgba(255,255,255,0.06)]">
                     <Copy className="w-4 h-4" />
                   </button>
-                  <button onClick={() => toggleResolved(l)} title={l.resolved ? 'Mark unresolved' : 'Mark resolved'} className={`p-1.5 ${l.resolved ? 'text-[#94A3B8]' : 'text-[#22C55E]'} hover:bg-[rgba(255,255,255,0.06)]`}>
+                  <button onClick={() => toggleResolved(l)} title={l.resolved ? 'Mark unresolved' : 'Mark resolved'} className={`p-1.5 ${l.resolved ? 'text-muted-foreground' : 'text-[#7C3AED]'} hover:bg-[rgba(255,255,255,0.06)]`}>
                     <CheckCircle className="w-4 h-4" />
                   </button>
-                  <button onClick={() => deleteDoc(doc(db, 'systemLogs', l.id))} title="Delete" className="p-1.5 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)]">
+                  <button onClick={() => deleteDoc(doc(db, 'systemLogs', l.id))} title="Delete" className="p-1.5 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]">
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <ChevronDown className={`w-4 h-4 text-[#64748b] transition ${isExpanded ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               </div>
               {isExpanded && (
-                <div className="px-4 pb-4 pt-0 border-t border-[rgba(34,197,94,0.06)] bg-[#020617]/40">
+                <div className="px-4 pb-4 pt-0 border-t border-[rgba(124,58,237,0.06)] bg-[#020617]/40">
                   {l.details && (
                     <div className="mt-3">
-                      <p className="text-xs font-semibold text-[#94A3B8] mb-1">Details</p>
-                      <pre className="text-xs text-[#CBD5E1] bg-[#1E293B] border border-[rgba(34,197,94,0.08)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.details}</pre>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Details</p>
+                      <pre className="text-xs text-[#CBD5E1] bg-white border border-[rgba(124,58,237,0.08)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.details}</pre>
                     </div>
                   )}
                   {l.stack && (
                     <div className="mt-3">
-                      <p className="text-xs font-semibold text-[#94A3B8] mb-1">Stack</p>
-                      <pre className="text-xs text-[#f59e0b] bg-[#1E293B] border border-[rgba(245,158,11,0.15)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.stack}</pre>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">Stack</p>
+                      <pre className="text-xs text-[#f59e0b] bg-white border border-[rgba(245,158,11,0.15)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.stack}</pre>
                     </div>
                   )}
-                  {!l.details && !l.stack && <p className="text-xs text-[#64748b] mt-3">No additional context.</p>}
+                  {!l.details && !l.stack && <p className="text-xs text-muted-foreground mt-3">No additional context.</p>}
                 </div>
               )}
             </div>

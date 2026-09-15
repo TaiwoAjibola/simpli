@@ -11,15 +11,16 @@ const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ defau
 const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
 const CalendarPage = lazy(() => import('./components/CalendarPage').then(m => ({ default: m.CalendarPage })));
 const ClientsPage = lazy(() => import('./components/ClientsPage').then(m => ({ default: m.ClientsPage })));
-const TeamPage = lazy(() => import('./components/TeamPage').then(m => ({ default: m.TeamPage })));
 const DocumentsPage = lazy(() => import('./components/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
 const MilestonesPage = lazy(() => import('./components/MilestonesPage').then(m => ({ default: m.MilestonesPage })));
 const ReportsPage = lazy(() => import('./components/ReportsPage').then(m => ({ default: m.ReportsPage })));
 const NotificationsPage = lazy(() => import('./components/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const ProjectsPage = lazy(() => import('./components/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const GoalsMilestonesModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsMilestonesModule })));
-const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({ default: m.InsightsPage })));
+const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
+const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.MyWork })));
+const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
+const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -47,11 +48,14 @@ function AppContent() {
         <Suspense fallback={<PageLoader message="Loading..." />}>
           <div key={currentPage} className="animate-fade-up h-full">
             {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+            {currentPage === 'my-work' && <MyWork />}
             {currentPage === 'projects' && <ProjectsPage onNavigate={handleNavigate} />}
+            {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
             {currentPage === 'tasks' && <TasksModule />}
+            {currentPage === 'defects' && <DefectDashboard />}
+            {currentPage === 'action-points' && <ActionPointsPage />}
             {currentPage === 'calendar' && <CalendarPage />}
             {currentPage === 'clients' && <ClientsPage />}
-            {currentPage === 'team' && <TeamPage />}
             {currentPage === 'documents' && <DocumentsPage />}
             {currentPage === 'milestones' && <MilestonesPage />}
             {currentPage === 'reports' && <ReportsPage />}

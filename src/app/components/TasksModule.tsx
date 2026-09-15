@@ -319,26 +319,26 @@ export function TasksModule() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#4C1D95] mb-2">Tasks</h1>
-          <p className="text-[#6D28D9]">{tasks.length} total tasks</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Tasks</h1>
+          <p className="text-foreground">{tasks.length} total tasks</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-[#F5F3FF] border border-[#E9D5FF]">
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'list' ? 'text-[#7C3AED]' : 'text-[#6D28D9]'}`}
+              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'list' ? 'text-[#7C3AED]' : 'text-foreground'}`}
             >
               <List className="w-4 h-4" /> List
             </button>
             <button
               onClick={() => setViewMode('kanban')}
-              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'kanban' ? 'text-[#7C3AED]' : 'text-[#6D28D9]'}`}
+              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'kanban' ? 'text-[#7C3AED]' : 'text-foreground'}`}
             >
               <LayoutGrid className="w-4 h-4" /> Kanban
             </button>
             <button
               onClick={() => setViewMode('timeline')}
-              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'timeline' ? 'text-[#7C3AED]' : 'text-[#6D28D9]'}`}
+              className={`px-3 py-2 text-sm flex items-center gap-1.5 ${viewMode === 'timeline' ? 'text-[#7C3AED]' : 'text-foreground'}`}
             >
               <CalendarRange className="w-4 h-4" /> Timeline
             </button>
@@ -364,7 +364,7 @@ export function TasksModule() {
 
       {showAddForm && (
         <div className="mb-6 p-6 bg-white border border-[#E9D5FF]">
-          <h3 className="font-semibold text-[#4C1D95] mb-4">
+          <h3 className="font-semibold text-foreground mb-4">
             {editingTask ? 'Edit Task' : 'Create New Task'}
           </h3>
 
@@ -376,7 +376,7 @@ export function TasksModule() {
                 className={`px-4 py-2 text-sm font-medium transition ${
                   taskMode === 'single'
                     ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'
-                    : 'text-[#6D28D9] hover:text-[#4C1D95]'
+                    : 'text-foreground hover:text-foreground'
                 }`}
               >
                 Single Task
@@ -387,7 +387,7 @@ export function TasksModule() {
                 className={`px-4 py-2 text-sm font-medium transition ${
                   taskMode === 'multi'
                     ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'
-                    : 'text-[#6D28D9] hover:text-[#4C1D95]'
+                    : 'text-foreground hover:text-foreground'
                 }`}
               >
                 Multiple Tasks
@@ -399,12 +399,12 @@ export function TasksModule() {
 
             {taskMode === 'single' && (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2">Task Name</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Task Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -412,13 +412,13 @@ export function TasksModule() {
 
             {taskMode === 'single' && (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                   rows={3}
                   required
                 />
@@ -427,7 +427,7 @@ export function TasksModule() {
 
             {taskMode === 'single' && (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Work Type
                 </label>
                 <div className="flex items-center gap-1 bg-[#F5F3FF] border border-[#E9D5FF] w-fit">
@@ -437,7 +437,7 @@ export function TasksModule() {
                     className={`px-4 py-2 text-sm font-medium transition ${
                       formData.workType === 'development'
                         ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'
-                        : 'text-[#6D28D9] hover:text-[#4C1D95]'
+                        : 'text-foreground hover:text-foreground'
                     }`}
                   >
                     Development
@@ -448,14 +448,14 @@ export function TasksModule() {
                     className={`px-4 py-2 text-sm font-medium transition ${
                       formData.workType === 'non-development'
                         ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'
-                        : 'text-[#6D28D9] hover:text-[#4C1D95]'
+                        : 'text-foreground hover:text-foreground'
                     }`}
                   >
                     Non-Development
                   </button>
                 </div>
                 {formData.workType === 'development' && (
-                  <p className="text-xs text-[#6D28D9] mt-1">
+                  <p className="text-xs text-foreground mt-1">
                     Development tasks can be linked to a repository, branch and pull request.
                   </p>
                 )}
@@ -465,11 +465,11 @@ export function TasksModule() {
             {taskMode === 'single' ? (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#4C1D95] mb-2">Goal (optional)</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Goal (optional)</label>
                   <select
                     value={formData.goalId}
                     onChange={(e) => setFormData({ ...formData, goalId: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                   >
                     <option value="">No Goal</option>
                     {goals.map((goal) => {
@@ -484,7 +484,7 @@ export function TasksModule() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#4C1D95] mb-2">Assign To</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Assign To</label>
                   <div className="flex flex-wrap gap-2">
                     {employees.map((emp) => {
                       const isSelected = formData.assignedTo.includes(emp.id);
@@ -495,8 +495,8 @@ export function TasksModule() {
                           onClick={() => toggleAssignee(emp.id)}
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
-                              ? 'bg-[rgba(124,58,237,0.1)] border-[#22C55E] text-[#7C3AED] font-medium'
-                              : 'bg-[#F5F3FF] border-[#E9D5FF] text-[#4C1D95] hover:border-[rgba(124,58,237,0.3)]'
+                              ? 'bg-[rgba(124,58,237,0.1)] border-[#7C3AED] text-[#7C3AED] font-medium'
+                              : 'bg-[#F5F3FF] border-[#E9D5FF] text-foreground hover:border-[rgba(124,58,237,0.3)]'
                           }`}
                         >
                           {emp.name}
@@ -505,17 +505,17 @@ export function TasksModule() {
                     })}
                   </div>
                   {formData.assignedTo.length === 0 && (
-                    <p className="text-xs text-[#6D28D9] mt-1">Select one or more assignees</p>
+                    <p className="text-xs text-foreground mt-1">Select one or more assignees</p>
                   )}
                 </div>
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2">Goal (optional, all tasks)</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Goal (optional, all tasks)</label>
                 <select
                   value={multiGoalId}
                   onChange={(e) => setMultiGoalId(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                 >
                   <option value="">No Goal</option>
                   {goals.map((goal) => {
@@ -532,7 +532,7 @@ export function TasksModule() {
 
             {taskMode === 'single' && (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2">Priority</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Priority</label>
                 <select
                   value={formData.priority}
                   onChange={(e) =>
@@ -541,7 +541,7 @@ export function TasksModule() {
                       priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent'
                     })
                   }
-                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -565,12 +565,12 @@ export function TasksModule() {
               };
               return (
               <div>
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                   <TagIcon className="w-4 h-4" />
                   Tags
                 </label>
                 {appTags.length === 0 ? (
-                  <p className="text-xs text-[#6D28D9]">Select a goal with an app to see available tags</p>
+                  <p className="text-xs text-foreground">Select a goal with an app to see available tags</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {appTags.map(tag => {
@@ -582,8 +582,8 @@ export function TasksModule() {
                           onClick={() => toggleTag(tag.id)}
                           className={`px-3 py-1.5 text-sm border-2 transition ${
                             isSelected
-                              ? 'bg-[rgba(124,58,237,0.1)] border-[#22C55E] text-[#7C3AED] font-medium'
-                              : 'bg-[#F5F3FF] border-[#E9D5FF] text-[#4C1D95] hover:border-[rgba(124,58,237,0.3)]'
+                              ? 'bg-[rgba(124,58,237,0.1)] border-[#7C3AED] text-[#7C3AED] font-medium'
+                              : 'bg-[#F5F3FF] border-[#E9D5FF] text-foreground hover:border-[rgba(124,58,237,0.3)]'
                           }`}
                         >
                           {tag.name}
@@ -599,21 +599,21 @@ export function TasksModule() {
             {taskMode === 'single' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#4C1D95] mb-2">Start Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#4C1D95] mb-2">End Date</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">End Date</label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                    className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
                   />
                 </div>
               </div>
@@ -622,7 +622,7 @@ export function TasksModule() {
             {taskMode === 'multi' && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-[#4C1D95]">Tasks ({multiTasks.length})</label>
+                  <label className="block text-sm font-medium text-foreground">Tasks ({multiTasks.length})</label>
                   <button
                     type="button"
                     onClick={addMultiTaskRow}
@@ -634,18 +634,18 @@ export function TasksModule() {
 
                 {multiTasks.length === 0 && (
                   <div className="text-center py-8 bg-[#F5F3FF] border border-dashed border-[#E9D5FF]">
-                    <p className="text-sm text-[#6D28D9]">Click "Add Task" to add tasks under this goal</p>
+                    <p className="text-sm text-foreground">Click "Add Task" to add tasks under this goal</p>
                   </div>
                 )}
 
                 {multiTasks.map((row, idx) => (
                   <div key={idx} className="p-4 bg-[#F5F3FF] border border-[#E9D5FF] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#4C1D95]">Task {idx + 1}</span>
+                      <span className="text-sm font-medium text-foreground">Task {idx + 1}</span>
                       <button
                         type="button"
                         onClick={() => removeMultiTaskRow(idx)}
-                        className="p-1 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)]"
+                        className="p-1 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)]"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -653,28 +653,28 @@ export function TasksModule() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-[#4C1D95] mb-1">Task Name</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Task Name</label>
                         <input
                           type="text"
                           value={row.name}
                           onChange={(e) => updateMultiTaskRow(idx, 'name', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-[#4C1D95] mb-1">Description</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Description</label>
                         <input
                           type="text"
                           value={row.description}
                           onChange={(e) => updateMultiTaskRow(idx, 'description', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-[#4C1D95] mb-1">Assign To</label>
+                      <label className="block text-xs font-medium text-foreground mb-1">Assign To</label>
                       <div className="flex flex-wrap gap-1.5">
                         {employees.map((emp) => {
                           const selected = row.assignedTo.includes(emp.id);
@@ -685,8 +685,8 @@ export function TasksModule() {
                               onClick={() => toggleMultiAssignee(idx, emp.id)}
                               className={`px-2 py-1 text-xs border transition ${
                                 selected
-                                  ? 'bg-[rgba(124,58,237,0.1)] border-[#22C55E] text-[#7C3AED]'
-                                  : 'bg-white border-[#E9D5FF] text-[#4C1D95]'
+                                  ? 'bg-[rgba(124,58,237,0.1)] border-[#7C3AED] text-[#7C3AED]'
+                                  : 'bg-white border-[#E9D5FF] text-foreground'
                               }`}
                             >
                               {emp.name.split(' ')[0]}
@@ -698,11 +698,11 @@ export function TasksModule() {
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-[#4C1D95] mb-1">Priority</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Priority</label>
                         <select
                           value={row.priority}
                           onChange={(e) => updateMultiTaskRow(idx, 'priority', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
@@ -711,21 +711,21 @@ export function TasksModule() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-[#4C1D95] mb-1">Start Date</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">Start Date</label>
                         <input
                           type="date"
                           value={row.startDate}
                           onChange={(e) => updateMultiTaskRow(idx, 'startDate', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-[#4C1D95] mb-1">End Date</label>
+                        <label className="block text-xs font-medium text-foreground mb-1">End Date</label>
                         <input
                           type="date"
                           value={row.endDate}
                           onChange={(e) => updateMultiTaskRow(idx, 'endDate', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                         />
                       </div>
                     </div>
@@ -739,7 +739,7 @@ export function TasksModule() {
                 <button
                   type="button"
                   onClick={() => setShowSubtasksSection(!showSubtasksSection)}
-                  className="flex items-center gap-2 text-sm font-medium text-[#7C3AED] hover:text-[#16a34a] transition"
+                  className="flex items-center gap-2 text-sm font-medium text-[#7C3AED] hover:text-foreground transition"
                 >
                   {showSubtasksSection ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   <Layers className="w-4 h-4" />
@@ -750,22 +750,22 @@ export function TasksModule() {
                   <div className="mt-4 space-y-4">
                     <div className="p-4 bg-[#F5F3FF] border border-[#E9D5FF] space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-[#4C1D95] mb-1">Subtask Name</label>
+                        <label className="block text-sm font-medium text-foreground mb-1">Subtask Name</label>
                         <input
                           type="text"
                           value={newSubtask.name}
                           onChange={(e) => setNewSubtask({ ...newSubtask, name: e.target.value })}
-                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                          className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                           placeholder="Enter subtask name"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm font-medium text-[#4C1D95] mb-1">Priority</label>
+                          <label className="block text-sm font-medium text-foreground mb-1">Priority</label>
                           <select
                             value={newSubtask.priority}
                             onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value as Subtask['priority'] })}
-                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                           >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -774,7 +774,7 @@ export function TasksModule() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-[#4C1D95] mb-1">Assign To</label>
+                          <label className="block text-sm font-medium text-foreground mb-1">Assign To</label>
                           <div className="flex flex-wrap gap-1">
                             {employees.map((emp) => {
                               const selected = newSubtask.assignedTo.includes(emp.id);
@@ -785,8 +785,8 @@ export function TasksModule() {
                                   onClick={() => toggleSubtaskAssignee(emp.id)}
                                   className={`px-2 py-1 text-xs border transition ${
                                     selected
-                                      ? 'bg-[rgba(124,58,237,0.1)] border-[#22C55E] text-[#7C3AED]'
-                                      : 'bg-white border-[#E9D5FF] text-[#4C1D95]'
+                                      ? 'bg-[rgba(124,58,237,0.1)] border-[#7C3AED] text-[#7C3AED]'
+                                      : 'bg-white border-[#E9D5FF] text-foreground'
                                   }`}
                                 >
                                   {emp.name.split(' ')[0]}
@@ -798,21 +798,21 @@ export function TasksModule() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-sm font-medium text-[#4C1D95] mb-1">Start Date</label>
+                          <label className="block text-sm font-medium text-foreground mb-1">Start Date</label>
                           <input
                             type="date"
                             value={newSubtask.startDate}
                             onChange={(e) => setNewSubtask({ ...newSubtask, startDate: e.target.value })}
-                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-[#4C1D95] mb-1">End Date</label>
+                          <label className="block text-sm font-medium text-foreground mb-1">End Date</label>
                           <input
                             type="date"
                             value={newSubtask.endDate}
                             onChange={(e) => setNewSubtask({ ...newSubtask, endDate: e.target.value })}
-                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] text-sm"
+                            className="w-full px-3 py-2 bg-white border border-[#E9D5FF] text-foreground text-sm"
                           />
                         </div>
                       </div>
@@ -829,34 +829,34 @@ export function TasksModule() {
 
                     {subtasks.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-[#4C1D95]">Subtasks to be created ({subtasks.length})</p>
+                        <p className="text-sm font-medium text-foreground">Subtasks to be created ({subtasks.length})</p>
                         {subtasks.map((st, idx) => {
                           const assigneeNames = st.assignedTo.map(id => getEmployeeById(id)?.name).filter(Boolean).join(', ');
                           return (
                             <div key={idx} className="flex items-center justify-between p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-[#4C1D95]">{st.name}</p>
+                                <p className="text-sm font-medium text-foreground">{st.name}</p>
                                 <div className="flex items-center gap-2 mt-1">
                                   <span className={`text-xs px-2 py-0.5 ${
-                                    st.priority === 'urgent' ? 'bg-[rgba(220,38,38,0.05)] text-[#DC2626]' :
+                                    st.priority === 'urgent' ? 'bg-[rgba(124,58,237,0.05)] text-[#7C3AED]' :
                                     st.priority === 'high' ? 'bg-[rgba(249,115,22,0.1)] text-[#F97316]' :
                                     st.priority === 'medium' ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]' :
-                                    'bg-[rgba(107,107,128,0.1)] text-[#6D28D9]'
+                                    'bg-[rgba(107,107,128,0.1)] text-foreground'
                                   }`}>
                                     {st.priority}
                                   </span>
                                   {assigneeNames && (
-                                    <span className="text-xs text-[#6D28D9]">→ {assigneeNames}</span>
+                                    <span className="text-xs text-foreground">→ {assigneeNames}</span>
                                   )}
                                   {st.startDate && (
-                                    <span className="text-xs text-[#6D28D9]">{st.startDate}{st.endDate ? ` - ${st.endDate}` : ''}</span>
+                                    <span className="text-xs text-foreground">{st.startDate}{st.endDate ? ` - ${st.endDate}` : ''}</span>
                                   )}
                                 </div>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => removeSubtaskFromList(idx)}
-                                className="p-1.5 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] rounded transition ml-2"
+                                className="p-1.5 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] rounded transition ml-2"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -872,12 +872,12 @@ export function TasksModule() {
 
             {taskMode === 'single' && !editingTask && (
               <div className="pt-4 border-t border-[#E9D5FF]">
-                <label className="block text-sm font-medium text-[#4C1D95] mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                   <Paperclip className="w-4 h-4" />
                   Attachments
                 </label>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 px-4 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] text-sm cursor-pointer hover:bg-[#F5F3FF] transition">
+                  <label className="flex items-center gap-2 px-4 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground text-sm cursor-pointer hover:bg-[#F5F3FF] transition">
                     <Paperclip className="w-4 h-4" />
                     Choose Files
                     <input
@@ -889,7 +889,7 @@ export function TasksModule() {
                     />
                   </label>
                   {attachments.length > 0 && (
-                    <span className="text-xs text-[#6D28D9]">{attachments.length} file{attachments.length > 1 ? 's' : ''} selected</span>
+                    <span className="text-xs text-foreground">{attachments.length} file{attachments.length > 1 ? 's' : ''} selected</span>
                   )}
                 </div>
 
@@ -900,14 +900,14 @@ export function TasksModule() {
                         <div className="flex items-center gap-2 min-w-0">
                           <FileText className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-sm text-[#4C1D95] truncate">{file.name}</p>
-                            <p className="text-xs text-[#6D28D9]">{formatFileSize(file.size)}</p>
+                            <p className="text-sm text-foreground truncate">{file.name}</p>
+                            <p className="text-xs text-foreground">{formatFileSize(file.size)}</p>
                           </div>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeAttachment(idx)}
-                          className="p-1 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] rounded transition flex-shrink-0"
+                          className="p-1 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] rounded transition flex-shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -929,7 +929,7 @@ export function TasksModule() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-[#F5F3FF] text-[#4C1D95] border border-[#E9D5FF] hover:bg-[#F5F3FF]"
+                className="px-4 py-2 bg-[#F5F3FF] text-foreground border border-[#E9D5FF] hover:bg-[#F5F3FF]"
               >
                 Cancel
               </button>
@@ -939,11 +939,11 @@ export function TasksModule() {
       )}
 
       <div className="mb-6 flex items-center gap-2">
-        <Filter className="w-5 h-5 text-[#6D28D9]" />
+        <Filter className="w-5 h-5 text-foreground" />
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value as TaskStatus | 'all')}
-          className="px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] text-sm"
+          className="px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground text-sm"
         >
           <option value="all">All Tasks</option>
           <option value="not_started">Not Started</option>
@@ -983,12 +983,12 @@ export function TasksModule() {
             const statusTasks = filteredTasks.filter(t => t.status === status);
             return (
               <div key={status} className="bg-white border border-[#E9D5FF] p-4">
-                <h3 className="font-semibold text-[#4C1D95] mb-3 capitalize text-sm">{status.replace('_', ' ')}</h3>
+                <h3 className="font-semibold text-foreground mb-3 capitalize text-sm">{status.replace('_', ' ')}</h3>
                 <div className="space-y-2">
                   {statusTasks.map(task => {
                     const taskGoal = task.goalId ? getGoalById(task.goalId) : null;
                     const taskApp = taskGoal ? getAppById(taskGoal.appId) : null;
-                    const taskAppColor = taskApp?.color || '#22C55E';
+                    const taskAppColor = taskApp?.color || '#7C3AED';
                     const taskCardStyle = (taskApp?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
                     return (
                     <div
@@ -999,13 +999,13 @@ export function TasksModule() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#4C1D95]">{task.name}</p>
-                          <p className="text-xs text-[#6D28D9] mt-0.5">{taskApp?.name}{taskGoal ? ` → ${taskGoal.name}` : ''}</p>
+                          <p className="text-sm font-medium text-foreground">{task.name}</p>
+                          <p className="text-xs text-foreground mt-0.5">{taskApp?.name}{taskGoal ? ` → ${taskGoal.name}` : ''}</p>
                           <span className={`text-xs px-2 py-0.5 mt-1 inline-block ${
-                            task.priority === 'urgent' ? 'bg-[rgba(220,38,38,0.05)] text-[#DC2626]' :
+                            task.priority === 'urgent' ? 'bg-[rgba(124,58,237,0.05)] text-[#7C3AED]' :
                             task.priority === 'high' ? 'bg-[rgba(249,115,22,0.1)] text-[#F97316]' :
                             task.priority === 'medium' ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]' :
-                            'bg-[rgba(107,107,128,0.1)] text-[#6D28D9]'
+                            'bg-[rgba(107,107,128,0.1)] text-foreground'
                           }`}>
                             {task.priority}
                           </span>
@@ -1017,7 +1017,7 @@ export function TasksModule() {
                             className={`p-1 rounded ${
                               task.lastEmailSentAt
                                 ? 'text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]'
-                                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                                : 'text-[#A78BFA] hover:bg-[rgba(124,58,237,0.1)]'
                             }`}
                             title={task.lastEmailSentAt ? `Resend email` : 'Send email'}
                           >
@@ -1035,7 +1035,7 @@ export function TasksModule() {
                           {canAssignTasks && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
-                              className="p-1 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] rounded"
+                              className="p-1 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] rounded"
                               title="Delete"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -1063,7 +1063,7 @@ export function TasksModule() {
 
       {filteredTasks.length === 0 && viewMode !== 'timeline' && (
         <div className="text-center py-12 bg-white border border-[#E9D5FF]">
-          <p className="text-[#6D28D9]">No tasks found</p>
+          <p className="text-foreground">No tasks found</p>
         </div>
       )}
 
@@ -1113,7 +1113,7 @@ function TaskCard({
   const { hasPermission } = useAuth();
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
-  const appColor = app?.color || '#22C55E';
+  const appColor = app?.color || '#7C3AED';
   const cardStyle = (app?.cardStyle || 'default') as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal';
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
@@ -1131,7 +1131,7 @@ function TaskCard({
     low: `bg-[rgba(148,163,184,0.1)] text-[${PRIORITY_COLORS.low}]`,
     medium: `bg-[rgba(124,58,237,0.1)] text-[${PRIORITY_COLORS.medium}]`,
     high: `bg-[rgba(249,115,22,0.1)] text-[${PRIORITY_COLORS.high}]`,
-    urgent: `bg-[rgba(220,38,38,0.05)] text-[${PRIORITY_COLORS.urgent}]`
+    urgent: `bg-[rgba(124,58,237,0.05)] text-[${PRIORITY_COLORS.urgent}]`
   };
 
   const config = statusConfig[task.status] ?? statusConfig.not_started;
@@ -1151,11 +1151,11 @@ function TaskCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div>
-              <h3 className="font-semibold text-[#4C1D95]">{task.name}</h3>
-              <p className="text-sm text-[#6D28D9] mt-1">{task.description}</p>
+              <h3 className="font-semibold text-foreground">{task.name}</h3>
+              <p className="text-sm text-foreground mt-1">{task.description}</p>
             </div>
             {task.priority === 'urgent' && (
-              <Star className="w-5 h-5 text-[#DC2626] fill-[#ff3b5c] flex-shrink-0" />
+              <Star className="w-5 h-5 text-[#7C3AED] fill-[#7C3AED] flex-shrink-0" />
             )}
             <div className="flex gap-1 flex-shrink-0">
               <button
@@ -1163,7 +1163,7 @@ function TaskCard({
                 className={`p-1.5 rounded transition ${
                   task.lastEmailSentAt
                     ? 'text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]'
-                    : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                    : 'text-[#A78BFA] hover:bg-[rgba(124,58,237,0.1)]'
                 }`}
                 title={task.lastEmailSentAt ? 'Resend email' : 'Send email'}
               >
@@ -1181,7 +1181,7 @@ function TaskCard({
               {canDelete && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="p-1.5 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] rounded transition"
+                  className="p-1.5 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] rounded transition"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -1191,7 +1191,7 @@ function TaskCard({
           </div>
 
           <div className="mb-3">
-            <p className="text-xs text-[#6D28D9]">
+            <p className="text-xs text-foreground">
               {app?.name}{goal ? ` → ${goal.name}` : ''}
             </p>
             {app && (
@@ -1220,7 +1220,7 @@ function TaskCard({
             <span className={`text-xs font-medium px-2 py-1 ${
               (task.workType || 'non-development') === 'development'
                 ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
-                : 'bg-[rgba(107,107,128,0.1)] text-[#6D28D9]'
+                : 'bg-[rgba(107,107,128,0.1)] text-foreground'
             }`}>
               {(task.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
             </span>
@@ -1230,7 +1230,7 @@ function TaskCard({
                 task.github.pullRequest.state === 'merged'
                   ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
                   : task.github.pullRequest.reviewState === 'approved' && task.github.pullRequest.checkStatus === 'success'
-                    ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                    ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
                     : task.github.pullRequest.reviewState === 'changes_requested' ||
                       task.github.pullRequest.checkStatus === 'failure'
                       ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
@@ -1248,7 +1248,7 @@ function TaskCard({
                 onStatusChange(e.target.value as TaskStatus);
               }}
               onClick={(e) => e.stopPropagation()}
-              className="text-xs bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] px-2 py-1"
+              className="text-xs bg-[#F5F3FF] border border-[#E9D5FF] text-foreground px-2 py-1"
               disabled={task.status === 'approved'}
             >
               {availableStatuses.map(s => (
@@ -1258,19 +1258,19 @@ function TaskCard({
 
             {assignees.length > 0 && (
               <div className="flex items-center gap-1.5">
-                <User className="w-4 h-4 text-[#6D28D9]" />
+                <User className="w-4 h-4 text-foreground" />
                 <div className="flex -space-x-2">
                   {assignees.slice(0, 3).map((emp, idx) => (
                     <div
                       key={idx}
-                      className="w-6 h-6 bg-gradient-to-br from-[#22C55E] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#020617] text-xs font-bold border-2 border-[#0F172A]"
+                      className="w-6 h-6 bg-gradient-to-br from-[#7C3AED] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#020617] text-xs font-bold border-2 border-[#0F172A]"
                       title={emp?.name}
                     >
                       {emp?.name.charAt(0)}
                     </div>
                   ))}
                   {assignees.length > 3 && (
-                    <div className="w-6 h-6 bg-[#F5F3FF] rounded-full flex items-center justify-center text-[#6D28D9] text-xs font-bold border-2 border-[#0F172A]">
+                    <div className="w-6 h-6 bg-[#F5F3FF] rounded-full flex items-center justify-center text-foreground text-xs font-bold border-2 border-[#0F172A]">
                       +{assignees.length - 3}
                     </div>
                   )}
@@ -1278,7 +1278,7 @@ function TaskCard({
               </div>
             )}
 
-            <span className="text-xs text-[#6D28D9]">
+            <span className="text-xs text-foreground">
               Created {format(task.createdAt, 'MMM d, yyyy')}
             </span>
           </div>
@@ -1291,7 +1291,7 @@ function TaskCard({
                 e.stopPropagation();
                 onApprove();
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#10b981] text-[#020617] font-medium hover:bg-[#0d9668] transition text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-[#A78BFA] text-[#020617] font-medium hover:bg-[#0d9668] transition text-sm"
             >
               <Check className="w-4 h-4" />
               Approve Task
@@ -1300,7 +1300,7 @@ function TaskCard({
 
           {task.approvedBy && approver && (
             <div className="mt-3 pt-3 border-t border-[#E9D5FF]">
-              <p className="text-xs text-[#10b981] font-medium">
+              <p className="text-xs text-[#A78BFA] font-medium">
                 ✓ Approved by {approver.name} on{' '}
                 {task.approvedAt && format(task.approvedAt, 'MMM d, yyyy')}
               </p>

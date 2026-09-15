@@ -4,8 +4,11 @@ import { useApp } from '../context/AppContext';
 import SimpliLogo from '../assets/Simpli.svg';
 import {
   LayoutDashboard,
+  Briefcase,
   FolderKanban,
   ListTodo,
+  Bug,
+  CheckSquare,
   CalendarDays,
   Users,
   FileText,
@@ -30,11 +33,13 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
+    { id: 'my-work', label: 'My Work', icon: Briefcase, show: true },
     { id: 'projects', label: 'Projects', icon: FolderKanban, show: true },
     { id: 'tasks', label: 'Tasks', icon: ListTodo, show: true },
+    { id: 'defects', label: 'Defects', icon: Bug, show: true },
+    { id: 'action-points', label: 'Action Points', icon: CheckSquare, show: true },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays, show: true },
     { id: 'clients', label: 'Clients', icon: Users, show: true },
-    { id: 'team', label: 'Team', icon: Users, show: true },
     { id: 'documents', label: 'Documents & Files', icon: FileText, show: true },
     { id: 'milestones', label: 'Milestones', icon: Target, show: true },
     { id: 'reports', label: 'Reports', icon: BarChart3, show: true },
@@ -53,7 +58,7 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-xl shadow-md icon-rotate-on-hover"
       >
-        {sidebarOpen ? <X className="w-5 h-5 text-[#4C1D95]" /> : <Menu className="w-5 h-5 text-[#4C1D95]" />}
+        {sidebarOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
       </button>
 
       {sidebarOpen && (
@@ -68,8 +73,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
             <div className="flex items-center gap-3">
               <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
               <div>
-                <h1 className="font-bold text-lg text-[#4C1D95] tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>Simpli</h1>
-                <p className="text-xs text-[#6D28D9] uppercase tracking-wider">{currentRole?.name}</p>
+                <h1 className="font-bold text-lg text-foreground tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>Simpli</h1>
+                <p className="text-xs text-foreground uppercase tracking-wider">{currentRole?.name}</p>
               </div>
             </div>
             <NotificationInbox />
@@ -87,15 +92,15 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`group w-full flex items-center gap-3 px-3 py-2 nav-item rounded-xl transition-all duration-200 ${
+                    className={`group w-full flex items-center gap-3 px-3 py-2 nav-item rounded-xl transition-all duration-150 ${
                       isActive
                         ? 'is-active bg-[#7C3AED]/15 font-medium text-[#7C3AED]'
-                        : 'text-[#6D28D9]/70 hover:text-[#4C1D95] hover:bg-[#F5F3FF]'
+                        : 'text-foreground/70 hover:text-foreground hover:bg-[#F5F3FF]'
                     }`}
                     style={{ animationDelay: `${ii * 40}ms` }}
                   >
                     <span className={`nav-icon-tile rounded-lg ${isActive ? 'bg-[#7C3AED]/15' : 'bg-[#F5F3FF]'}`}>
-                      <Icon className={`w-[18px] h-[18px] transition-transform ${isActive ? 'text-[#7C3AED]' : 'text-[#6D28D9]/50'}`} />
+                      <Icon className={`w-[18px] h-[18px] transition-transform ${isActive ? 'text-[#7C3AED]' : 'text-foreground/50'}`} />
                     </span>
                     <span>{item.label}</span>
                     {isActive && <span className="w-2 h-2 bg-[#7C3AED] rounded-full ml-auto animate-pulse" />}
@@ -112,13 +117,13 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
               {currentUser?.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-[#4C1D95] truncate">{currentUser?.name}</p>
-              <p className="text-xs text-[#6D28D9] truncate">{currentUser?.email}</p>
+              <p className="font-medium text-sm text-foreground truncate">{currentUser?.name}</p>
+              <p className="text-xs text-foreground truncate">{currentUser?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] transition rounded-xl"
+            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] transition rounded-xl"
           >
             <LogOut className="w-4 h-4" />
             <span>Logout</span>

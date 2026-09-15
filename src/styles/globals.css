@@ -13,19 +13,6 @@
   animation: slide-in 0.3s ease-out;
 }
 
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
 @keyframes fade-up {
   from {
     transform: translateY(12px);
@@ -56,106 +43,6 @@
   animation: scale-in 0.22s ease-out both;
 }
 
-/* ---- Micro-interactions (Motion-Driven) ---- */
-
-@keyframes micro-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-14deg); }
-  50% { transform: rotate(11deg); }
-  75% { transform: rotate(-7deg); }
-}
-
-@keyframes micro-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2.5px); }
-  75% { transform: translateX(2.5px); }
-}
-
-/* Hover-transition icon effects */
-.micro-pop,
-.micro-slide,
-.micro-spin-hover,
-.micro-grow {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, filter 0.25s ease;
-}
-
-.micro-pop:hover,
-.micro-pop:focus-visible {
-  transform: scale(1.22);
-}
-
-.micro-pop:active {
-  transform: scale(0.92);
-}
-
-.micro-slide:hover,
-.micro-slide:focus-visible {
-  transform: translateX(3px);
-}
-
-.micro-spin-hover:hover,
-.micro-spin-hover:focus-visible {
-  transform: rotate(90deg);
-}
-
-.micro-grow:hover,
-.micro-grow:focus-visible {
-  transform: scale(1.1);
-}
-
-/* Parent-group triggered animations */
-.group:hover .micro-wiggle,
-.group:focus-within .micro-wiggle {
-  animation: micro-wiggle 0.4s ease;
-}
-
-.group:hover .micro-shake,
-.group:focus-within .micro-shake {
-  animation: micro-shake 0.4s ease;
-}
-
-.group:hover .micro-pop,
-.group:focus-within .micro-pop {
-  transform: scale(1.18);
-}
-
-.group:hover .micro-glow,
-.group:focus-within .micro-glow {
-  filter: drop-shadow(0 0 7px rgba(124, 58, 237, 0.55));
-}
-
-.group:hover .micro-slide,
-.group:focus-within .micro-slide {
-  transform: translateX(3px);
-}
-
-/* Card lift */
-.card-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.card-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.5);
-}
-
-/* Catch-all: subtle pop on any lucide icon inside an interactive element */
-.lucide {
-  transition: transform 0.2s ease;
-}
-
-button:not(:disabled):hover > .lucide,
-a:hover > .lucide,
-button:not(:disabled):focus-visible > .lucide,
-a:focus-visible > .lucide {
-  transform: scale(1.12);
-}
-
-button:not(:disabled):active > .lucide,
-a:active > .lucide {
-  transform: scale(0.94);
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -180,123 +67,113 @@ a:active > .lucide {
   }
 }
 
-/* ============================================================
-   Design-system layer (drastic overhaul)
-   Aurora shell, glass surfaces, glow, animated iconography
-   ============================================================ */
+/* ---- Simple micro-interactions ---- */
 
-/* --- Aurora ambient background (fixed, behind everything) --- */
-.aurora-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  background:
-    radial-gradient(1200px 600px at 15% 0%, rgba(124, 58, 237, 0.10), transparent 55%),
-    radial-gradient(900px 500px at 90% 10%, rgba(139, 92, 246, 0.09), transparent 55%),
-    radial-gradient(800px 600px at 50% 100%, rgba(109, 40, 217, 0.06), transparent 55%),
-    #020617;
+.micro-pop,
+.micro-slide,
+.micro-spin-hover,
+.micro-grow {
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
-.aurora-orb {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.55;
-  will-change: transform;
+.micro-pop:hover,
+.micro-pop:focus-visible {
+  transform: scale(1.05);
 }
 
-.aurora-orb-1 {
-  width: 420px;
-  height: 420px;
-  top: -120px;
-  left: 8%;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.35), transparent 65%);
-  animation: aurora-drift-1 26s ease-in-out infinite alternate;
+.micro-pop:active {
+  transform: scale(0.95);
 }
 
-.aurora-orb-2 {
-  width: 380px;
-  height: 380px;
-  bottom: -140px;
-  right: 5%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.30), transparent 65%);
-  animation: aurora-drift-2 32s ease-in-out infinite alternate;
+.micro-slide:hover,
+.micro-slide:focus-visible {
+  transform: translateX(3px);
 }
 
-.aurora-orb-3 {
-  width: 260px;
-  height: 260px;
-  top: 40%;
-  left: 55%;
-  background: radial-gradient(circle, rgba(109, 40, 217, 0.22), transparent 65%);
-  animation: aurora-drift-1 20s ease-in-out infinite alternate-reverse;
+.micro-spin-hover:hover,
+.micro-spin-hover:focus-visible {
+  transform: rotate(90deg);
 }
 
-@keyframes aurora-drift-1 {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(60px, 40px, 0) scale(1.15); }
+.micro-grow:hover,
+.micro-grow:focus-visible {
+  transform: scale(1.05);
 }
 
-@keyframes aurora-drift-2 {
-  0%   { transform: translate3d(0, 0, 0) scale(1.05); }
-  100% { transform: translate3d(-70px, -30px, 0) scale(0.95); }
+.group:hover .micro-pop,
+.group:focus-within .micro-pop {
+  transform: scale(1.05);
 }
+
+.group:hover .micro-slide,
+.group:focus-within .micro-slide {
+  transform: translateX(3px);
+}
+
+/* Catch-all: subtle pop on any lucide icon inside an interactive element */
+.lucide {
+  transition: transform 0.15s ease;
+}
+
+button:not(:disabled):hover > .lucide,
+a:hover > .lucide,
+button:not(:disabled):focus-visible > .lucide,
+a:focus-visible > .lucide {
+  transform: scale(1.05);
+}
+
+button:not(:disabled):active > .lucide,
+a:active > .lucide {
+  transform: scale(0.95);
+}
+
+/* ---- Design-system layer (flat design) ---- */
 
 /* --- Glass surfaces --- */
 .glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(245, 243, 255, 0.55));
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .glass-strong {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(245, 243, 255, 0.8));
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-  border: 1px solid rgba(124, 58, 237, 0.14);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .glass-card {
   position: relative;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(245, 243, 255, 0.5));
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(124, 58, 237, 0.10);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  transition: border-color 0.15s ease;
 }
 
 .glass-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(124, 58, 237, 0.28);
-  box-shadow: 0 18px 40px -18px rgba(124, 58, 237, 0.35), 0 0 0 1px rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.3);
 }
 
 .dark .glass {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.65), rgba(15, 23, 42, 0.55));
-  border: 1px solid rgba(124, 58, 237, 0.12);
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .dark .glass-strong {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.8));
-  border: 1px solid rgba(124, 58, 237, 0.14);
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 .dark .glass-card {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.55), rgba(15, 23, 42, 0.5));
-  border: 1px solid rgba(124, 58, 237, 0.10);
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(124, 58, 237, 0.12);
 }
 
 .dark .glass-card:hover {
-  border-color: rgba(124, 58, 237, 0.28);
-  box-shadow: 0 18px 40px -18px rgba(124, 58, 237, 0.35), 0 0 0 1px rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.3);
 }
 
-/* --- Active nav glow + animated accent bar --- */
+/* --- Active nav accent bar --- */
 .nav-item {
   position: relative;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .nav-item::before {
@@ -307,11 +184,10 @@ a:active > .lucide {
   height: 40%;
   width: 3px;
   border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, #7C3AED, #A78BFA);
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.75);
+  background-color: #7C3AED;
   transform: translateY(-50%) scaleY(0);
   transform-origin: center;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.15s ease;
 }
 
 .nav-item.is-active::before {
@@ -326,7 +202,7 @@ a:active > .lucide {
   transform: translateY(-50%) scaleY(0.55);
 }
 
-/* Icon tile in nav: fixed chip that lights up / tilts on hover */
+/* Icon tile in nav */
 .nav-icon-tile {
   position: relative;
   display: grid;
@@ -336,70 +212,31 @@ a:active > .lucide {
   flex-shrink: 0;
   border-radius: 10px;
   border: 1px solid transparent;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .nav-item:hover .nav-icon-tile {
-  transform: translateX(3px) rotate(-4deg) scale(1.08);
+  transform: translateX(3px);
   border-color: rgba(124, 58, 237, 0.35);
-  background: rgba(124, 58, 237, 0.08);
-  box-shadow: 0 0 14px rgba(124, 58, 237, 0.25);
+  background-color: rgba(124, 58, 237, 0.08);
 }
 
 .nav-item.is-active .nav-icon-tile {
-  background: rgba(124, 58, 237, 0.14);
+  background-color: rgba(124, 58, 237, 0.14);
   border-color: rgba(124, 58, 237, 0.35);
-  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.15), 0 0 16px rgba(124, 58, 237, 0.22);
 }
 
-/* Entrance stagger for nav groups / items */
+/* Entrance stagger */
 .stagger-in {
   animation: fade-up 0.4s ease-out both;
 }
 
-/* --- Animated brand mark: orbiting satellites around a core --- */
-.brand-orb {
-  width: 34px;
-  height: 34px;
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.brand-orb-core {
-  width: 14px;
-  height: 14px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 30% 30%, #A78BFA, #7C3AED);
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.7);
-}
-
-.brand-orb-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1.5px dashed rgba(124, 58, 237, 0.5);
-  animation: spin-slow 10s linear infinite;
-}
-
-.brand-orb-sat {
-  position: absolute;
-  top: -3px;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: #8b5cf6;
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.9);
-}
-
-/* --- Icon animation classes (the "library books" request): elements inside
-   a static icon wake up on hover --- */
+/* --- Icon animation classes --- */
 .icon-rotate-on-hover {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s ease;
 }
 
-.icon-rotate-on-hover:hover { transform: rotate(-18deg) scale(1.15); }
+.icon-rotate-on-hover:hover { transform: rotate(-18deg) scale(1.05); }
 
 .icon-float-soft { animation: icon-float-soft 3.4s ease-in-out infinite; }
 
@@ -419,68 +256,41 @@ a:active > .lucide {
   border-radius: 12px;
   border: 1px solid rgba(124, 58, 237, 0.35);
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .group:hover .icon-pulse-ring::after {
   opacity: 1;
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
-/* --- Gradient headline for hero/brand text --- */
-.text-gradient {
-  background: linear-gradient(90deg, #7C3AED, #A78BFA 45%, #6D28D9);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* --- Shimmering animated border for primary CTAs / active panel --- */
-.shimmer-border {
-  position: relative;
-  border: 1px solid transparent;
-  background:
-    linear-gradient(#0f172a, #0f172a) padding-box,
-    linear-gradient(120deg, rgba(124, 58, 237, 0.5), rgba(139, 92, 246, 0.4), rgba(124, 58, 237, 0.5)) border-box;
-  background-size: 100% 100%, 250% 250%;
-  animation: shimmer-move 5s linear infinite;
-}
-
-@keyframes shimmer-move {
-  0% { background-position: 0 0, 0% 0%; }
-  100% { background-position: 0 0, 100% 0%; }
-}
-
-/* --- Buttons: primary glow lift --- */
+/* --- Buttons: flat primary --- */
 .btn-primary-glow {
-  background: linear-gradient(180deg, #7C3AED, #6D28D9);
-  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35), 0 6px 20px -6px rgba(124, 58, 237, 0.55);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  background-color: #7C3AED;
+  border: 1px solid #7C3AED;
   border-radius: 12px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .btn-primary-glow:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.45), 0 10px 26px -8px rgba(124, 58, 237, 0.7);
+  background-color: #6D28D9;
+  border-color: #6D28D9;
 }
 
 .btn-primary-glow:active {
-  transform: translateY(0);
+  background-color: #6D28D9;
 }
 
-/* --- Stat/hero number glow --- */
+/* --- Stat/hero number --- */
 .stat-value {
-  text-shadow: 0 0 22px rgba(124, 58, 237, 0.35);
+  color: #7C3AED;
 }
 
 button {
   border-radius: 12px;
 }
 
-/* ============================================================
-   Simple spinner loader
-   ============================================================ */
+/* ---- Simple spinner loader ---- */
 .simpli-loader {
   width: 40px;
   height: 40px;
@@ -494,16 +304,19 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aurora-orb,
-  .brand-orb-ring,
-  .brand-orb-sat,
   .icon-float-soft {
-    animation: none !important;
-  }
-  .shimmer-border {
     animation: none !important;
   }
   .simpli-loader {
     animation: none !important;
   }
+}
+
+/* Font families */
+body {
+  font-family: 'Fira Sans', sans-serif;
+}
+
+code, .font-mono {
+  font-family: 'Fira Code', monospace;
 }

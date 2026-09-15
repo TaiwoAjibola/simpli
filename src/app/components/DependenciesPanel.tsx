@@ -56,15 +56,15 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#F8FAFC] flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Link2 className="w-4 h-4" />
           Dependencies
-          <span className="text-xs font-normal text-[#94A3B8]">({deps.length})</span>
+          <span className="text-xs font-normal text-muted-foreground">({deps.length})</span>
         </h3>
         {canManage && (
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] rounded"
+            className="flex items-center gap-1 px-2 py-1 text-xs bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded"
           >
             <Plus className="w-3.5 h-3.5" /> Link Work
           </button>
@@ -78,10 +78,10 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           </p>
           <ul className="space-y-1">
             {blockedBy.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
                 <span>{labelFor(d.fromKind, d.fromId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -96,10 +96,10 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <p className="text-xs font-medium text-[#eab308] mb-2">Blocks</p>
           <ul className="space-y-1">
             {blocking.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
                 <span>{labelFor(d.toKind, d.toId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -110,18 +110,18 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {deps.filter(d => d.type === 'related_to').length > 0 && (
-        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded">
-          <p className="text-xs font-medium text-[#94A3B8] mb-2">Related to</p>
+        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Related to</p>
           <ul className="space-y-1">
             {deps.filter(d => d.type === 'related_to').map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-[#F8FAFC]">
+              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
                 <span>
                   {d.fromKind === workKind && d.fromId === workId
                     ? labelFor(d.toKind, d.toId)
                     : labelFor(d.fromKind, d.fromId)}
                 </span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-[#94A3B8] hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -132,11 +132,11 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {showAdd && (
-        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded space-y-2">
+        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded space-y-2">
           <select
             value={depType}
             onChange={e => setDepType(e.target.value as WorkDependencyType)}
-            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
+            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
           >
             <option value="blocked_by">Blocked by</option>
             <option value="blocks">Blocks</option>
@@ -145,7 +145,7 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <select
             value={targetId}
             onChange={e => setTargetId(e.target.value)}
-            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
+            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
           >
             <option value="">Select work item...</option>
             {workRefs.filter(r => r.id !== workId).map(r => (
@@ -155,7 +155,7 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <button
             onClick={handleAdd}
             disabled={!targetId}
-            className="w-full px-3 py-1.5 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a] rounded disabled:opacity-50"
+            className="w-full px-3 py-1.5 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] rounded disabled:opacity-50"
           >
             Add Link
           </button>

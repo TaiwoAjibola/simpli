@@ -14,8 +14,8 @@ import {
 import { Client } from '../types';
 
 const STATUS_STYLES: Record<Client['status'], string> = {
-  active: 'bg-[rgba(16,185,129,0.1)] text-[#10b981]',
-  inactive: 'bg-[rgba(148,163,184,0.1)] text-[#6D28D9]',
+  active: 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]',
+  inactive: 'bg-[rgba(148,163,184,0.1)] text-foreground',
   archived: 'bg-[rgba(167,139,250,0.1)] text-[#A78BFA]'
 };
 
@@ -82,8 +82,8 @@ export function ClientsPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#4C1D95]">Clients</h1>
-          <p className="text-[#6D28D9] mt-1">Manage your client relationships</p>
+          <h1 className="text-3xl font-bold text-foreground">Clients</h1>
+          <p className="text-foreground mt-1">Manage your client relationships</p>
         </div>
         {canManage && (
           <button
@@ -98,60 +98,60 @@ export function ClientsPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="mb-6 p-6 bg-white border border-[#E9D5FF] space-y-4">
-          <h3 className="text-lg font-medium text-[#4C1D95]">{editingClient ? 'Edit Client' : 'New Client'}</h3>
+          <h3 className="text-lg font-medium text-foreground">{editingClient ? 'Edit Client' : 'New Client'}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Name *</label>
-              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" required />
+              <label className="block text-sm font-medium text-foreground mb-2">Name *</label>
+              <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Status</label>
-              <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as Client['status'] })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]">
+              <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+              <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as Client['status'] })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="archived">Archived</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Email</label>
-              <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Email</label>
+              <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Phone</label>
-              <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
+              <input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Company</label>
-              <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Company</label>
+              <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Industry</label>
-              <input type="text" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Industry</label>
+              <input type="text" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Contact Person</label>
-              <input type="text" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Contact Person</label>
+              <input type="text" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Address</label>
-              <input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95]" />
+              <label className="block text-sm font-medium text-foreground mb-2">Address</label>
+              <input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Notes</label>
-              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] h-20 resize-none" />
+              <label className="block text-sm font-medium text-foreground mb-2">Notes</label>
+              <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-foreground h-20 resize-none" />
             </div>
           </div>
           <div className="flex gap-2">
             <button type="submit" className="px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9]">{editingClient ? 'Update' : 'Create'} Client</button>
-            <button type="button" onClick={resetForm} className="px-4 py-2 bg-white text-[#4C1D95] border border-[#E9D5FF]">Cancel</button>
+            <button type="button" onClick={resetForm} className="px-4 py-2 bg-white text-foreground border border-[#E9D5FF]">Cancel</button>
           </div>
         </form>
       )}
 
       {clients.length === 0 && !showForm && (
         <div className="text-center py-12 bg-white border border-[#E9D5FF]">
-          <Users className="w-12 h-12 text-[#6D28D9] mx-auto mb-3" />
-          <p className="text-[#6D28D9]">No clients yet. Add your first client to get started.</p>
+          <Users className="w-12 h-12 text-foreground mx-auto mb-3" />
+          <p className="text-foreground">No clients yet. Add your first client to get started.</p>
         </div>
       )}
 
@@ -166,8 +166,8 @@ export function ClientsPage() {
                     <Building className="w-5 h-5 text-[#7C3AED]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[#4C1D95]">{client.name}</h3>
-                    {client.company && <p className="text-xs text-[#6D28D9]">{client.company}</p>}
+                    <h3 className="font-semibold text-foreground">{client.name}</h3>
+                    {client.company && <p className="text-xs text-foreground">{client.company}</p>}
                   </div>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 ${STATUS_STYLES[client.status]}`}>{client.status}</span>
@@ -175,23 +175,23 @@ export function ClientsPage() {
 
               <div className="space-y-1.5 mb-3">
                 {client.email && (
-                  <div className="flex items-center gap-2 text-xs text-[#6D28D9]">
+                  <div className="flex items-center gap-2 text-xs text-foreground">
                     <Mail className="w-3 h-3" />{client.email}
                   </div>
                 )}
                 {client.phone && (
-                  <div className="flex items-center gap-2 text-xs text-[#6D28D9]">
+                  <div className="flex items-center gap-2 text-xs text-foreground">
                     <Phone className="w-3 h-3" />{client.phone}
                   </div>
                 )}
                 {client.contactPerson && (
-                  <p className="text-xs text-[#6D28D9]">Contact: {client.contactPerson}</p>
+                  <p className="text-xs text-foreground">Contact: {client.contactPerson}</p>
                 )}
               </div>
 
               {linkedProjects.length > 0 && (
                 <div className="mb-3 pt-3 border-t border-[rgba(124,58,237,0.05)]">
-                  <p className="text-[10px] text-[#6D28D9] uppercase font-medium mb-1">Projects ({linkedProjects.length})</p>
+                  <p className="text-[10px] text-foreground uppercase font-medium mb-1">Projects ({linkedProjects.length})</p>
                   <div className="flex flex-wrap gap-1">
                     {linkedProjects.map(p => (
                       <span key={p.id} className="text-[10px] px-1.5 py-0.5 bg-[rgba(124,58,237,0.08)] text-[#7C3AED]">{p.name}</span>
@@ -202,8 +202,8 @@ export function ClientsPage() {
 
               {canManage && (
                 <div className="flex items-center gap-2 pt-3 border-t border-[rgba(124,58,237,0.05)]">
-                  <button onClick={() => handleEdit(client)} className="p-1.5 text-[#6D28D9] hover:text-[#7C3AED]"><Edit2 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => handleDelete(client.id)} className="p-1.5 text-[#6D28D9] hover:text-[#DC2626]"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => handleEdit(client)} className="p-1.5 text-foreground hover:text-[#7C3AED]"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => handleDelete(client.id)} className="p-1.5 text-foreground hover:text-[#7C3AED]"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               )}
             </div>

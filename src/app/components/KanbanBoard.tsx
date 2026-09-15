@@ -15,19 +15,19 @@ import { canTransitionWork } from '../../utils/workflow';
 
 const DEV_TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'not_started', title: 'Not Started', color: '#94A3B8' },
-  { id: 'in_progress', title: 'In Progress', color: '#22C55E' },
-  { id: 'blocked', title: 'Blocked', color: '#ff3b5c' },
+  { id: 'in_progress', title: 'In Progress', color: '#7C3AED' },
+  { id: 'blocked', title: 'Blocked', color: '#7C3AED' },
   { id: 'pending_qa', title: 'Pending QA', color: '#8b5cf6' },
-  { id: 'completed', title: 'Completed', color: '#22c55e' },
-  { id: 'approved', title: 'Approved', color: '#10b981' }
+  { id: 'completed', title: 'Completed', color: '#7C3AED' },
+  { id: 'approved', title: 'Approved', color: '#A78BFA' }
 ];
 
 const OPS_TASK_COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'not_started', title: 'Not Started', color: '#94A3B8' },
-  { id: 'in_progress', title: 'In Progress', color: '#22C55E' },
-  { id: 'blocked', title: 'Blocked', color: '#ff3b5c' },
-  { id: 'completed', title: 'Completed', color: '#22c55e' },
-  { id: 'approved', title: 'Approved', color: '#10b981' }
+  { id: 'in_progress', title: 'In Progress', color: '#7C3AED' },
+  { id: 'blocked', title: 'Blocked', color: '#7C3AED' },
+  { id: 'completed', title: 'Completed', color: '#7C3AED' },
+  { id: 'approved', title: 'Approved', color: '#A78BFA' }
 ];
 
 const GH_LIFECYCLE_COLUMNS: { id: string; title: string; color: string; match: (t: any) => boolean }[] = [
@@ -35,7 +35,7 @@ const GH_LIFECYCLE_COLUMNS: { id: string; title: string; color: string; match: (
   {
     id: 'branch_created',
     title: 'Branch Created',
-    color: '#22C55E',
+    color: '#7C3AED',
     match: (t) => !!t.github?.branchName && ['not_started', 'branch_created'].includes(t.github?.status)
   },
   {
@@ -60,7 +60,7 @@ const GH_LIFECYCLE_COLUMNS: { id: string; title: string; color: string; match: (
   {
     id: 'closed',
     title: 'Closed / Done',
-    color: '#10b981',
+    color: '#A78BFA',
     match: (t) => ['approved', 'closed'].includes(t.github?.status)
   }
 ];
@@ -70,7 +70,7 @@ const DEFECT_COLUMNS: { id: DefectStatus; title: string; color: string }[] = [
   { id: 'in_progress', title: 'In Progress', color: '#f97316' },
   { id: 'pending_qa', title: 'Pending QA', color: '#8b5cf6' },
   { id: 'resolved', title: 'Resolved', color: '#3b82f6' },
-  { id: 'closed', title: 'Closed', color: '#10b981' }
+  { id: 'closed', title: 'Closed', color: '#A78BFA' }
 ];
 
 type SortOption = 'default' | 'priority' | 'dueDate' | 'name';
@@ -167,25 +167,25 @@ function KanbanContent() {
       <div className="mb-4 lg:mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#F8FAFC] mb-1">Work Board</h1>
-            <p className="text-sm text-[#94A3B8]">Track tasks and defects — switch tabs to view each board, drag cards to update status</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-1">Work Board</h1>
+            <p className="text-sm text-muted-foreground">Track tasks and defects — switch tabs to view each board, drag cards to update status</p>
           </div>
-          <div className="flex items-center gap-2 bg-[rgba(15,23,42,0.4)] p-1.5 rounded-xl border border-[rgba(34,197,94,0.1)] flex-wrap">
-            <div className="flex items-center bg-[#1E293B]/70 border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
-              <button onClick={() => setViewMode('tasks')} className={`px-3 py-1.5 text-xs ${viewMode === 'tasks' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}>Tasks</button>
-              <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}>Defects</button>
+          <div className="flex items-center gap-2 bg-[rgba(15,23,42,0.4)] p-1.5 rounded-xl border border-[rgba(124,58,237,0.1)] flex-wrap">
+            <div className="flex items-center bg-white/70 border border-[rgba(124,58,237,0.1)] rounded-lg overflow-hidden">
+              <button onClick={() => setViewMode('tasks')} className={`px-3 py-1.5 text-xs ${viewMode === 'tasks' ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]' : 'text-muted-foreground'}`}>Tasks</button>
+              <button onClick={() => setViewMode('defects')} className={`px-3 py-1.5 text-xs ${viewMode === 'defects' ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]' : 'text-muted-foreground'}`}>Defects</button>
             </div>
             {showTasks && (
-              <div className="flex items-center bg-[#1E293B]/70 border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
+              <div className="flex items-center bg-white/70 border border-[rgba(124,58,237,0.1)] rounded-lg overflow-hidden">
                 <button
                   onClick={() => setBoardMode('status')}
-                  className={`px-3 py-1.5 text-xs ${boardMode === 'status' ? 'text-[#22C55E] bg-[rgba(34,197,94,0.1)]' : 'text-[#94A3B8]'}`}
+                  className={`px-3 py-1.5 text-xs ${boardMode === 'status' ? 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]' : 'text-muted-foreground'}`}
                 >
                   Status
                 </button>
                 <button
                   onClick={() => setBoardMode('github')}
-                  className={`px-3 py-1.5 text-xs ${boardMode === 'github' ? 'text-[#8b5cf6] bg-[rgba(139,92,246,0.1)]' : 'text-[#94A3B8]'}`}
+                  className={`px-3 py-1.5 text-xs ${boardMode === 'github' ? 'text-[#8b5cf6] bg-[rgba(139,92,246,0.1)]' : 'text-muted-foreground'}`}
                   title="Group development tasks by GitHub lifecycle (branch → PR → review → QA → merged)"
                 >
                   GitHub Lifecycle
@@ -195,7 +195,7 @@ function KanbanContent() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(124,58,237,0.12)] text-foreground text-xs rounded-lg relative z-10"
             >
               <option value="default">Default</option>
               <option value="priority">Priority</option>
@@ -205,7 +205,7 @@ function KanbanContent() {
             <select
               value={filterApp}
               onChange={(e) => setFilterApp(e.target.value)}
-              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(124,58,237,0.12)] text-foreground text-xs rounded-lg relative z-10"
             >
               <option value="all">All Apps</option>
               {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
@@ -213,18 +213,18 @@ function KanbanContent() {
             <select
               value={filterWorkType}
               onChange={(e) => setFilterWorkType(e.target.value as 'all' | WorkType)}
-              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
+              className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(124,58,237,0.12)] text-foreground text-xs rounded-lg relative z-10"
             >
               <option value="all">All Work Types</option>
               <option value="development">Development</option>
               <option value="non-development">Non-development</option>
             </select>
             <div className="flex items-center gap-1">
-              <TagIcon className="w-3 h-3 text-[#94A3B8]" />
+              <TagIcon className="w-3 h-3 text-muted-foreground" />
               <select
                 value={filterTag}
                 onChange={(e) => setFilterTag(e.target.value)}
-                className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(34,197,94,0.12)] text-[#F8FAFC] text-xs rounded-lg relative z-10"
+                className="px-3 py-1.5 bg-[rgba(15,23,42,0.55)] backdrop-blur border border-[rgba(124,58,237,0.12)] text-foreground text-xs rounded-lg relative z-10"
               >
                 <option value="all">All Tags</option>
                 {tags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
@@ -336,25 +336,25 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
     })
   });
 
-  const borderColor = type === 'defect' ? 'rgba(220,38,38,0.3)' : type === 'actionPoint' ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.1)';
-  const hoverBorder = type === 'defect' ? 'rgba(220,38,38,0.5)' : type === 'actionPoint' ? 'rgba(245,158,11,0.5)' : 'rgba(34,197,94,0.3)';
+  const borderColor = type === 'defect' ? 'rgba(124,58,237,0.3)' : type === 'actionPoint' ? 'rgba(245,158,11,0.3)' : 'rgba(124,58,237,0.1)';
+  const hoverBorder = type === 'defect' ? 'rgba(124,58,237,0.5)' : type === 'actionPoint' ? 'rgba(245,158,11,0.5)' : 'rgba(124,58,237,0.3)';
 
   return (
     <div
       ref={readOnly ? undefined : drop}
       className={`flex-shrink-0 w-72 lg:w-80 bg-[#0F172A] ${readOnly ? '' : 'border-2 border-dashed'} transition ${
-        isOver ? 'border-[#22C55E] bg-[rgba(34,197,94,0.05)]' : `border-transparent hover:border-[${borderColor}]`
+        isOver ? 'border-[#7C3AED] bg-[rgba(124,58,237,0.05)]' : `border-transparent hover:border-[${borderColor}]`
       }`}
-      style={readOnly ? {} : { borderColor: isOver ? '#22C55E' : borderColor }}
+      style={readOnly ? {} : { borderColor: isOver ? '#7C3AED' : borderColor }}
     >
-      <div className="p-3 lg:p-4 border-b border-[rgba(34,197,94,0.1)]">
+      <div className="p-3 lg:p-4 border-b border-[rgba(124,58,237,0.1)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {type === 'defect' && <Bug className="w-4 h-4 text-[#dc2626]" />}
             {type === 'actionPoint' && <FileText className="w-4 h-4 text-[#f59e0b]" />}
-            <h3 className="font-semibold text-[#F8FAFC] text-sm">{column.title}</h3>
+            <h3 className="font-semibold text-foreground text-sm">{column.title}</h3>
           </div>
-          <span className="bg-[#1E293B] text-[#F8FAFC] text-xs font-medium px-2 py-1">
+          <span className="bg-white text-foreground text-xs font-medium px-2 py-1">
             {tasks.length}
           </span>
         </div>
@@ -395,7 +395,7 @@ function KanbanColumn({ column, tasks, onDrop, onCardClick, getEmployeeById, get
         ))}
         {tasks.length === 0 && (
           <div className="text-center py-6">
-            <p className="text-xs text-[#94A3B8]">No {type === 'defect' ? 'bugs' : type === 'actionPoint' ? 'action points' : 'tasks'}</p>
+            <p className="text-xs text-muted-foreground">No {type === 'defect' ? 'bugs' : type === 'actionPoint' ? 'action points' : 'tasks'}</p>
           </div>
         )}
       </div>
@@ -426,16 +426,16 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
     .filter(Boolean);
   const goal = getGoalById(task.goalId);
   const app = goal ? getAppById(goal.appId) : null;
-  const appColor = app?.color || '#22C55E';
+  const appColor = app?.color || '#7C3AED';
   const cardStyle = app?.cardStyle || 'default';
   const { sendTaskNotification } = useApp();
   const { showToast } = useToast();
 
   const priorityColors: Record<string, string> = {
-    low: 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]',
-    medium: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]',
+    low: 'bg-[rgba(107,107,128,0.1)] text-muted-foreground',
+    medium: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
     high: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]',
-    urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]'
+    urgent: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]'
   };
 
   const handleMailClick = async (e: React.MouseEvent) => {
@@ -454,10 +454,10 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
       style={getCardInlineStyle(cardStyle, appColor)}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-[#F8FAFC] text-sm line-clamp-2">{task.name}</h4>
-        {task.priority === 'urgent' && <Star className="w-4 h-4 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />}
+        <h4 className="font-medium text-foreground text-sm line-clamp-2">{task.name}</h4>
+        {task.priority === 'urgent' && <Star className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED] flex-shrink-0" />}
       </div>
-      <p className="text-xs text-[#94A3B8] mb-3 line-clamp-2">{task.description}</p>
+      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{task.description}</p>
       <div className="mb-2">
         <TagBadges tagIds={task.tags} allTags={allTags} />
       </div>
@@ -467,7 +467,7 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
             task.github.pullRequest.state === 'merged'
               ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
               : task.github.pullRequest.reviewState === 'approved' && task.github.pullRequest.checkStatus === 'success'
-                ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
                 : task.github.pullRequest.reviewState === 'changes_requested' ||
                    task.github.pullRequest.checkStatus === 'failure'
                   ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
@@ -485,16 +485,16 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
         <div className="flex items-center gap-1">
           {assignees.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <User className="w-3 h-3 text-[#94A3B8]" />
-              <span className="text-xs text-[#94A3B8]">{assignees[0].name.split(' ')[0]}{assignees.length > 1 ? ` +${assignees.length - 1}` : ''}</span>
+              <User className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{assignees[0].name.split(' ')[0]}{assignees.length > 1 ? ` +${assignees.length - 1}` : ''}</span>
             </div>
           )}
           <button
             onClick={handleMailClick}
             className={`p-1 rounded transition ${
               (task as any).lastEmailSentAt
-                ? 'text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)]'
-                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                ? 'text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]'
+                : 'text-[#A78BFA] hover:bg-[rgba(124,58,237,0.1)]'
             }`}
             title={(task as any).lastEmailSentAt ? 'Resend email' : 'Send email'}
           >
@@ -503,8 +503,8 @@ function TaskCard({ task, onClick, getEmployeeById, getGoalById, getAppById, all
         </div>
       </div>
       {goal && (
-        <div className="mt-2 pt-2 border-t border-[rgba(34,197,94,0.1)]">
-          <p className="text-xs text-[#94A3B8] truncate">{app?.name} → {goal.name}</p>
+        <div className="mt-2 pt-2 border-t border-[rgba(124,58,237,0.1)]">
+          <p className="text-xs text-muted-foreground truncate">{app?.name} → {goal.name}</p>
         </div>
       )}
     </div>
@@ -544,10 +544,10 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
   const cardStyle = app?.cardStyle || 'default';
 
   const priorityColors: Record<string, string> = {
-    low: 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]',
-    medium: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]',
+    low: 'bg-[rgba(107,107,128,0.1)] text-muted-foreground',
+    medium: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
     high: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]',
-    urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]'
+    urgent: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]'
   };
 
   return (
@@ -560,10 +560,10 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
       style={getCardInlineStyle(cardStyle, appColor)}
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-[#F8FAFC] text-sm line-clamp-2">{ap.title}</h4>
-        {ap.priority === 'urgent' && <Star className="w-4 h-4 text-[#ff3b5c] fill-[#ff3b5c] flex-shrink-0" />}
+        <h4 className="font-medium text-foreground text-sm line-clamp-2">{ap.title}</h4>
+        {ap.priority === 'urgent' && <Star className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED] flex-shrink-0" />}
       </div>
-      {ap.description && <p className="text-xs text-[#94A3B8] mb-3 line-clamp-2">{ap.description}</p>}
+      {ap.description && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{ap.description}</p>}
       <div className="mb-2">
         <TagBadges tagIds={ap.tags} allTags={allTags} />
       </div>
@@ -575,21 +575,21 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
           <span className={`text-xs font-medium px-2 py-1 ${
             (ap.workType || 'non-development') === 'development'
               ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
-              : 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]'
+              : 'bg-[rgba(107,107,128,0.1)] text-muted-foreground'
           }`}>
             {(ap.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
           </span>
         </div>
         {assignees.length > 0 && (
           <div className="flex items-center gap-1.5">
-            <User className="w-3 h-3 text-[#94A3B8]" />
-            <span className="text-xs text-[#94A3B8]">{assignees[0].name.split(' ')[0]}</span>
+            <User className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">{assignees[0].name.split(' ')[0]}</span>
           </div>
         )}
       </div>
       {(goal || app) && (
-        <div className="mt-2 pt-2 border-t border-[rgba(34,197,94,0.1)]">
-          <p className="text-xs text-[#94A3B8] truncate">
+        <div className="mt-2 pt-2 border-t border-[rgba(124,58,237,0.1)]">
+          <p className="text-xs text-muted-foreground truncate">
             {app?.name}{goal ? ` → ${goal.name}` : ''}
           </p>
         </div>
@@ -613,7 +613,7 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
 
   const severityColors: Record<string, string> = {
     blocker: 'bg-[rgba(153,27,27,0.2)] text-[#991b1b]',
-    critical: 'bg-[rgba(220,38,38,0.2)] text-[#dc2626]',
+    critical: 'bg-[rgba(124,58,237,0.2)] text-[#dc2626]',
     major: 'bg-[rgba(245,158,11,0.2)] text-[#f59e0b]',
     minor: 'bg-[rgba(234,179,8,0.2)] text-[#eab308]'
   };
@@ -628,7 +628,7 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
     <div
       ref={drag}
       onClick={() => onClick(defect)}
-      className={`bg-[#0F172A] border border-[rgba(220,38,38,0.2)] p-3 lg:p-4 cursor-pointer hover:border-[rgba(220,38,38,0.4)] hover:shadow-md transition ${
+      className={`bg-[#0F172A] border border-[rgba(124,58,237,0.2)] p-3 lg:p-4 cursor-pointer hover:border-[rgba(124,58,237,0.4)] hover:shadow-md transition ${
         isDragging ? 'opacity-50' : ''
       }`}
     >
@@ -639,10 +639,10 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
             <span className="font-mono text-xs text-[#dc2626]">{defect.defectCode}</span>
             {defect.severity === 'blocker' && <AlertCircle className="w-3 h-3 text-[#991b1b]" />}
           </div>
-          <h4 className="font-medium text-[#F8FAFC] text-sm line-clamp-2 mt-1">{defect.title}</h4>
+          <h4 className="font-medium text-foreground text-sm line-clamp-2 mt-1">{defect.title}</h4>
         </div>
       </div>
-      <p className="text-xs text-[#94A3B8] mb-2 line-clamp-2">{defect.module || defect.description}</p>
+      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{defect.module || defect.description}</p>
       <div className="mb-2">
         <TagBadges tagIds={(defect as any).tags} allTags={allTags} />
       </div>
@@ -652,7 +652,7 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
             defect.github.pullRequest.state === 'merged'
               ? 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]'
               : defect.github.pullRequest.reviewState === 'approved' && defect.github.pullRequest.checkStatus === 'success'
-                ? 'bg-[rgba(16,185,129,0.15)] text-[#10b981]'
+                ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
                 : defect.github.pullRequest.reviewState === 'changes_requested' ||
                   defect.github.pullRequest.checkStatus === 'failure'
                   ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
@@ -664,8 +664,8 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
         </div>
       )}
       {defectApp && (
-        <div className="mb-2 pt-2 border-t border-[rgba(220,38,38,0.15)]">
-          <p className="text-xs text-[#94A3B8] truncate">{defectApp.name}</p>
+        <div className="mb-2 pt-2 border-t border-[rgba(124,58,237,0.15)]">
+          <p className="text-xs text-muted-foreground truncate">{defectApp.name}</p>
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -675,16 +675,16 @@ function ActionPointCard({ ap, onClick, getEmployeeById, getGoalById, getAppById
         <div className="flex items-center gap-1">
           {assignee && (
             <div className="flex items-center gap-1.5">
-              <User className="w-3 h-3 text-[#94A3B8]" />
-              <span className="text-xs text-[#94A3B8]">{assignee.name.split(' ')[0]}</span>
+              <User className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{assignee.name.split(' ')[0]}</span>
             </div>
           )}
           <button
             onClick={handleMailClick}
             className={`p-1 rounded transition ${
               defect.lastEmailSentAt
-                ? 'text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)]'
-                : 'text-[#10b981] hover:bg-[rgba(16,185,129,0.1)]'
+                ? 'text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]'
+                : 'text-[#A78BFA] hover:bg-[rgba(124,58,237,0.1)]'
             }`}
             title={defect.lastEmailSentAt ? 'Resend email' : 'Send email'}
           >

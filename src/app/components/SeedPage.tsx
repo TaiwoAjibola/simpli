@@ -109,23 +109,23 @@ export function SeedPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-      <div className="bg-[#0F172A] border border-[rgba(34,197,94,0.1)] p-8 max-w-md w-full">
-        <h1 className="text-2xl font-bold text-[#F8FAFC] mb-4">Seed Database</h1>
-        <p className="text-[#94A3B8] mb-6">
+      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-8 max-w-md w-full">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Seed Database</h1>
+        <p className="text-muted-foreground mb-6">
           This will create the initial roles and admin user in Firebase.
         </p>
 
         {status === 'idle' && (
           <button
             onClick={handleSeed}
-            className="w-full bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition"
+            className="w-full bg-[#7C3AED] text-[#020617] py-3 font-medium hover:bg-[#6D28D9] transition"
           >
             Seed Database
           </button>
         )}
 
         {status === 'loading' && (
-          <div className="flex items-center gap-3 text-[#F8FAFC]">
+          <div className="flex items-center gap-3 text-foreground">
             <Loader className="w-5 h-5 animate-spin" />
             <span>{message}</span>
           </div>
@@ -133,18 +133,18 @@ export function SeedPage() {
 
         {status === 'success' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-[#10b981]">
+            <div className="flex items-center gap-3 text-[#A78BFA]">
               <CheckCircle className="w-5 h-5" />
               <span>{message}</span>
             </div>
-            <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-4">
-              <p className="text-sm text-[#F8FAFC] mb-2">Admin credentials:</p>
-              <p className="text-sm text-[#94A3B8]">Email: <span className="text-[#22C55E]">{adminUser.email}</span></p>
-              <p className="text-sm text-[#94A3B8]">Password: <span className="text-[#22C55E]">{adminUser.password}</span></p>
+            <div className="bg-white border border-[rgba(124,58,237,0.1)] p-4">
+              <p className="text-sm text-foreground mb-2">Admin credentials:</p>
+              <p className="text-sm text-muted-foreground">Email: <span className="text-[#7C3AED]">{adminUser.email}</span></p>
+              <p className="text-sm text-muted-foreground">Password: <span className="text-[#7C3AED]">{adminUser.password}</span></p>
             </div>
             <a
               href="/"
-              className="block text-center bg-[#22C55E] text-[#020617] py-3 font-medium hover:bg-[#16a34a] transition"
+              className="block text-center bg-[#7C3AED] text-[#020617] py-3 font-medium hover:bg-[#6D28D9] transition"
             >
               Go to Login
             </a>
@@ -152,7 +152,7 @@ export function SeedPage() {
         )}
 
         {status === 'error' && (
-          <div className="flex items-center gap-3 text-[#ff3b5c]">
+          <div className="flex items-center gap-3 text-[#7C3AED]">
             <AlertCircle className="w-5 h-5" />
             <span>{message}</span>
           </div>

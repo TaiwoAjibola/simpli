@@ -40,11 +40,11 @@ function NotificationRow({ notification, onRead }: {
   const getTypeIcon = () => {
     switch (notification.type) {
       case 'task_approved': case 'task_completed': return <CheckCircle className="w-5 h-5 text-[#7C3AED]" />;
-      case 'defect_assigned': return <AlertCircle className="w-5 h-5 text-[#ff3b5c]" />;
+      case 'defect_assigned': return <AlertCircle className="w-5 h-5 text-[#7C3AED]" />;
       case 'goal_created': return <Target className="w-5 h-5 text-[#7C3AED]" />;
       case 'task_assigned': return <Users className="w-5 h-5 text-[#3B82F6]" />;
       case 'mention': return <MessageCircle className="w-5 h-5 text-[#F59E0B]" />;
-      default: return <Bell className="w-5 h-5 text-[#6D28D9]" />;
+      default: return <Bell className="w-5 h-5 text-foreground" />;
     }
   };
 
@@ -72,37 +72,37 @@ function NotificationRow({ notification, onRead }: {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className={`text-sm font-medium ${notification.read ? 'text-[#94A3B8]' : 'text-[#4C1D95]'}`}>
+                <p className={`text-sm font-medium ${notification.read ? 'text-muted-foreground' : 'text-foreground'}`}>
                   {notification.title}
                 </p>
                 {!notification.read && <span className="w-2 h-2 bg-[#7C3AED] rounded-full flex-shrink-0" />}
               </div>
-              <p className="text-xs text-[#6D28D9] mt-0.5">{getTypeLabel()}</p>
-              <p className="text-xs text-[#94A3B8] mt-1">
+              <p className="text-xs text-foreground mt-0.5">{getTypeLabel()}</p>
+              <p className="text-xs text-muted-foreground mt-1">
                 {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
               </p>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               {!notification.read && <span className="w-2 h-2 rounded-full bg-[#7C3AED]" />}
-              {expanded ? <ChevronDown className="w-4 h-4 text-[#94A3B8]" /> : <ChevronRight className="w-4 h-4 text-[#94A3B8]" />}
+              {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
             </div>
           </div>
           {expanded && notification.message && (
             <div className="mt-3 p-3 bg-[#F5F3FF] border border-[#E9D5FF] rounded-lg">
-              <p className="text-sm text-[#4C1D95] whitespace-pre-line">{notification.message}</p>
+              <p className="text-sm text-foreground whitespace-pre-line">{notification.message}</p>
               {notification.relatedTo && (
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-xs px-2 py-0.5 bg-[rgba(124,58,237,0.1)] text-[#7C3AED] rounded">
                     {notification.relatedTo.type}
                   </span>
-                  <span className="text-xs text-[#6D28D9]">{notification.relatedTo.id}</span>
+                  <span className="text-xs text-foreground">{notification.relatedTo.id}</span>
                 </div>
               )}
             </div>
           )}
           {expanded && (
             <div className="flex items-center gap-2 mt-3">
-              <button className="text-xs text-[#94A3B8] hover:text-[#6D28D9] flex items-center gap-1">
+              <button className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                 <Archive className="w-3 h-3" /> Archive
               </button>
             </div>
@@ -136,7 +136,7 @@ export function NotificationsPage() {
 
   const stats = [
     { label: 'Total', value: mine.length, icon: Bell, color: '#7C3AED' },
-    { label: 'Unread', value: unread.length, icon: AlertCircle, color: '#22C55E' },
+    { label: 'Unread', value: unread.length, icon: AlertCircle, color: '#7C3AED' },
     { label: 'Read', value: readNotifications.length, icon: CheckCircle, color: '#94A3B8' }
   ];
 
@@ -144,8 +144,8 @@ export function NotificationsPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#4C1D95]">Notifications</h1>
-          <p className="text-[#6D28D9] mt-1">{unread.length} unread · {mine.length} total</p>
+          <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
+          <p className="text-foreground mt-1">{unread.length} unread · {mine.length} total</p>
         </div>
         <div className="flex items-center gap-2">
           {unread.length > 0 && (
@@ -170,8 +170,8 @@ export function NotificationsPage() {
                   <Icon className="w-5 h-5" style={{ color: stat.color }} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#4C1D95]">{stat.value}</p>
-                  <p className="text-sm text-[#6D28D9]">{stat.label}</p>
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-sm text-foreground">{stat.label}</p>
                 </div>
               </div>
             </div>
@@ -181,13 +181,13 @@ export function NotificationsPage() {
 
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search notifications..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] rounded-xl text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-[#E9D5FF] text-foreground rounded-xl text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
           />
         </div>
         <div className="flex items-center bg-white border border-[#E9D5FF] rounded-xl p-1">
@@ -202,7 +202,7 @@ export function NotificationsPage() {
               className={`px-3 py-2 text-sm font-medium rounded-lg transition ${
                 filter === tab.key
                   ? 'bg-[#7C3AED] text-white'
-                  : 'text-[#6D28D9] hover:text-[#4C1D95]'
+                  : 'text-foreground hover:text-foreground'
               }`}
             >
               {tab.label}
@@ -212,7 +212,7 @@ export function NotificationsPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value as NotificationType)}
-          className="px-4 py-2 bg-white border border-[#E9D5FF] text-[#4C1D95] rounded-xl text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
+          className="px-4 py-2 bg-white border border-[#E9D5FF] text-foreground rounded-xl text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
         >
           <option value="all">All Types</option>
           <option value="task">Tasks</option>
@@ -226,9 +226,9 @@ export function NotificationsPage() {
       <div className="space-y-3">
         {filteredNotifications.length === 0 ? (
           <div className="glass-card rounded-xl p-12 text-center">
-            <Bell className="w-12 h-12 text-[#6D28D9] mx-auto mb-3" />
-            <p className="text-[#6D28D9] text-lg">No notifications found</p>
-            <p className="text-sm text-[#94A3B8] mt-1">Try adjusting your filters or search query</p>
+            <Bell className="w-12 h-12 text-foreground mx-auto mb-3" />
+            <p className="text-foreground text-lg">No notifications found</p>
+            <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters or search query</p>
           </div>
         ) : (
           filteredNotifications.map(notification => (

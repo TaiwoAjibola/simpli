@@ -55,24 +55,24 @@ export function QaWorkPanel({ workKind, workId, qualifies }: QaWorkPanelProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-[#F8FAFC] mb-2 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
           QA Cycles
-          <span className="text-xs font-normal text-[#94A3B8]">({cycles.length})</span>
+          <span className="text-xs font-normal text-muted-foreground">({cycles.length})</span>
         </h3>
         {cycles.length === 0 ? (
-          <p className="text-sm text-[#94A3B8]">No QA cycles recorded yet.</p>
+          <p className="text-sm text-muted-foreground">No QA cycles recorded yet.</p>
         ) : (
           <ul className="space-y-2">
             {cycles.map(c => (
-              <li key={c.id} className="flex items-start gap-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded">
+              <li key={c.id} className="flex items-start gap-2 bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded">
                 {c.result === 'pass' ? (
-                  <CheckCircle className="w-4 h-4 text-[#10b981] shrink-0 mt-0.5" />
+                  <CheckCircle className="w-4 h-4 text-[#A78BFA] shrink-0 mt-0.5" />
                 ) : (
                   <XCircle className="w-4 h-4 text-[#ef4444] shrink-0 mt-0.5" />
                 )}
-                <div className="text-sm text-[#F8FAFC]">
+                <div className="text-sm text-foreground">
                   <span className="font-medium">Cycle {c.cycleNumber}</span>
-                  <span className="text-[#94A3B8]"> · {c.environment} · {new Date(c.testedAt).toLocaleDateString()}</span>
+                  <span className="text-muted-foreground"> · {c.environment} · {new Date(c.testedAt).toLocaleDateString()}</span>
                   {c.notes && <p className="text-sm text-[#CBD5E1] mt-1">{c.notes}</p>}
                   {c.defectsDiscovered.length > 0 && (
                     <p className="text-xs text-[#ef4444] mt-1">
@@ -88,12 +88,12 @@ export function QaWorkPanel({ workKind, workId, qualifies }: QaWorkPanelProps) {
       </div>
 
       {canTest && (
-        <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] p-3 rounded space-y-3">
-          <h3 className="text-sm font-semibold text-[#F8FAFC]">Record QA Result</h3>
+        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Record QA Result</h3>
           <select
             value={environment}
             onChange={e => setEnvironment(e.target.value as any)}
-            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
+            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
           >
             {(['dev', 'staging', 'production', 'uat'] as const).map(e => (
               <option key={e} value={e}>{e}</option>
@@ -103,21 +103,21 @@ export function QaWorkPanel({ workKind, workId, qualifies }: QaWorkPanelProps) {
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="QA notes..."
-            className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded min-h-[80px]"
+            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded min-h-[80px]"
           />
           {workKind === 'task' && (
             <input
               value={defectsDiscovered}
               onChange={e => setDefectsDiscovered(e.target.value)}
               placeholder="New defect codes discovered (comma separated, e.g. DEF-101)"
-              className="w-full bg-[#020617] border border-[rgba(34,197,94,0.2)] text-[#F8FAFC] text-sm px-2 py-1.5 rounded"
+              className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
             />
           )}
           <div className="flex gap-2">
             <button
               onClick={() => handleRecord('pass')}
               disabled={busy}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#10b981] text-white text-sm hover:bg-[#059669] rounded disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#A78BFA] text-white text-sm hover:bg-[#059669] rounded disabled:opacity-50"
             >
               {busy ? <Loader className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
               Mark Passed
