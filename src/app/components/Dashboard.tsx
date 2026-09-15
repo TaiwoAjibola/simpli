@@ -60,30 +60,27 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     .filter(t => t.status !== 'approved' && t.priority === 'urgent')
     .slice(0, 5);
 
-  const bgColors = {
-    'task_approved': 'bg-[#7C3AED]',
-    'task_completed': 'bg-[#A78BFA]',
-    default: 'bg-[#6D28D9]'
-  };
-
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 bg-[#FFFFFF] max-w-[900px] mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
-          <p className="text-foreground">Welcome back, {currentUser?.name}</p>
+          <h1 className="text-[24px] font-semibold text-[#37352F] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Dashboard</h1>
+          <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Welcome back, {currentUser?.name}</p>
         </div>
-        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white rounded-full text-sm text-foreground border border-[#E9D5FF]">
-          <span className="w-2 h-2 rounded-full bg-[#A78BFA] animate-pulse" />
-          Simpli is running smoothly
+        <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-[#FBFBFA] rounded-md text-xs text-[#787774] border border-[#E9E9E7]" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <span className="w-2 h-2 rounded-full bg-[#0F7B6C]" />
+            Simpli is running smoothly
+          </div>
+          <button
+            onClick={() => onNavigate('my-work')}
+            className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white rounded-md text-sm font-medium hover:bg-[#1a6fc7] transition-colors duration-150 cursor-pointer"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            <FileText className="w-4 h-4" />
+            My Work
+          </button>
         </div>
-        <button
-          onClick={() => onNavigate('my-work')}
-          className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-white rounded-full text-sm font-medium hover:bg-[#6D28D9] transition"
-        >
-          <FileText className="w-4 h-4" />
-          My Work
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -91,7 +88,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           title="Total Tasks"
           value={stats.total}
           icon={CheckCircle2}
-          color="cyan"
+          color="gray"
           trend={`${completionRate}% completed`}
           percentage={completionRate}
         />
@@ -99,7 +96,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           title="In Progress"
           value={stats.inProgress}
           icon={Clock}
-          color="purple"
+          color="blue"
           trend="Active work"
           percentage={stats.total > 0 ? Math.round((stats.inProgress / stats.total) * 100) : 0}
         />
@@ -122,43 +119,40 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card rounded-xl p-6" style={{ animationDelay: '120ms' }}>
+        <div className="lg:col-span-2 bg-white border border-[#E9E9E7] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Recent Activity</h2>
+            <h2 className="text-[16px] font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>Recent Activity</h2>
             <button
               onClick={() => onNavigate('reports')}
-              className="group text-sm text-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+              className="text-sm text-[#2383E2] hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors duration-150"
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               View All <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-1">
             {recentActivities.length > 0 ? recentActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start gap-3 p-3 hover:bg-[rgba(124,58,237,0.05)] transition"
+                className="flex items-start gap-3 p-3 rounded-md border-b border-[#E9E9E7] last:border-0 hover:bg-[#F7F7F5] transition-colors duration-150"
               >
-                <div className={`w-8 h-8 flex items-center justify-center ${
-                  activity.type === 'task_approved' ? bgColors['task_approved'] :
-                  activity.type === 'task_completed' ? bgColors['task_completed'] :
-                  bgColors.default
-                }`}>
+                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#E9E9E7] text-[#37352F] text-xs font-medium shrink-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                   {activity.userName.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">
+                  <p className="text-sm text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>
                     <span className="font-medium">{activity.userName}</span>{' '}
-                    {activity.description}
+                    <span className="text-[#787774]">{activity.description}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {format(activity.timestamp, 'MMM d, h:mm a')}
                   </p>
                 </div>
               </div>
             )) : (
               <div className="text-center py-8">
-                <ActivityIcon className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No activity yet</p>
+                <ActivityIcon className="w-8 h-8 text-[#787774] mx-auto mb-2" />
+                <p className="text-[#787774] text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>No activity yet</p>
               </div>
             )}
           </div>
@@ -166,8 +160,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
         <div className="space-y-6">
           {canViewAll && (
-            <div className="glass-card rounded-xl p-6">
-              <h3 className="font-bold text-foreground mb-4">Quick Stats</h3>
+            <div className="bg-white border border-[#E9E9E7] rounded-lg p-6">
+              <h3 className="font-semibold text-[#37352F] mb-4 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>Quick Stats</h3>
               <div className="space-y-3">
                 <QuickStat
                   icon={Layers}
@@ -191,20 +185,20 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           )}
 
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="font-bold text-foreground mb-4">Urgent Tasks</h3>
+          <div className="bg-white border border-[#E9E9E7] rounded-lg p-6">
+            <h3 className="font-semibold text-[#37352F] mb-4 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>Urgent Tasks</h3>
             {priorityTasks.length > 0 ? (
               <div className="space-y-2">
                 {priorityTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-3 bg-[rgba(124,58,237,0.1)] border border-[rgba(255,59,92,0.2)]"
+                    className="p-3 bg-white border border-[#E9E9E7] rounded-md hover:bg-[#F7F7F5] transition-colors duration-150"
                   >
-                    <p className="text-sm font-medium text-foreground">{task.name}</p>
+                    <p className="text-sm font-medium text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{task.name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-destructive font-medium">URGENT</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground capitalize">
+                      <span className="text-xs text-[#EB5757] font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>URGENT</span>
+                      <span className="text-xs text-[#787774]">•</span>
+                      <span className="text-xs text-[#787774] capitalize" style={{ fontFamily: 'Inter, sans-serif' }}>
                         {task.status.replace('_', ' ')}
                       </span>
                     </div>
@@ -212,22 +206,23 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No urgent tasks</p>
+              <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>No urgent tasks</p>
             )}
           </div>
         </div>
       </div>
 
       {canViewAll && activeApps.length > 0 && (
-        <div className="glass-card rounded-xl p-6">
+        <div className="bg-white border border-[#E9E9E7] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Active Projects</h2>
-  <button
-      onClick={() => onNavigate('projects')}
-      className="group text-sm text-[#7C3AED] hover:text-foreground flex items-center gap-1 cursor-pointer"
-    >
-      View All <ArrowUpRight className="w-4 h-4" />
-    </button>
+            <h2 className="text-[16px] font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>Active Projects</h2>
+            <button
+              onClick={() => onNavigate('projects')}
+              className="text-sm text-[#2383E2] hover:opacity-80 flex items-center gap-1 cursor-pointer transition-colors duration-150"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              View All <ArrowUpRight className="w-4 h-4" />
+            </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {activeApps.slice(0, 3).map((app) => {
@@ -243,22 +238,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               return (
                 <div
                   key={app.id}
-                  className="group p-4 border border-[rgba(124,58,237,0.1)] hover:border-[#7C3AED] transition cursor-pointer bg-white"
+                  className="p-4 bg-white border border-[#E9E9E7] rounded-lg hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
                   onClick={() => onNavigate('app-details', app.id)}
                 >
-                  <h3 className="font-semibold text-foreground mb-2">{app.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                  <h3 className="font-semibold text-[#37352F] mb-2 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>{app.name}</h3>
+                  <p className="text-sm text-[#787774] mb-4 line-clamp-2" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {app.description}
                   </p>
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="text-muted-foreground">
+                  <div className="flex items-center justify-between text-xs mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    <span className="text-[#787774]">
                       {appGoals.length} goals
                     </span>
-                    <span className="text-foreground font-medium">{progress}%</span>
+                    <span className="text-[#37352F] font-medium">{progress}%</span>
                   </div>
-                  <div className="w-full bg-[rgba(124,58,237,0.1)] h-1.5">
+                  <div className="w-full bg-[#E9E9E7] h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-[#7C3AED] h-1.5 transition-all"
+                      className="bg-[#2383E2] h-1.5 rounded-full transition-all duration-150"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -283,15 +278,15 @@ function StatCard({
   title: string;
   value: number;
   icon: any;
-  color: 'cyan' | 'purple' | 'red' | 'green';
+  color: 'blue' | 'green' | 'red' | 'gray';
   trend: string;
   percentage: number;
 }) {
   const colors = {
-    cyan: { bg: '#7C3AED' },
-    purple: { bg: '#A78BFA' },
-    red: { bg: '#7C3AED' },
-    green: { bg: '#A78BFA' }
+    blue: { bg: '#2383E2' },
+    green: { bg: '#0F7B6C' },
+    red: { bg: '#EB5757' },
+    gray: { bg: '#787774' }
   };
 
   const { bg } = colors[color];
@@ -299,8 +294,7 @@ function StatCard({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="group bg-white rounded-2xl p-6 relative overflow-hidden border border-[#E9D5FF] hover:border-[#7C3AED]/30 cursor-default transition-all duration-150">
-      <div className="absolute top-0 right-0 w-24 h-24 opacity-10 bg-[#7C3AED]"></div>
+    <div className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150 cursor-default">
       <div className="flex items-center justify-between mb-4">
         <div className="relative">
           <svg width="80" height="80" viewBox="0 0 80 80">
@@ -309,7 +303,7 @@ function StatCard({
               cy="40"
               r="36"
               fill="none"
-              stroke="rgba(124,58,237,0.1)"
+              stroke="#E9E9E7"
               strokeWidth="4"
             />
             <circle
@@ -326,14 +320,14 @@ function StatCard({
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Icon className="w-6 h-6" style={{ color: bg }} />
+            <Icon className="w-4 h-4 text-[#787774]" />
           </div>
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-foreground">{value}</p>
-        <p className="text-sm text-foreground mt-1">{title}</p>
-        <p className="text-xs text-foreground/60 mt-2">{trend}</p>
+        <p className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>{value}</p>
+        <p className="text-xs text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{title}</p>
+        <p className="text-xs text-[#787774] mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{trend}</p>
       </div>
     </div>
   );
@@ -353,13 +347,14 @@ function QuickStat({
   return (
     <button
       onClick={onClick}
-      className="group w-full flex items-center justify-between p-3 bg-white border border-[#E9D5FF] hover:border-[#7C3AED] transition cursor-pointer"
+      className="w-full flex items-center justify-between p-3 bg-white border border-[#E9E9E7] rounded-md hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
+      style={{ fontFamily: 'Inter, sans-serif' }}
     >
       <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-[#7C3AED]" />
-        <span className="text-sm text-foreground">{label}</span>
+        <Icon className="w-4 h-4 text-[#787774]" />
+        <span className="text-sm text-[#37352F]">{label}</span>
       </div>
-      <span className="text-lg font-bold text-foreground">{value}</span>
+      <span className="text-sm font-semibold text-[#37352F]">{value}</span>
     </button>
   );
 }

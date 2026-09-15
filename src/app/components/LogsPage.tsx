@@ -30,11 +30,11 @@ function safeDate(v: any): Date | undefined {
 }
 
 const levelMeta: Record<LogLevel, { label: string; icon: any; bg: string; text: string; border: string }> = {
-  critical: { label: 'Critical', icon: AlertOctagon, bg: 'bg-[rgba(239,68,68,0.15)]', text: 'text-[#ef4444]', border: 'border-[#ef4444]/30' },
-  error: { label: 'Error', icon: AlertTriangle, bg: 'bg-[rgba(255,59,92,0.12)]', text: 'text-[#7C3AED]', border: 'border-[#7C3AED]/25' },
-  warn: { label: 'Warn', icon: AlertTriangle, bg: 'bg-[rgba(245,158,11,0.12)]', text: 'text-[#f59e0b]', border: 'border-[#f59e0b]/25' },
-  info: { label: 'Info', icon: Info, bg: 'bg-[rgba(124,58,237,0.10)]', text: 'text-[#7C3AED]', border: 'border-[#7C3AED]/20' },
-  debug: { label: 'Debug', icon: Bug, bg: 'bg-[rgba(100,116,139,0.12)]', text: 'text-muted-foreground', border: 'border-[#64748b]/20' }
+  critical: { label: 'Critical', icon: AlertOctagon, bg: 'bg-[#FBE9E9]', text: 'text-[#EB5757]', border: 'border-[#E9E9E7]' },
+  error: { label: 'Error', icon: AlertTriangle, bg: 'bg-[#FBE9E9]', text: 'text-[#EB5757]', border: 'border-[#E9E9E7]' },
+  warn: { label: 'Warn', icon: AlertTriangle, bg: 'bg-[#F7F7F5]', text: 'text-[#787774]', border: 'border-[#E9E9E7]' },
+  info: { label: 'Info', icon: Info, bg: 'bg-[#F7F7F5]', text: 'text-[#787774]', border: 'border-[#E9E9E7]' },
+  debug: { label: 'Debug', icon: Bug, bg: 'bg-[#F7F7F5]', text: 'text-[#787774]', border: 'border-[#E9E9E7]' }
 };
 
 export function LogsPage() {
@@ -99,7 +99,6 @@ export function LogsPage() {
     });
   }, [logs, levelFilter, sourceFilter, timeFilter, search, showResolved]);
 
-  // stats
   const stats = useMemo(() => {
     const last24 = logs.filter(l => l.createdAt && Date.now() - l.createdAt.getTime() < 86400_000);
     return {
@@ -158,169 +157,168 @@ export function LogsPage() {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">System Logs</h1>
-          <p className="text-muted-foreground mt-1">
-            {stats.shown} of {stats.total} logs · {stats.errors24} errors (24h) · {stats.unresolved} unresolved
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-foreground cursor-pointer">
-            <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} className="accent-[#7C3AED]" />
-            <RefreshCw className={`w-4 h-4 ${live ? 'text-[#7C3AED] animate-spin' : 'text-muted-foreground'}`} />
-            Live
-          </label>
-          <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-foreground hover:border-[#7C3AED]/30">
-            <Download className="w-4 h-4" /> Export CSV
-          </button>
-          <button onClick={clearResolved} className="px-3 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-sm text-muted-foreground hover:text-foreground">
-            Clear resolved
-          </button>
-          <button onClick={clearAll} className="flex items-center gap-1.5 px-3 py-2 bg-[rgba(255,59,92,0.12)] border border-[#7C3AED]/25 text-sm text-[#7C3AED]">
-            <Trash2 className="w-4 h-4" /> Clear all
-          </button>
-        </div>
-      </div>
-
-      {/* Stats strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: 'Total', value: stats.total, sub: `${filtered.length} shown` },
-          { label: 'Errors (24h)', value: stats.errors24, sub: 'error + critical', tone: stats.errors24 > 0 ? 'text-[#7C3AED]' : 'text-[#7C3AED]' },
-          { label: 'Warnings (24h)', value: stats.warns24, sub: 'warn', tone: stats.warns24 > 0 ? 'text-[#f59e0b]' : 'text-muted-foreground' },
-          { label: 'Unresolved', value: stats.unresolved, sub: 'needs attention', tone: stats.unresolved > 0 ? 'text-[#ef4444]' : 'text-muted-foreground' }
-        ].map(s => (
-          <div key={s.label} className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${s.tone || 'text-foreground'}`}>{s.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{s.sub}</p>
+    <div className="min-h-screen bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <div className="max-w-[900px] mx-auto">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-[24px] font-semibold text-[#37352F] tracking-tight">System Logs</h1>
+            <p className="text-[14px] text-[#787774] mt-1">
+              {stats.shown} of {stats.total} logs · {stats.errors24} errors (24h) · {stats.unresolved} unresolved
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-4 p-4 bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
-            <option value="all">All levels</option>
-            <option value="critical">Critical</option>
-            <option value="error">Error</option>
-            <option value="warn">Warn</option>
-            <option value="info">Info</option>
-            <option value="debug">Debug</option>
-          </select>
-          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
-            <option value="all">All sources</option>
-            {(['email','github','api','firestore','auth','ui','workflow','report','system','task','defect','action-point','general'] as const).map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select value={timeFilter} onChange={e => setTimeFilter(e.target.value as any)} className="bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm px-3 py-2">
-            <option value="all">All time</option>
-            <option value="1h">Last hour</option>
-            <option value="24h">Last 24h</option>
-            <option value="7d">Last 7 days</option>
-          </select>
-          <label className="flex items-center gap-1.5 text-sm text-muted-foreground ml-2">
-            <input type="checkbox" checked={showResolved} onChange={e => setShowResolved(e.target.checked)} className="accent-[#7C3AED]" />
-            Resolved
-          </label>
-        </div>
-        <div className="flex-1 min-w-[220px] max-w-md ml-auto relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search message, details, route…"
-            className="w-full pl-9 pr-9 py-2 bg-white border border-[rgba(124,58,237,0.12)] text-foreground text-sm placeholder:text-muted-foreground focus:border-[#7C3AED]/40 outline-none"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground">
-              <X className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[13px] text-[#37352F] cursor-pointer hover:bg-[#F7F7F5] transition-colors duration-150">
+              <input type="checkbox" checked={live} onChange={e => setLive(e.target.checked)} className="accent-[#2383E2]" />
+              <RefreshCw className={`w-4 h-4 ${live ? 'text-[#2383E2] animate-spin' : 'text-[#787774]'}`} />
+              Live
+            </label>
+            <button onClick={exportCsv} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[13px] text-[#37352F] hover:bg-[#F7F7F5] transition-colors duration-150">
+              <Download className="w-4 h-4" /> Export CSV
             </button>
-          )}
-        </div>
-      </div>
-
-      {/* List */}
-      <div className="space-y-2">
-        {loading && <div className="p-8 text-center text-muted-foreground">Loading logs…</div>}
-        {!loading && filtered.length === 0 && (
-          <div className="p-12 text-center bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
-            <p className="text-muted-foreground">No logs match your filters.</p>
-            <p className="text-xs text-muted-foreground mt-2">Logs are written by the app on errors, email failures, GitHub/API issues, and unhandled exceptions.</p>
+            <button onClick={clearResolved} className="px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[13px] text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] transition-colors duration-150">
+              Clear resolved
+            </button>
+            <button onClick={clearAll} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[13px] text-[#EB5757] hover:bg-[#FBE9E9] transition-colors duration-150">
+              <Trash2 className="w-4 h-4" /> Clear all
+            </button>
           </div>
-        )}
-        {filtered.map(l => {
-          const meta = levelMeta[l.level] || levelMeta.info;
-          const Icon = meta.icon;
-          const isExpanded = expanded === l.id;
-          return (
-            <div key={l.id} className={`bg-[#0F172A] border ${l.resolved ? 'border-[rgba(124,58,237,0.15)] opacity-75' : meta.border} overflow-hidden`}>
-              <div
-                className="flex items-start gap-3 p-4 cursor-pointer hover:bg-[rgba(124,58,237,0.05)]"
-                onClick={() => setExpanded(isExpanded ? null : l.id)}
-              >
-                <span className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${meta.bg} ${meta.text}`}>
-                  <Icon className="w-4 h-4" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 ${meta.bg} ${meta.text}`}>{meta.label}</span>
-                    <span className="text-xs px-2 py-0.5 bg-white text-muted-foreground border border-[rgba(124,58,237,0.08)]">{l.source}</span>
-                    {l.route && <span className="text-xs text-muted-foreground truncate max-w-[220px]">{l.route}</span>}
-                    {l.resolved && <span className="text-xs px-2 py-0.5 bg-[rgba(124,58,237,0.12)] text-[#7C3AED] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> resolved</span>}
-                    <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {l.createdAt ? format(l.createdAt, 'MMM d, HH:mm:ss') : '—'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground mt-1.5 break-words">{l.message}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {l.userName || l.userEmail ? `${l.userName || ''}${l.userName && l.userEmail ? ' · ' : ''}${l.userEmail || ''} · ` : ''}
-                    {l.details ? `${l.details.slice(0, 140)}${l.details.length > 140 ? '…' : ''}` : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => copyDetails(l)} title="Copy" className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-[rgba(255,255,255,0.06)]">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => toggleResolved(l)} title={l.resolved ? 'Mark unresolved' : 'Mark resolved'} className={`p-1.5 ${l.resolved ? 'text-muted-foreground' : 'text-[#7C3AED]'} hover:bg-[rgba(255,255,255,0.06)]`}>
-                    <CheckCircle className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => deleteDoc(doc(db, 'systemLogs', l.id))} title="Delete" className="p-1.5 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)]">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition ${isExpanded ? 'rotate-180' : ''}`} />
-                </div>
-              </div>
-              {isExpanded && (
-                <div className="px-4 pb-4 pt-0 border-t border-[rgba(124,58,237,0.06)] bg-[#020617]/40">
-                  {l.details && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">Details</p>
-                      <pre className="text-xs text-[#CBD5E1] bg-white border border-[rgba(124,58,237,0.08)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.details}</pre>
-                    </div>
-                  )}
-                  {l.stack && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">Stack</p>
-                      <pre className="text-xs text-[#f59e0b] bg-white border border-[rgba(245,158,11,0.15)] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.stack}</pre>
-                    </div>
-                  )}
-                  {!l.details && !l.stack && <p className="text-xs text-muted-foreground mt-3">No additional context.</p>}
-                </div>
-              )}
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: 'Total', value: stats.total, sub: `${filtered.length} shown` },
+            { label: 'Errors (24h)', value: stats.errors24, sub: 'error + critical', tone: stats.errors24 > 0 ? 'text-[#EB5757]' : 'text-[#37352F]' },
+            { label: 'Warnings (24h)', value: stats.warns24, sub: 'warn', tone: stats.warns24 > 0 ? 'text-[#787774]' : 'text-[#787774]' },
+            { label: 'Unresolved', value: stats.unresolved, sub: 'needs attention', tone: stats.unresolved > 0 ? 'text-[#EB5757]' : 'text-[#787774]' }
+          ].map(s => (
+            <div key={s.label} className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">
+              <p className="text-[11px] uppercase tracking-wider text-[#787774] font-medium">{s.label}</p>
+              <p className={`text-[22px] font-semibold mt-1 ${s.tone || 'text-[#37352F]'}`}>{s.value}</p>
+              <p className="text-[12px] text-[#787774] mt-1">{s.sub}</p>
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mb-4 p-4 bg-white border border-[#E9E9E7] rounded-[8px]">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-[#787774]" />
+            <select value={levelFilter} onChange={e => setLevelFilter(e.target.value as any)} className="bg-white border border-[#E0E0DE] text-[#37352F] text-[13px] px-3 py-2 rounded-[6px] focus:outline-none focus:border-[#2383E2]">
+              <option value="all">All levels</option>
+              <option value="critical">Critical</option>
+              <option value="error">Error</option>
+              <option value="warn">Warn</option>
+              <option value="info">Info</option>
+              <option value="debug">Debug</option>
+            </select>
+            <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value as any)} className="bg-white border border-[#E0E0DE] text-[#37352F] text-[13px] px-3 py-2 rounded-[6px] focus:outline-none focus:border-[#2383E2]">
+              <option value="all">All sources</option>
+              {(['email','github','api','firestore','auth','ui','workflow','report','system','task','defect','action-point','general'] as const).map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <select value={timeFilter} onChange={e => setTimeFilter(e.target.value as any)} className="bg-white border border-[#E0E0DE] text-[#37352F] text-[13px] px-3 py-2 rounded-[6px] focus:outline-none focus:border-[#2383E2]">
+              <option value="all">All time</option>
+              <option value="1h">Last hour</option>
+              <option value="24h">Last 24h</option>
+              <option value="7d">Last 7 days</option>
+            </select>
+            <label className="flex items-center gap-1.5 text-[13px] text-[#787774] ml-2">
+              <input type="checkbox" checked={showResolved} onChange={e => setShowResolved(e.target.checked)} className="accent-[#2383E2]" />
+              Resolved
+            </label>
+          </div>
+          <div className="flex-1 min-w-[220px] max-w-md ml-auto relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#787774]" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search message, details, route…"
+              className="w-full pl-9 pr-9 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[13px] rounded-[6px] placeholder:text-[#787774] focus:outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2]"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#787774] hover:text-[#37352F]">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {loading && <div className="p-8 text-center text-[14px] text-[#787774] bg-white border border-[#E9E9E7] rounded-[8px]">Loading logs…</div>}
+          {!loading && filtered.length === 0 && (
+            <div className="p-12 text-center bg-white border border-[#E9E9E7] rounded-[8px]">
+              <p className="text-[14px] text-[#787774]">No logs match your filters.</p>
+              <p className="text-[12px] text-[#787774] mt-2">Logs are written by the app on errors, email failures, GitHub/API issues, and unhandled exceptions.</p>
+            </div>
+          )}
+          {filtered.map(l => {
+            const meta = levelMeta[l.level] || levelMeta.info;
+            const Icon = meta.icon;
+            const isExpanded = expanded === l.id;
+            return (
+              <div key={l.id} className={`bg-white border border-[#E9E9E7] rounded-[8px] overflow-hidden ${l.resolved ? 'opacity-60' : ''} hover:bg-[#F7F7F5] transition-colors duration-150`}>
+                <div
+                  className="flex items-start gap-3 p-4 cursor-pointer"
+                  onClick={() => setExpanded(isExpanded ? null : l.id)}
+                >
+                  <span className={`w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-[6px] ${meta.bg} ${meta.text}`}>
+                    <Icon className="w-4 h-4" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-[4px] border border-[#E9E9E7] ${meta.bg} ${meta.text}`}>{meta.label}</span>
+                      <span className="text-[11px] px-2 py-0.5 bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7] rounded-[4px]">{l.source}</span>
+                      {l.route && <span className="text-[12px] text-[#787774] truncate max-w-[220px]">{l.route}</span>}
+                      {l.resolved && <span className="text-[11px] px-2 py-0.5 bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7] rounded-[4px] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> resolved</span>}
+                      <span className="text-[12px] text-[#787774] ml-auto flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {l.createdAt ? format(l.createdAt, 'MMM d, HH:mm:ss') : '—'}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-[#37352F] mt-1.5 break-words font-mono leading-relaxed">{l.message}</p>
+                    <p className="text-[12px] text-[#787774] mt-1 font-mono">
+                      {l.userName || l.userEmail ? `${l.userName || ''}${l.userName && l.userEmail ? ' · ' : ''}${l.userEmail || ''} · ` : ''}
+                      {l.details ? `${l.details.slice(0, 140)}${l.details.length > 140 ? '…' : ''}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => copyDetails(l)} title="Copy" className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[4px] transition-colors duration-150">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => toggleResolved(l)} title={l.resolved ? 'Mark unresolved' : 'Mark resolved'} className={`p-1.5 rounded-[4px] border border-transparent hover:bg-white hover:border-[#E9E9E7] transition-colors duration-150 ${l.resolved ? 'text-[#787774]' : 'text-[#2383E2]'}`}>
+                      <CheckCircle className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => deleteDoc(doc(db, 'systemLogs', l.id))} title="Delete" className="p-1.5 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[4px] transition-colors duration-150">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <ChevronDown className={`w-4 h-4 text-[#787774] transition ${isExpanded ? 'rotate-180' : ''}`} />
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="px-4 pb-4 pt-0 border-t border-[#E9E9E7] bg-[#FBFBFA]">
+                    {l.details && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold text-[#787774] mb-1 uppercase tracking-wide">Details</p>
+                        <pre className="text-[13px] font-mono text-[#37352F] bg-white border border-[#E9E9E7] rounded-[6px] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.details}</pre>
+                      </div>
+                    )}
+                    {l.stack && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold text-[#787774] mb-1 uppercase tracking-wide">Stack</p>
+                        <pre className="text-[13px] font-mono text-[#EB5757] bg-white border border-[#E9E9E7] rounded-[6px] p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">{l.stack}</pre>
+                      </div>
+                    )}
+                    {!l.details && !l.stack && <p className="text-[12px] text-[#787774] mt-3">No additional context.</p>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[12px] text-[#787774] mt-4">
+          Tip: The app logs email failures (Gmail 535), GitHub API errors, Firestore issues, and any unhandled UI exceptions here. Keep this page live while testing.
+        </p>
       </div>
-      <p className="text-xs text-[#475569] mt-4">
-        Tip: The app logs email failures (Gmail 535), GitHub API errors, Firestore issues, and any unhandled UI exceptions here. Keep this page live while testing.
-      </p>
     </div>
   );
 }

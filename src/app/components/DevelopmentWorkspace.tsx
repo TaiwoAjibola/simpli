@@ -80,12 +80,12 @@ function DiffLines({ patch }: { patch: string }) {
       {lines.map((line, i) => {
         let cls = 'text-muted-foreground';
         let bg = '';
-        if (line.startsWith('+')) { cls = 'text-foreground'; bg = 'bg-[rgba(124,58,237,0.08)]'; }
+        if (line.startsWith('+')) { cls = 'text-foreground'; bg = 'bg-[#F7F7F5]'; }
         else if (line.startsWith('-')) { cls = 'text-[#f87171]'; bg = 'bg-[rgba(255,59,92,0.08)]'; }
-        else if (line.startsWith('@@')) { cls = 'text-[#8b5cf6]'; bg = 'bg-[rgba(139,92,246,0.08)]'; }
+        else if (line.startsWith('@@')) { cls = 'text-[#2383E2]'; bg = 'bg-[rgba(139,92,246,0.08)]'; }
         return (
           <div key={i} className={`${bg} px-3 whitespace-pre`}>
-            <span className="select-none text-[#334155]">{line[0] === '+' ? '+' : line[0] === '-' ? '-' : ' '}</span>
+            <span className="select-none text-[#787774]">{line[0] === '+' ? '+' : line[0] === '-' ? '-' : ' '}</span>
             {line.slice(1) || '\u00A0'}
           </div>
         );
@@ -174,7 +174,6 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   useEffect(() => {
     setViewBranch('');
     loadBranches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo?.id]);
 
   const loadTree = useCallback(async () => {
@@ -283,7 +282,6 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
     }
   }, [repo?.name]);
 
-  // Load data when repo+branch are known.
   useEffect(() => {
     const key = `${params}|${branch}|${prNumber}`;
     if (!params || !branch || loadedRef.current === key) return;
@@ -293,18 +291,13 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
     loadDiff();
     if (prNumber) loadPr();
     loadDeployments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params, branch, prNumber]);
 
-  // Auto-sync: silently refresh live data (PR, commits, diff) while the
-  // workspace is open so statuses picked up by webhooks appear without the
-  // manual Refresh button. Tree + file content are only refreshed on demand.
   const refresh = useCallback(() => {
     loadCommits();
     loadDiff();
     if (prNumber) loadPr();
     loadDeployments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadCommits, loadDiff, loadPr, loadDeployments, prNumber]);
 
   useEffect(() => {
@@ -319,7 +312,6 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
     loadDiff();
     if (prNumber) loadPr();
     loadDeployments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadTree, loadCommits, loadDiff, loadPr, loadDeployments, prNumber]);
 
   const handleCreateBranch = async () => {
@@ -511,21 +503,21 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
       <React.Fragment key={node.path}>
         <button
           onClick={() => node.type === 'dir' ? toggleDir(node.path) : (setSelectedFile(node.path), setTab('code'))}
-          className="flex items-center gap-1 w-full text-left px-2 py-[3px] hover:bg-[rgba(255,255,255,0.03)] text-xs"
+          className="flex items-center gap-1 w-full text-left px-2 py-[3px] hover:bg-[#F7F7F5] text-xs"
           style={{ paddingLeft: `${8 + depth * 14}px` }}
         >
           {node.type === 'dir' ? (
             <>
               {expanded.has(node.path) ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
-              <Folder className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+              <Folder className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
             </>
           ) : (
             <>
               <span className="w-3" />
-              <File className="w-3.5 h-3.5 text-[#8b5cf6] shrink-0" />
+              <File className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
             </>
           )}
-          <span className={`truncate ${selectedFile === node.path && node.type === 'file' ? 'text-[#7C3AED]' : 'text-[#CBD5E1]'}`}>{node.name}</span>
+          <span className={`truncate ${selectedFile === node.path && node.type === 'file' ? 'text-[#2383E2]' : 'text-[#37352F]'}`}>{node.name}</span>
         </button>
         {node.type === 'dir' && expanded.has(node.path) && renderTree(node.children || [], depth + 1)}
       </React.Fragment>
@@ -545,10 +537,10 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   return (
     <div className="space-y-4">
       {/* Integration status header */}
-      <div className="bg-white border border-[rgba(124,58,237,0.1)] p-4 rounded">
+      <div className="bg-white border border-[#E9E9E7] p-4 rounded-[6px]">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-          <span className="flex items-center gap-2 text-[#7C3AED]">
-            <span className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+          <span className="flex items-center gap-2 text-[#2383E2]">
+            <span className="w-2 h-2 rounded-full bg-[#2383E2]" />
             GitHub {repo ? 'Connected' : 'Not connected'}
           </span>
           {repo && (
@@ -558,13 +550,13 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 {repo.owner}/{repo.name}
               </span>
               {branch && (
-                <span className="flex items-center gap-1.5 text-[#8b5cf6] font-mono">
+                <span className="flex items-center gap-1.5 text-[#2383E2] font-mono">
                   <GitBranch className="w-4 h-4" />
                   {branch}
                 </span>
               )}
               {prNumber && (
-                <span className="flex items-center gap-1.5 text-[#A78BFA]">
+                <span className="flex items-center gap-1.5 text-[#37352F]">
                   <GitPullRequest className="w-4 h-4" />
                   PR #{prNumber}
                 </span>
@@ -576,8 +568,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 </span>
               )}
               {g?.pullRequest && (
-                <span className={`px-2 py-0.5 rounded text-xs ${
-                  g.pullRequest.checkStatus === 'success' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                <span className={`px-2 py-0.5 rounded-[6px] text-xs ${
+                  g.pullRequest.checkStatus === 'success' ? 'bg-[#F7F7F5] text-[#37352F]'
                   : g.pullRequest.checkStatus === 'failure' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                   : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                 }`}>
@@ -590,14 +582,14 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
       </div>
 
       {/* Workspace tabs */}
-      <div className="flex gap-1 border-b border-[rgba(124,58,237,0.1)]">
+      <div className="flex gap-1 border-b border-[#E9E9E7]">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             disabled={!repo || (t.id !== 'deploys' && t.id !== 'issue' && !branch) || (t.id === 'pr' && !prNumber)}
             className={`flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 transition disabled:opacity-40 ${
-              tab === t.id ? 'border-[#7C3AED] text-[#7C3AED] font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
+              tab === t.id ? 'border-[#2383E2] text-[#2383E2] font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <t.icon className="w-4 h-4" />
@@ -607,7 +599,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
         {canDev && (
           <button
             onClick={handleRefresh}
-            className="ml-auto flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:text-[#7C3AED]"
+            className="ml-auto flex items-center gap-1 px-3 py-2 text-xs text-[#787774] hover:text-[#37352F]"
             title="Refresh"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} />
@@ -617,7 +609,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
       </div>
 
       {/* Actions: repo select, create branch, open PR */}
-      <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded space-y-2">
+      <div className="bg-white border border-[#E9E9E7] p-3 rounded-[6px] space-y-2">
         {appRepos.length > 0 && (
           <select
             value={repo?.id || (g?.repositoryId || '')}
@@ -625,7 +617,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               const r = repositories.find(x => x.id === e.target.value);
               updateWorkGithub(workKind, workId, { repositoryId: r ? `${r.owner}/${r.name}` : e.target.value } as any);
             }}
-            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+            className="w-full bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
           >
             <option value="">Select repository...</option>
             {appRepos.map(r => (
@@ -634,12 +626,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
           </select>
         )}
         {repo && (
-          <div className="flex items-center gap-2 bg-[#020617] border border-[rgba(124,58,237,0.2)] rounded px-2">
-            <GitBranch className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-[#E9E9E7] rounded-[6px] px-2">
+            <GitBranch className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
             <select
               value={branch}
               onChange={e => setViewBranch(e.target.value)}
-              className="w-full bg-transparent text-foreground text-sm py-1.5 rounded outline-none"
+              className="w-full bg-transparent text-foreground text-sm py-1.5 rounded-[6px] outline-none"
               title="Switch branch"
             >
               <option value={branch}>{branch}</option>
@@ -655,12 +647,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               value={branchName}
               onChange={e => setBranchName(e.target.value)}
               placeholder="New branch name (e.g. feature/sim-142)"
-              className="flex-1 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+              className="flex-1 bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
             />
             <button
               onClick={handleCreateBranch}
               disabled={busy === 'branch' || !branchName.trim()}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] rounded disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#2383E2] text-[#FFFFFF] text-sm font-medium hover:bg-[#1a6fc0] rounded-[6px] disabled:opacity-50"
             >
               {busy === 'branch' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <GitBranch className="w-3.5 h-3.5" />}
               Create Branch
@@ -673,12 +665,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               value={prTitle}
               onChange={e => setPrTitle(e.target.value)}
               placeholder="Pull request title"
-              className="flex-1 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+              className="flex-1 bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
             />
             <button
               onClick={handleOpenPr}
               disabled={busy === 'pr'}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#A78BFA] text-white text-sm font-medium hover:bg-[#059669] rounded disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#059669] rounded-[6px] disabled:opacity-50"
             >
               {busy === 'pr' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <GitPullRequest className="w-3.5 h-3.5" />}
               Open PR
@@ -689,7 +681,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* No repo/branch empty state */}
       {(!repo || !branch) && (
-        <div className="text-center py-10 bg-white border border-[rgba(124,58,237,0.1)] rounded">
+        <div className="text-center py-10 bg-white border border-[#E9E9E7] rounded-[6px]">
           <GitBranch className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
             {!repo ? 'Link a repository to this work item to open the workspace.' : 'Create a branch to start the development workspace.'}
@@ -699,15 +691,15 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* CODE TAB */}
       {repo && branch && tab === 'code' && (
-        <div className="grid grid-cols-[240px_1fr] h-[520px] border border-[rgba(124,58,237,0.1)] rounded overflow-hidden">
-          <div className="bg-[#0F172A] border-r border-[rgba(124,58,237,0.1)] flex flex-col">
-            <div className="p-2 border-b border-[rgba(124,58,237,0.1)] flex items-center gap-1">
+        <div className="grid grid-cols-[240px_1fr] h-[520px] border border-[#E9E9E7] rounded-[6px] overflow-hidden">
+          <div className="bg-white border-r border-[#E9E9E7] flex flex-col">
+            <div className="p-2 border-b border-[#E9E9E7] flex items-center gap-1">
               <Search className="w-3.5 h-3.5 text-muted-foreground" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search files..."
-                className="flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-[#475569]"
+                className="flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-[#787774]"
               />
             </div>
             <div className="flex-1 overflow-y-auto py-1">
@@ -718,7 +710,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               ) : renderTree(filteredTree)}
             </div>
           </div>
-          <div className="bg-[#020617] overflow-auto">
+          <div className="bg-white overflow-auto">
             {selectedFile ? (
               fileLoading ? (
                 <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
@@ -727,16 +719,16 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-[rgba(124,58,237,0.1)] text-xs text-muted-foreground sticky top-0 bg-[#0F172A]">
+                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E9E9E7] text-xs text-muted-foreground sticky top-0 bg-white">
                     <span className="font-mono">{selectedFile}</span>
                     <div className="flex items-center gap-3">
                       {canReview && prNumber && prDetail?.state === 'open' && (
-                        <span className="flex items-center gap-1 text-[#7C3AED]">
+                        <span className="flex items-center gap-1 text-[#2383E2]">
                           <MessageSquarePlus className="w-3 h-3" />
                           Click a changed line to add a review comment
                         </span>
                       )}
-                      <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${branch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#7C3AED] hover:opacity-80">
+                      <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${branch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#2383E2] hover:opacity-80">
                         <ExternalLink className="w-3 h-3" />
                         View on GitHub
                       </a>
@@ -753,36 +745,36 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                       <div key={num} className={hasComments ? 'bg-[rgba(250,204,21,0.04)]' : ''}>
                         <div
                           onClick={() => commentable && startComment(num)}
-                          className={`group flex items-start hover:bg-[rgba(255,255,255,0.03)] ${commentable ? 'cursor-pointer' : ''}`}
+                          className={`group flex items-start hover:bg-[#F7F7F5] ${commentable ? 'cursor-pointer' : ''}`}
                         >
-                          <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#facc15]' : 'text-[#334155]'} group-hover:text-muted-foreground`}>
+                          <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#facc15]' : 'text-[#787774]'} group-hover:text-muted-foreground`}>
                             {hasComments && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#facc15] mr-2 align-middle" />}
                             {num}
                           </span>
-                          <span className="flex-1 whitespace-pre text-[12px] leading-5 py-px font-mono text-[#CBD5E1]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+                          <span className="flex-1 whitespace-pre text-[12px] leading-5 py-px font-mono text-[#37352F]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
                             {line || '\u00A0'}
                           </span>
                           {commentable && !composing && (
-                            <span className="opacity-0 group-hover:opacity-100 px-2 pt-px text-[#7C3AED]">
+                            <span className="opacity-0 group-hover:opacity-100 px-2 pt-px text-[#2383E2]">
                               <MessageSquarePlus className="w-3.5 h-3.5" />
                             </span>
                           )}
                         </div>
 
                         {existing.map((c: any) => (
-                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(250,204,21,0.15)] rounded p-2 text-xs">
+                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-white border border-[rgba(250,204,21,0.15)] rounded-[6px] p-2 text-xs">
                             <div className="flex items-center gap-2 text-[#facc15]">
                               <MessageSquare className="w-3 h-3" />
                               <span className="font-medium">{c.author}</span>
                               <span className="text-muted-foreground">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
                             </div>
-                            <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                            <p className="text-[#37352F] mt-1 whitespace-pre-wrap">{c.body}</p>
                           </div>
                         ))}
 
                         {pending.map(c => (
-                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(124,58,237,0.25)] rounded p-2 text-xs">
-                            <div className="flex items-center gap-2 text-[#7C3AED]">
+                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-white border border-[#E9E9E7] rounded-[6px] p-2 text-xs">
+                            <div className="flex items-center gap-2 text-[#2383E2]">
                               <MessageSquare className="w-3 h-3" />
                               <span className="font-medium">You</span>
                               <span className="text-muted-foreground">pending · line {c.line}</span>
@@ -790,19 +782,19 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                                 <Trash2 className="w-3 h-3" />
                               </button>
                             </div>
-                            <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                            <p className="text-[#37352F] mt-1 whitespace-pre-wrap">{c.body}</p>
                           </div>
                         ))}
 
                         {composing && (
-                          <div className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(124,58,237,0.4)] rounded p-2">
+                          <div className="ml-10 mr-4 mb-1 bg-white border border-[#E9E9E7] rounded-[6px] p-2">
                             <textarea
                               autoFocus
                               value={commentText}
                               onChange={e => setCommentText(e.target.value)}
                               rows={2}
                               placeholder={`Comment on line ${num}…`}
-                              className="w-full bg-transparent text-xs text-foreground outline-none resize-none placeholder:text-[#475569]"
+                              className="w-full bg-transparent text-xs text-foreground outline-none resize-none placeholder:text-[#787774]"
                             />
                             <div className="flex items-center justify-end gap-2 mt-1">
                               <button
@@ -814,7 +806,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                               <button
                                 onClick={() => saveComment(num)}
                                 disabled={!commentText.trim()}
-                                className="flex items-center gap-1 px-2 py-1 text-xs bg-[#7C3AED] text-[#020617] font-medium rounded disabled:opacity-40"
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-[#2383E2] text-[#FFFFFF] font-medium rounded-[6px] disabled:opacity-40"
                               >
                                 <Send className="w-3 h-3" />
                                 Add to review
@@ -828,7 +820,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 </div>
               )
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-[#475569]">
+              <div className="flex items-center justify-center h-full text-sm text-[#787774]">
                 Select a file from the tree to view its source
               </div>
             )}
@@ -838,7 +830,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* CHANGES TAB */}
       {repo && branch && tab === 'changes' && (
-        <div className="h-[520px] overflow-auto border border-[rgba(124,58,237,0.1)] rounded bg-[#020617]">
+        <div className="h-[520px] overflow-auto border border-[#E9E9E7] rounded-[6px] bg-white">
           {diffLoading ? (
             <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -854,14 +846,14 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
           ) : (
             <div className="space-y-4 p-2">
               {diff.map((f: any) => (
-                <div key={f.filename} className="border border-[rgba(124,58,237,0.1)] rounded overflow-hidden">
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-[#0F172A] text-xs">
+                <div key={f.filename} className="border border-[#E9E9E7] rounded-[6px] overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-white text-xs">
                     <span className="font-mono text-foreground">{f.filename}</span>
                     <span className="flex items-center gap-3">
                       <span className="text-foreground">+{f.additions}</span>
                       <span className="text-[#f87171]">-{f.deletions}</span>
-                      <span className={`px-1.5 py-0.5 rounded ${
-                        f.status === 'added' ? 'bg-[rgba(124,58,237,0.15)] text-[#7C3AED]'
+                      <span className={`px-1.5 py-0.5 rounded-[6px] ${
+                        f.status === 'added' ? 'bg-[#F7F7F5] text-[#2383E2]'
                         : f.status === 'removed' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                         : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                       }`}>{f.status}</span>
@@ -879,7 +871,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* COMMITS TAB */}
       {repo && branch && tab === 'commits' && (
-        <div className="h-[520px] overflow-auto border border-[rgba(124,58,237,0.1)] rounded bg-[#020617] p-2">
+        <div className="h-[520px] overflow-auto border border-[#E9E9E7] rounded-[6px] bg-white p-2">
           {commitsLoading ? (
             <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -893,9 +885,9 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
           ) : (
             <div className="space-y-2">
               {commits.map((c: any, i: number) => (
-                <div key={c.sha} className="flex gap-3 p-3 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded">
-                  <div className="w-8 h-8 rounded-full bg-[rgba(124,58,237,0.1)] flex items-center justify-center shrink-0">
-                    <GitCommit className="w-4 h-4 text-[#7C3AED]" />
+                <div key={c.sha} className="flex gap-3 p-3 bg-white border border-[#E9E9E7] rounded-[6px]">
+                  <div className="w-8 h-8 rounded-full bg-[#F7F7F5] flex items-center justify-center shrink-0">
+                    <GitCommit className="w-4 h-4 text-[#2383E2]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground break-words">{c.message}</p>
@@ -907,7 +899,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                     </div>
                   </div>
                   {c.url && (
-                    <a href={c.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80 shrink-0">
+                    <a href={c.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:opacity-80 shrink-0">
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
@@ -921,7 +913,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
       {/* PR TAB */}
       {repo && branch && prNumber && tab === 'pr' && (
         <div className="space-y-4">
-          <div className="bg-white border border-[rgba(124,58,237,0.1)] p-4 rounded">
+          <div className="bg-white border border-[#E9E9E7] p-4 rounded-[6px]">
             {prLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading PR...
@@ -930,27 +922,27 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-foreground flex items-center gap-2">
-                    <GitPullRequest className="w-4 h-4 text-[#A78BFA]" />
+                    <GitPullRequest className="w-4 h-4 text-[#37352F]" />
                     PR #{prDetail.prNumber}: {prDetail.title}
                   </h4>
                   <div className="flex items-center gap-2 text-xs">
-                    <span className={`px-2 py-0.5 rounded ${
-                      prDetail.reviewState === 'approved' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                    <span className={`px-2 py-0.5 rounded-[6px] ${
+                      prDetail.reviewState === 'approved' ? 'bg-[#F7F7F5] text-[#37352F]'
                       : prDetail.reviewState === 'changes_requested' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                       : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                     }`}>
                       Review: {prDetail.reviewState || 'pending'}
                     </span>
-                    <span className={`px-2 py-0.5 rounded ${
-                      prDetail.checkStatus === 'success' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                    <span className={`px-2 py-0.5 rounded-[6px] ${
+                      prDetail.checkStatus === 'success' ? 'bg-[#F7F7F5] text-[#37352F]'
                       : prDetail.checkStatus === 'failure' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                       : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                     }`}>
                       CI: {prDetail.checkStatus || 'pending'}
                     </span>
-                    <span className={`px-2 py-0.5 rounded ${
-                      prDetail.state === 'merged' ? 'bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]'
-                      : prDetail.state === 'open' ? 'bg-[rgba(124,58,237,0.15)] text-[#7C3AED]'
+                    <span className={`px-2 py-0.5 rounded-[6px] ${
+                      prDetail.state === 'merged' ? 'bg-[rgba(139,92,246,0.15)] text-[#2383E2]'
+                      : prDetail.state === 'open' ? 'bg-[#F7F7F5] text-[#2383E2]'
                       : 'bg-[rgba(107,107,128,0.1)] text-muted-foreground'
                     }`}>
                       {prDetail.state}
@@ -958,25 +950,25 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="font-mono text-[#7C3AED]">{prDetail.head || '?'}</span>
+                  <span className="font-mono text-[#2383E2]">{prDetail.head || '?'}</span>
                   <ChevronRight className="w-3 h-3" />
                   <span className="font-mono text-foreground">{prDetail.base || '?'}</span>
                   {prDetail.mergedAt && <span>Merged {new Date(prDetail.mergedAt).toLocaleString()}</span>}
                   {prDetail.url && (
-                    <a href={prDetail.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80">
+                    <a href={prDetail.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:opacity-80">
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
                 </div>
                 {(canReview || canMerge) && prDetail.state === 'open' && (
-                  <div className="pt-2 border-t border-[rgba(124,58,237,0.1)]">
+                  <div className="pt-2 border-t border-[#E9E9E7]">
                     {canReview && (
                       <>
                         {pendingComments.length > 0 && (
-                          <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.2)] rounded text-xs text-[#7C3AED]">
+                          <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-xs text-[#2383E2]">
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span className="font-medium">{pendingComments.length} inline comment{pendingComments.length === 1 ? '' : 's'} ready</span>
-                            <button onClick={() => setTab('code')} className="ml-auto text-muted-foreground hover:text-[#7C3AED] underline">Review on lines</button>
+                            <button onClick={() => setTab('code')} className="ml-auto text-[#787774] hover:text-[#37352F] underline">Review on lines</button>
                           </div>
                         )}
                         <textarea
@@ -984,7 +976,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           onChange={e => setReviewSummary(e.target.value)}
                           rows={2}
                           placeholder={pendingComments.length ? 'Overall summary for this review…' : 'Review summary (optional)…'}
-                          className="w-full bg-[#020617] border border-[rgba(124,58,237,0.15)] text-sm text-foreground outline-none rounded p-2 resize-none placeholder:text-[#475569] focus:border-[#7C3AED]"
+                          className="w-full bg-white border border-[#E9E9E7] text-sm text-foreground outline-none rounded-[6px] p-2 resize-none placeholder:text-[#787774] focus:border-[#2383E2]"
                         />
                       </>
                     )}
@@ -994,7 +986,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           <button
                             onClick={() => handleReview('COMMENT')}
                             disabled={busy === 'review'}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[rgba(148,163,184,0.2)] text-[#CBD5E1] text-sm font-medium hover:bg-[#273449] rounded disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[rgba(148,163,184,0.2)] text-[#37352F] text-sm font-medium hover:bg-[#273449] rounded-[6px] disabled:opacity-50"
                           >
                             <MessageSquare className="w-4 h-4" />
                             Comment
@@ -1002,7 +994,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           <button
                             onClick={() => handleReview('APPROVE')}
                             disabled={busy === 'review'}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] rounded disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-[#FFFFFF] text-sm font-medium hover:bg-[#1a6fc0] rounded-[6px] disabled:opacity-50"
                           >
                             <CheckCircle className="w-4 h-4" />
                             Approve Review
@@ -1010,7 +1002,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           <button
                             onClick={() => handleReview('REQUEST_CHANGES')}
                             disabled={busy === 'review'}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] text-white text-sm font-medium hover:bg-[#dc2626] rounded disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] text-white text-sm font-medium hover:bg-[#dc2626] rounded-[6px] disabled:opacity-50"
                           >
                             <XCircle className="w-4 h-4" />
                             Request Changes
@@ -1021,7 +1013,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                         <button
                           onClick={handleMerge}
                           disabled={busy === 'merge' || prDetail.state === 'merged'}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6] text-white text-sm font-medium hover:bg-[#7c3aed] rounded disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#7c3aed] rounded-[6px] disabled:opacity-50"
                           title={prDetail.reviewState === 'approved' ? 'Merge this PR' : `Review not yet approved (${prDetail.reviewState}) — merge anyway?`}
                         >
                           <GitPullRequest className="w-4 h-4" />
@@ -1033,20 +1025,20 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 )}
 
                 {prDetail.description && (
-                  <div className="pt-2 border-t border-[rgba(124,58,237,0.1)]">
+                  <div className="pt-2 border-t border-[#E9E9E7]">
                     <p className="text-xs font-semibold text-muted-foreground mb-1">Description</p>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{prDetail.description}</p>
                   </div>
                 )}
 
                 {prDetail.reviewers && prDetail.reviewers.length > 0 && (
-                  <div className="pt-2 border-t border-[rgba(124,58,237,0.1)]">
+                  <div className="pt-2 border-t border-[#E9E9E7]">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Reviews</p>
                     <div className="space-y-2">
                       {prDetail.reviewers.map((r: any, i: number) => (
-                        <div key={i} className="flex items-start gap-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-2 rounded">
+                        <div key={i} className="flex items-start gap-2 bg-white border border-[#E9E9E7] p-2 rounded-[6px]">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            r.state === 'APPROVED' ? 'bg-[rgba(124,58,237,0.2)] text-[#A78BFA]'
+                            r.state === 'APPROVED' ? 'bg-[#F7F7F5] text-[#37352F]'
                             : r.state === 'CHANGES_REQUESTED' ? 'bg-[rgba(239,68,68,0.2)] text-[#ef4444]'
                             : 'bg-[rgba(245,158,11,0.2)] text-[#f59e0b]'
                           }`}>
@@ -1055,8 +1047,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-xs">
                               <span className="font-medium text-foreground">{r.login}</span>
-                              <span className={`px-1.5 py-0.5 rounded ${
-                                r.state === 'APPROVED' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                              <span className={`px-1.5 py-0.5 rounded-[6px] ${
+                                r.state === 'APPROVED' ? 'bg-[#F7F7F5] text-[#37352F]'
                                 : r.state === 'CHANGES_REQUESTED' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                                 : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                               }`}>
@@ -1064,7 +1056,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                               </span>
                               {r.submittedAt && <span className="text-muted-foreground">{new Date(r.submittedAt).toLocaleString()}</span>}
                             </div>
-                            {r.body && <p className="text-xs text-[#CBD5E1] mt-1 whitespace-pre-wrap">{r.body}</p>}
+                            {r.body && <p className="text-xs text-[#37352F] mt-1 whitespace-pre-wrap">{r.body}</p>}
                           </div>
                         </div>
                       ))}
@@ -1073,11 +1065,11 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 )}
 
                 {prDetail.reviewComments && prDetail.reviewComments.length > 0 && (
-                  <div className="pt-2 border-t border-[rgba(124,58,237,0.1)]">
+                  <div className="pt-2 border-t border-[#E9E9E7]">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Comments on code</p>
                     <div className="space-y-2">
                       {prDetail.reviewComments.map((c: any) => (
-                        <div key={c.id} className="flex items-start gap-2 bg-[#0F172A] border border-[rgba(250,204,21,0.12)] p-2 rounded">
+                        <div key={c.id} className="flex items-start gap-2 bg-white border border-[rgba(250,204,21,0.12)] p-2 rounded-[6px]">
                           <MessageSquare className="w-3.5 h-3.5 text-[#facc15] mt-0.5 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-xs">
@@ -1085,7 +1077,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                               <span className="text-[#facc15] font-mono">{c.path}:{c.line}</span>
                               {c.createdAt && <span className="text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</span>}
                             </div>
-                            <p className="text-xs text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                            <p className="text-xs text-[#37352F] mt-1 whitespace-pre-wrap">{c.body}</p>
                           </div>
                         </div>
                       ))}
@@ -1094,21 +1086,21 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 )}
 
                 {prDetail.checks && prDetail.checks.length > 0 && (
-                  <div className="pt-2 border-t border-[rgba(124,58,237,0.1)]">
+                  <div className="pt-2 border-t border-[#E9E9E7]">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Checks</p>
                     <div className="space-y-1.5">
                       {prDetail.checks.map((c: any, i: number) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                            c.conclusion === 'success' ? 'bg-[rgba(124,58,237,0.2)] text-[#A78BFA]'
+                            c.conclusion === 'success' ? 'bg-[#F7F7F5] text-[#37352F]'
                             : c.conclusion === 'failure' || c.conclusion === 'action_required' || c.conclusion === 'timed_out' ? 'bg-[rgba(239,68,68,0.2)] text-[#ef4444]'
                             : 'bg-[rgba(245,158,11,0.2)] text-[#f59e0b]'
                           }`}>
                             {c.conclusion === 'success' ? '✓' : c.conclusion === 'failure' || c.conclusion === 'action_required' || c.conclusion === 'timed_out' ? '✗' : '…'}
                           </span>
-                          <span className="text-[#CBD5E1]">{c.status === 'completed' ? c.name : `${c.name} (${c.status})`}</span>
-                          <span className={`ml-auto px-1.5 py-0.5 rounded text-[10px] ${
-                            c.conclusion === 'success' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                          <span className="text-[#37352F]">{c.status === 'completed' ? c.name : `${c.name} (${c.status})`}</span>
+                          <span className={`ml-auto px-1.5 py-0.5 rounded-[6px] text-[10px] ${
+                            c.conclusion === 'success' ? 'bg-[#F7F7F5] text-[#37352F]'
                             : c.conclusion === 'failure' || c.conclusion === 'action_required' || c.conclusion === 'timed_out' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                             : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
                           }`}>
@@ -1140,16 +1132,16 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
       {repo && tab === 'issue' && (
         <div className="space-y-3">
           {g?.issue ? (
-            <div className="bg-white border border-[rgba(124,58,237,0.1)] p-4 rounded">
+            <div className="bg-white border border-[#E9E9E7] p-4 rounded-[6px]">
               <div className="flex items-start gap-3">
-                <Github className="w-5 h-5 text-[#7C3AED] mt-0.5" />
+                <Github className="w-5 h-5 text-[#2383E2] mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded ${g.issue.state === 'closed' ? 'bg-[#A78BFA]/20 text-[#A78BFA]' : 'bg-[#7C3AED]/20 text-[#7C3AED]'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-[6px] ${g.issue.state === 'closed' ? 'bg-[#2383E2]/20 text-[#37352F]' : 'bg-[#2383E2]/20 text-[#2383E2]'}`}>
                       {g.issue.state}
                     </span>
                     <span className="text-sm font-mono text-foreground">#{g.issue.issueNumber}</span>
-                    <a href={g.issue.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80 ml-auto">
+                    <a href={g.issue.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:opacity-80 ml-auto">
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
@@ -1157,7 +1149,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                   {g.issue.labels && g.issue.labels.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {g.issue.labels.map(lb => (
-                        <span key={lb} className="px-2 py-0.5 text-xs bg-[#020617] border border-[rgba(124,58,237,0.15)] text-muted-foreground rounded">
+                        <span key={lb} className="px-2 py-0.5 text-xs bg-white border border-[#E9E9E7] text-muted-foreground rounded-[6px]">
                           {lb}
                         </span>
                       ))}
@@ -1167,7 +1159,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               </div>
             </div>
           ) : (
-            <div className="text-center py-10 border border-[rgba(124,58,237,0.1)] rounded bg-[#0F172A]">
+            <div className="text-center py-10 border border-[#E9E9E7] rounded-[6px] bg-white">
               <Github className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
                 No GitHub issue linked. For defects, creating the defect with this repository linked opens an issue.
@@ -1179,7 +1171,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* DEPLOYS TAB */}
       {repo && tab === 'deploys' && (
-        <div className="h-[520px] overflow-auto border border-[rgba(124,58,237,0.1)] rounded bg-[#020617] p-2">
+        <div className="h-[520px] overflow-auto border border-[#E9E9E7] rounded-[6px] bg-white p-2">
           {!deployConfigured ? (
             <div className="text-center py-10">
               <Rocket className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
@@ -1199,8 +1191,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
           ) : (
             <div className="space-y-2">
               {(deployments || []).map((d: any) => (
-                <div key={d.id} className="flex gap-3 p-3 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded items-center">
-                  <Rocket className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                <div key={d.id} className="flex gap-3 p-3 bg-white border border-[#E9E9E7] rounded-[6px] items-center">
+                  <Rocket className="w-4 h-4 text-[#2383E2] shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground truncate">{d.name}</p>
                     <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
@@ -1210,8 +1202,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                       {d.createdAt && <span>· {new Date(d.createdAt).toLocaleString()}</span>}
                     </div>
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-xs ${
-                    d.state === 'READY' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
+                  <span className={`px-2 py-0.5 rounded-[6px] text-xs ${
+                    d.state === 'READY' ? 'bg-[#F7F7F5] text-[#37352F]'
                     : d.state === 'ERROR' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
                     : d.state === 'CANCELED' ? 'bg-[rgba(107,107,128,0.1)] text-muted-foreground'
                     : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
@@ -1219,7 +1211,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                     {d.state}
                   </span>
                   {d.url && (
-                    <a href={d.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80 shrink-0">
+                    <a href={d.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:opacity-80 shrink-0">
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}

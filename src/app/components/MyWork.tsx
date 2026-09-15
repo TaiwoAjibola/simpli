@@ -74,8 +74,6 @@ export function MyWork() {
         blocked.push(item);
         continue;
       }
-
-      // Waiting for me: QA on defects, approvals on completed tasks
       if (item.workKind === 'defect' && item.status === 'pending_qa') {
         waitingForMe.push(item);
         continue;
@@ -84,7 +82,6 @@ export function MyWork() {
         waitingForMe.push(item);
         continue;
       }
-
       const due = item.dueDate || item.startDate;
       if (due && isPast(due)) {
         todayItems.push(item);
@@ -128,62 +125,64 @@ export function MyWork() {
   const totalCount = items.length;
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground mb-2">My Work</h1>
-        <p className="text-muted-foreground">
-          {totalCount} open items assigned to you across tasks, action points and defects
-        </p>
+    <div className="min-h-screen bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <div className="max-w-[900px] mx-auto">
+        <div className="mb-6">
+          <h1 className="text-[24px] font-semibold text-[#37352F] tracking-tight">My Work</h1>
+          <p className="text-[14px] text-[#787774] mt-1">
+            {totalCount} open items assigned to you across tasks, action points and defects
+          </p>
+        </div>
+
+        {sections.length === 0 ? (
+          <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-12 text-center">
+            <Briefcase className="w-10 h-10 text-[#787774] mx-auto mb-3" />
+            <p className="text-[14px] text-[#787774]">You're all caught up — no open work assigned to you.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {sections.map(section => (
+              <div key={section.id}>
+                <div className="flex items-center gap-2 mb-3">
+                  <section.icon className="w-4 h-4 text-[#787774]" />
+                  <h2 className="text-[16px] font-semibold text-[#37352F]">{section.title}</h2>
+                  <span className="text-[13px] text-[#787774]">({section.items.length})</span>
+                </div>
+                <div className="bg-white border border-[#E9E9E7] rounded-[8px] overflow-hidden divide-y divide-[#E9E9E7]">
+                  {section.items.map(item => {
+                    const goal = item.goalId ? getGoalById(item.goalId) : null;
+                    const app = item.appId ? getAppById(item.appId) : null;
+                    return (
+                      <WorkRow
+                        key={`${item.workKind}-${item.id}`}
+                        item={item}
+                        appName={app?.name}
+                        goalName={goal?.name}
+                        onClick={() => openItem(item)}
+                        onToggleActionPoint={handleActionPointToggle}
+                        canToggleActionPoint={item.workKind === 'action_point'}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {selectedTask && selectedTask.workKind === 'task' && (
+          <TaskDetailModal
+            task={selectedTask.raw as any}
+            onClose={() => setSelectedTask(null)}
+          />
+        )}
+        {selectedTask && selectedTask.workKind === 'defect' && (
+          <DefectDetailModal
+            defect={selectedTask.raw as any}
+            onClose={() => setSelectedTask(null)}
+          />
+        )}
       </div>
-
-      {sections.length === 0 ? (
-        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-12 text-center">
-          <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">You're all caught up — no open work assigned to you.</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {sections.map(section => (
-            <div key={section.id}>
-              <div className="flex items-center gap-2 mb-3">
-                <section.icon className="w-4 h-4 text-[#7C3AED]" />
-                <h2 className="text-lg font-semibold text-foreground">{section.title}</h2>
-                <span className="text-sm text-muted-foreground">({section.items.length})</span>
-              </div>
-              <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] divide-y divide-[rgba(124,58,237,0.05)]">
-                {section.items.map(item => {
-                  const goal = item.goalId ? getGoalById(item.goalId) : null;
-                  const app = item.appId ? getAppById(item.appId) : null;
-                  return (
-                    <WorkRow
-                      key={`${item.workKind}-${item.id}`}
-                      item={item}
-                      appName={app?.name}
-                      goalName={goal?.name}
-                      onClick={() => openItem(item)}
-                      onToggleActionPoint={handleActionPointToggle}
-                      canToggleActionPoint={item.workKind === 'action_point'}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {selectedTask && selectedTask.workKind === 'task' && (
-        <TaskDetailModal
-          task={selectedTask.raw as any}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
-      {selectedTask && selectedTask.workKind === 'defect' && (
-        <DefectDetailModal
-          defect={selectedTask.raw as any}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
     </div>
   );
 }
@@ -204,52 +203,46 @@ function WorkRow({
   canToggleActionPoint: boolean;
 }) {
   const kindConfig = {
-    task: { icon: CheckSquare, color: 'text-[#7C3AED]', label: 'Task' },
-    action_point: { icon: FileText, color: 'text-[#f59e0b]', label: 'Action Point' },
-    defect: { icon: Bug, color: 'text-[#dc2626]', label: 'Defect' }
+    task: { icon: CheckSquare, label: 'Task' },
+    action_point: { icon: FileText, label: 'Action Point' },
+    defect: { icon: Bug, label: 'Defect' }
   } as const;
   const kind = kindConfig[item.workKind];
   const KindIcon = kind.icon;
 
-  const priorityColor = item.priority === 'urgent'
-    ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]'
-    : item.priority === 'high'
-    ? 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b]'
-    : item.priority === 'medium'
-    ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]'
-    : 'bg-[rgba(107,107,128,0.1)] text-muted-foreground';
+  const priorityPill = 'bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774]';
 
   const statusText = item.status.replace(/_/g, ' ');
 
   return (
     <div
-      className="px-4 py-3 flex items-start gap-3 cursor-pointer hover:bg-[rgba(124,58,237,0.05)] transition group"
+      className="px-4 py-3 flex items-start gap-3 cursor-pointer hover:bg-[#F7F7F5] transition-colors duration-150 group"
       onClick={onClick}
     >
-      <KindIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${kind.color}`} />
+      <KindIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#787774]" />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-foreground truncate">{item.title}</p>
-              {item.priority === 'urgent' && <Star className="w-4 h-4 text-[#7C3AED] fill-[#7C3AED] flex-shrink-0" />}
+              <p className="text-[14px] font-medium text-[#37352F] truncate">{item.title}</p>
+              {item.priority === 'urgent' && <Star className="w-4 h-4 text-[#37352F] fill-[#37352F] flex-shrink-0" />}
             </div>
-            <div className="flex items-center gap-2 flex-wrap mt-1 text-xs text-muted-foreground">
-              <span className={`px-2 py-0.5 ${kind.color} bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]`}>
+            <div className="flex items-center gap-2 flex-wrap mt-1 text-[12px] text-[#787774]">
+              <span className="px-2 py-0.5 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[4px] text-[#787774]">
                 {kind.label}
               </span>
-              <span className="flex items-center gap-1 px-2 py-0.5 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)]">
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[4px] text-[#787774]">
                 {item.workType === 'development' ? <Code2 className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
                 {item.workType === 'development' ? 'Dev' : 'Non-dev'}
               </span>
-              {item.code && <span className="font-mono">{item.code}</span>}
+              {item.code && <span className="font-mono text-[12px] text-[#787774]">{item.code}</span>}
               {(appName || goalName) && (
-                <span className="truncate">
+                <span className="truncate text-[#787774]">
                   {appName}{goalName ? ` → ${goalName}` : ''}
                 </span>
               )}
               {item.dueDate && (
-                <span className={isPast(item.dueDate) ? 'text-[#7C3AED]' : ''}>
+                <span className={isPast(item.dueDate) ? 'text-[#EB5757]' : 'text-[#787774]'}>
                   Due {format(item.dueDate, 'MMM d')}
                 </span>
               )}
@@ -258,17 +251,17 @@ function WorkRow({
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={`text-xs font-medium px-2 py-1 ${priorityColor}`}>
+        <span className={`text-[11px] font-medium px-2 py-1 rounded-[4px] ${priorityPill}`}>
           {item.priority.toUpperCase()}
         </span>
-        <span className="text-xs text-muted-foreground capitalize">{statusText}</span>
+        <span className="text-[12px] text-[#787774] capitalize px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[4px]">{statusText}</span>
         {canToggleActionPoint && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleActionPoint(item);
             }}
-            className="p-1.5 text-[#A78BFA] hover:bg-[rgba(124,58,237,0.1)] rounded transition opacity-0 group-hover:opacity-100"
+            className="p-1.5 text-[#787774] hover:bg-white hover:border hover:border-[#E9E9E7] rounded-[4px] transition opacity-0 group-hover:opacity-100"
             title={item.status === 'completed' ? 'Reopen action point' : 'Mark action point complete'}
           >
             <CheckSquare className="w-4 h-4" />

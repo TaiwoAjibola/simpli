@@ -56,74 +56,67 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     <>
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-xl shadow-md icon-rotate-on-hover"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-[#E9E9E7] rounded-md"
       >
-        {sidebarOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
+        {sidebarOpen ? <X className="w-4 h-4 text-[#37352F]" /> : <Menu className="w-4 h-4 text-[#37352F]" />}
       </button>
 
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className={`h-screen w-64 bg-white border-r border-[#E9D5FF] flex flex-col fixed lg:static z-40 transition-transform duration-300 ${
+      <div className={`h-screen w-64 bg-[#FBFBFA] border-r border-[#E9E9E7] flex flex-col fixed lg:static z-40 transition-transform duration-150 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="p-6 border-b border-[#E9D5FF]">
-          <div className="flex items-center justify-between gap-3 group">
-            <div className="flex items-center gap-3">
-              <img src={SimpliLogo} alt="Simpli" className="w-10 h-10" />
+        <div className="p-4 border-b border-[#E9E9E7]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <img src={SimpliLogo} alt="Simpli" className="w-7 h-7" />
               <div>
-                <h1 className="font-bold text-lg text-foreground tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>Simpli</h1>
-                <p className="text-xs text-foreground uppercase tracking-wider">{currentRole?.name}</p>
+                <h1 className="font-semibold text-[14px] text-[#37352F] tracking-tight">Simpli</h1>
+                <p className="text-xs text-[#787774]">{currentRole?.name}</p>
               </div>
             </div>
             <NotificationInbox onNavigate={onNavigate} />
           </div>
         </div>
 
-        <nav className="flex-1 p-4 overflow-y-auto">
-          <div className="mb-6 stagger-in" style={{ animationDelay: '0ms' }}>
-            <div className="space-y-1">
-              {navItems.map((item, ii) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    className={`group w-full flex items-center gap-3 px-3 py-2 nav-item rounded-xl transition-all duration-150 ${
-                      isActive
-                        ? 'is-active bg-[#7C3AED]/15 font-medium text-[#7C3AED]'
-                        : 'text-foreground/70 hover:text-foreground hover:bg-[#F5F3FF]'
-                    }`}
-                    style={{ animationDelay: `${ii * 40}ms` }}
-                  >
-                    <span className={`nav-icon-tile rounded-lg ${isActive ? 'bg-[#7C3AED]/15' : 'bg-[#F5F3FF]'}`}>
-                      <Icon className={`w-[18px] h-[18px] transition-transform ${isActive ? 'text-[#7C3AED]' : 'text-foreground/50'}`} />
-                    </span>
-                    <span>{item.label}</span>
-                    {isActive && <span className="w-2 h-2 bg-[#7C3AED] rounded-full ml-auto animate-pulse" />}
-                  </button>
-                );
-              })}
-            </div>
+        <nav className="flex-1 p-3 overflow-y-auto">
+          <div className="space-y-0.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPage === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`w-full flex items-center gap-2.5 px-2 py-1.5 nav-item text-[14px] ${
+                    isActive ? 'is-active' : ''
+                  }`}
+                >
+                  <span className="nav-icon-tile">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#37352F]' : 'text-[#787774]'}`} />
+                  </span>
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </nav>
 
-        <div className="p-4 border-t border-[#E9D5FF]">
-          <div className="flex items-center gap-3 mb-1 px-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#7C3AED] to-[#F97316] flex items-center justify-center text-white font-bold rounded-full">
+        <div className="p-3 border-t border-[#E9E9E7]">
+          <div className="flex items-center gap-2.5 mb-2 px-1">
+            <div className="w-7 h-7 bg-[#37352F] flex items-center justify-center text-white font-medium rounded-full text-xs">
               {currentUser?.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground truncate">{currentUser?.name}</p>
-              <p className="text-xs text-foreground truncate">{currentUser?.email}</p>
+              <p className="font-medium text-sm text-[#37352F] truncate leading-tight">{currentUser?.name}</p>
+              <p className="text-xs text-[#787774] truncate">{currentUser?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#7C3AED] hover:bg-[rgba(124,58,237,0.05)] transition rounded-xl"
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] transition rounded-md"
           >
             <LogOut className="w-4 h-4" />
             <span>Logout</span>

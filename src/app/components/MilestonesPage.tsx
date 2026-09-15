@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  Target,
   CheckCircle,
   Clock,
-  XCircle,
   Flag,
   ChevronRight,
   ChevronDown,
   Calendar,
-  Users,
   TrendingUp
 } from 'lucide-react';
 import { GoalsModule } from './GoalsMilestonesModule';
@@ -17,7 +14,7 @@ import { GoalsModule } from './GoalsMilestonesModule';
 type MilestoneTab = 'all' | 'active' | 'completed' | 'upcoming';
 
 export function MilestonesPage() {
-  const { goals, tasks, phases } = useApp();
+  const { goals, tasks } = useApp();
   const [activeTab, setActiveTab] = useState<MilestoneTab>('all');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -51,51 +48,54 @@ export function MilestonesPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="bg-[#FFFFFF] max-w-[900px] mx-auto p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Milestones</h1>
-          <p className="text-foreground mt-1">Track project progress and key milestones</p>
+          <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Milestones</h1>
+          <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Track project progress and key milestones</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="glass-card rounded-xl p-6">
+        <div className="bg-white border border-[#E9E9E7] rounded-lg p-5">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-[rgba(124,58,237,0.1)] rounded-lg">
-              <TrendingUp className="w-6 h-6 text-[#7C3AED]" />
+            <div className="p-2 bg-[#F7F7F5] rounded-md border border-[#E9E9E7]">
+              <TrendingUp className="w-5 h-5 text-[#787774]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{overallProgress}%</p>
-              <p className="text-sm text-foreground">Overall Progress</p>
+              <p className="text-xl font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{overallProgress}%</p>
+              <p className="text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Overall Progress</p>
+            </div>
+          </div>
+          <div className="mt-3 w-full bg-[#E9E9E7] h-1.5 rounded-full overflow-hidden">
+            <div className="bg-[#2383E2] h-1.5 rounded-full transition-all duration-150" style={{ width: `${overallProgress}%` }} />
+          </div>
+        </div>
+        <div className="bg-white border border-[#E9E9E7] rounded-lg p-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#F7F7F5] rounded-md border border-[#E9E9E7]">
+              <CheckCircle className="w-5 h-5 text-[#787774]" />
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{totalCompleted}</p>
+              <p className="text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Tasks Completed</p>
             </div>
           </div>
         </div>
-        <div className="glass-card rounded-xl p-6">
+        <div className="bg-white border border-[#E9E9E7] rounded-lg p-5">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-[rgba(124,58,237,0.1)] rounded-lg">
-              <CheckCircle className="w-6 h-6 text-[#A78BFA]" />
+            <div className="p-2 bg-[#F7F7F5] rounded-md border border-[#E9E9E7]">
+              <Clock className="w-5 h-5 text-[#787774]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{totalCompleted}</p>
-              <p className="text-sm text-foreground">Tasks Completed</p>
-            </div>
-          </div>
-        </div>
-        <div className="glass-card rounded-xl p-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-[rgba(245,158,11,0.1)] rounded-lg">
-              <Clock className="w-6 h-6 text-[#F59E0B]" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{totalTasks - totalCompleted}</p>
-              <p className="text-sm text-foreground">Tasks Remaining</p>
+              <p className="text-xl font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{totalTasks - totalCompleted}</p>
+              <p className="text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Tasks Remaining</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center bg-[#E9E9E7] rounded-md p-1 w-fit mb-6">
         {[
           { key: 'all', label: 'All' },
           { key: 'active', label: 'Active' },
@@ -105,67 +105,60 @@ export function MilestonesPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as MilestoneTab)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-              activeTab === tab.key
-                ? 'bg-[#7C3AED] text-white'
-                : 'bg-white text-foreground border border-[#E9D5FF] hover:border-[#7C3AED]'
-            }`}
+            className={`px-3.5 py-1.5 text-sm font-medium rounded-[6px] transition-colors duration-150 cursor-pointer ${activeTab === tab.key ? 'bg-white text-[#37352F] shadow-sm border border-[#E9E9E7]' : 'text-[#787774] hover:text-[#37352F]'}`}
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="space-y-4 mb-8">
-        <h2 className="text-xl font-bold text-foreground">Milestone Timeline</h2>
-        {milestones.map((milestone, index) => {
+      <div className="space-y-3 mb-8">
+        <h2 className="text-[16px] font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>Milestone Timeline</h2>
+        {milestones.map((milestone) => {
           const isExpanded = expandedItems.has(milestone.id);
-          const statusColors = {
-            completed: 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]',
-            in_progress: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
-            pending: 'bg-[rgba(245,158,11,0.1)] text-[#F59E0B]'
+          const statusMap: Record<string, { label: string; dot: string; icon: React.ReactNode }> = {
+            completed: { label: 'Completed', dot: 'bg-[#0F7B6C]', icon: <CheckCircle className="w-5 h-5 text-[#0F7B6C]" /> },
+            in_progress: { label: 'In progress', dot: 'bg-[#2383E2]', icon: <Clock className="w-5 h-5 text-[#2383E2]" /> },
+            pending: { label: 'Not started', dot: 'bg-[#9B9A97]', icon: <Flag className="w-5 h-5 text-[#9B9A97]" /> }
           };
+          const meta = statusMap[milestone.status] || statusMap.pending;
           return (
-            <div key={milestone.id} className="glass-card rounded-xl p-6">
+            <div key={milestone.id} className="bg-white border border-[#E9E9E7] rounded-lg p-4 hover:bg-[#F7F7F5] transition-colors duration-150">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
-                  {milestone.status === 'completed' ? (
-                    <CheckCircle className="w-6 h-6 text-[#A78BFA]" />
-                  ) : milestone.status === 'in_progress' ? (
-                    <Clock className="w-6 h-6 text-[#7C3AED]" />
-                  ) : (
-                    <Flag className="w-6 h-6 text-[#F59E0B]" />
-                  )}
+                  {meta.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-foreground">{milestone.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 ${statusColors[milestone.status]}`}>
-                      {milestone.status.replace('_', ' ')}
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{milestone.title}</h3>
+                    <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded bg-white border border-[#E9E9E7] text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                      {meta.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-foreground">
+                  <div className="flex items-center gap-3 mt-1 text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> {milestone.date}
                     </span>
-                    <span className="text-xs text-muted-foreground">{milestone.type}</span>
+                    <span className="text-[#9B9A97]">{milestone.type}</span>
                   </div>
                 </div>
-                <button onClick={() => toggleExpand(milestone.id)}>
-                  {isExpanded ? <ChevronDown className="w-5 h-5 text-foreground" /> : <ChevronRight className="w-5 h-5 text-foreground" />}
+                <button onClick={() => toggleExpand(milestone.id)} className="p-1.5 rounded-md hover:bg-white border border-transparent hover:border-[#E9E9E7] transition-colors duration-150 cursor-pointer">
+                  {isExpanded ? <ChevronDown className="w-4 h-4 text-[#787774]" /> : <ChevronRight className="w-4 h-4 text-[#787774]" />}
                 </button>
               </div>
               {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-[#E9D5FF]">
-                  <p className="text-sm text-foreground">Milestone details and associated tasks will appear here.</p>
+                <div className="mt-4 pt-4 border-t border-[#E9E9E7]">
+                  <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>Milestone details and associated tasks will appear here.</p>
                   <div className="mt-3 space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-[#A78BFA]" />
-                      <span className="text-foreground">Prerequisites completed</span>
+                    <div className="flex items-center gap-2 text-sm text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <CheckCircle className="w-4 h-4 text-[#0F7B6C]" />
+                      Prerequisites completed
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-[#F59E0B]" />
-                      <span className="text-foreground">Pending review</span>
+                    <div className="flex items-center gap-2 text-sm text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      <Clock className="w-4 h-4 text-[#2383E2]" />
+                      Pending review
                     </div>
                   </div>
                 </div>
@@ -176,8 +169,8 @@ export function MilestonesPage() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-foreground mb-4">Goals & Milestones</h2>
-        <GoalsMilestonesModule />
+        <h2 className="text-[16px] font-semibold text-[#37352F] mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>Goals & Milestones</h2>
+        <GoalsModule />
       </div>
     </div>
   );
