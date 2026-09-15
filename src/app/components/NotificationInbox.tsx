@@ -5,7 +5,7 @@ import { Bell, CheckCheck, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Notification } from '../types';
 
-export function NotificationInbox() {
+export function NotificationInbox({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { currentUser } = useAuth();
   const { notifications, markNotificationRead, markAllNotificationsRead } = useApp();
   const [open, setOpen] = useState(false);
@@ -72,6 +72,19 @@ export function NotificationInbox() {
                 </div>
               )}
             </div>
+            {mine.length > 0 && onNavigate && (
+              <div className="border-t border-[rgba(124,58,237,0.1)] p-2">
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    onNavigate('notifications');
+                  }}
+                  className="w-full text-center text-xs font-medium text-[#7C3AED] hover:text-[#6D28D9] py-2 transition"
+                >
+                  View all notifications →
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
