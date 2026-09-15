@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { X, Upload, Paperclip, Loader } from 'lucide-react';
+import { X, Upload, Paperclip, Loader, Folder } from 'lucide-react';
 import { storage } from '../../firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { DefectIssueType, DefectSeverity, DefectPriority, DefectReproducibility, DefectFrequency, Defect } from '../types';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 type DefectCreateModalProps = {
   onClose: () => void;
@@ -39,9 +40,30 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
     testCycle: editDefect?.testCycle || ''
   });
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [driveAttachments, setDriveAttachments] = useState<any[]>([]);
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
+
+  const handleDriveSelect = (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string }[]) => {
+    if (!currentUser) return;
+    const newAtts = driveFiles.map(df => ({
+      id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${df.id}`,
+      name: df.name,
+      url: df.webViewLink || `https://drive.google.com/file/d/${df.id}/view`,
+      size: df.size ? parseInt(df.size, 10) : 0,
+      type: df.mimeType,
+      uploadedAt: new Date(),
+      uploadedBy: currentUser.id
+    }));
+    setDriveAttachments(prev => [...prev, ...newAtts]);
+    setShowDrivePicker(false);
+  };
+
+  const removeDriveAttachment = (index: number) => {
+    setDriveAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,13 +121,14 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
         setUploadProgress(100);
       }
 
+      const allAttachments = [...attachmentUrls, ...driveAttachments];
       setUploadStatus('Creating defect...');
       const created = await addDefect({
         ...formData,
         reportedBy: currentUser.id,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         status: 'open',
-        attachments: attachmentUrls
+        attachments: allAttachments
       });
 
       if (created) {
@@ -372,17 +395,33 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             <div className="col-span-2">
               <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Attachments</label>
               <div className="flex items-center gap-2 mb-2">
-                <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[14px] text-[#37352F] cursor-pointer hover:bg-[#F7F7F5] transition-colors duration-150">
-                  <Upload className="w-4 h-4 text-[#787774]" />
-                  <span>Upload Files</span>
+                <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  <span>Upload</span>
                   <input type="file" multiple className="hidden" onChange={handleFileSelect} />
                 </label>
+                <button
+                  type="button"
+                  onClick={() => setShowDrivePicker(!showDrivePicker)}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
+                >
+                  <Folder className="w-4 h-4 text-[#787774]" />
+                  {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+                </button>
                 {attachments.length > 0 && (
                   <span className="text-[14px] text-[#787774]">{attachments.length} file(s) selected</span>
                 )}
+                {driveAttachments.length > 0 && (
+                  <span className="text-[14px] text-[#787774]">{driveAttachments.length} from Drive</span>
+                )}
               </div>
+              {showDrivePicker && (
+                <div className="mb-3">
+                  <GoogleDrivePicker onSelect={handleDriveSelect} onClose={() => setShowDrivePicker(false)} />
+                </div>
+              )}
               {attachments.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 mb-2">
                   {attachments.map((file, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px]">
                       <div className="flex items-center gap-2 min-w-0">
@@ -391,6 +430,22 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
                         <span className="text-[12px] text-[#9B9A97]">({formatFileSize(file.size)})</span>
                       </div>
                       <button type="button" onClick={() => removeAttachment(idx)} className="p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition-colors duration-150 cursor-pointer ml-2">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {driveAttachments.length > 0 && (
+                <div className="space-y-2">
+                  {driveAttachments.map((att, idx) => (
+                    <div key={att.id} className="flex items-center justify-between p-3 bg-white border border-[#E9E9E7] rounded-[8px]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Folder className="w-4 h-4 text-[#787774] flex-shrink-0" />
+                        <span className="text-[14px] text-[#37352F] truncate">{att.name}</span>
+                        <span className="text-[12px] text-[#9B9A97]">({formatFileSize(att.size || 0)})</span>
+                      </div>
+                      <button type="button" onClick={() => removeDriveAttachment(idx)} className="p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition-colors duration-150 cursor-pointer ml-2">
                         <X className="w-4 h-4" />
                       </button>
                     </div>

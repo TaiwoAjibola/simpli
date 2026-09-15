@@ -18,7 +18,11 @@ import {
   Activity,
   ChevronDown,
   ChevronRight,
-  Mail
+  Mail,
+  Upload,
+  Folder,
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { Defect, DefectStatus, DefectResolution } from '../types';
@@ -27,6 +31,9 @@ import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
 import { DevelopmentWorkspace } from './DevelopmentWorkspace';
 import { DEFECT_STATUS_COLORS, DEFECT_SEVERITY_COLORS } from '../../utils/colors';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
+import { storage } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type DefectDetailModalProps = {
   defect: Defect;
@@ -43,6 +50,8 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const [commentText, setCommentText] = useState('');
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unknown';
   const getAppName = (id: string) => apps.find(a => a.id === id)?.name || 'Unknown';
@@ -139,6 +148,60 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const handleDriveSelect = async (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string }[]) => {
+    if (!currentUser) return;
+    const newAttachments = driveFiles.map(df => ({
+      id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${df.id}`,
+      name: df.name,
+      url: df.webViewLink || `https://drive.google.com/file/d/${df.id}/view`,
+      size: df.size ? parseInt(df.size, 10) : 0,
+      type: df.mimeType,
+      uploadedAt: new Date(),
+      uploadedBy: currentUser.id
+    }));
+    const updated = [...(defect.attachments || []), ...newAttachments];
+    await updateDefect(defect.id, { attachments: updated }, currentUser.id, currentUser.name);
+    setShowDrivePicker(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !currentUser) return;
+    setUploading(true);
+    try {
+      const uploaded: any[] = [];
+      for (const file of Array.from(files)) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileRef = ref(storage, `defects/${defect.id}/${Date.now()}_${safeName}`);
+        await uploadBytes(fileRef, file);
+        const downloadURL = await getDownloadURL(fileRef);
+        uploaded.push({
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          url: downloadURL,
+          size: file.size,
+          type: file.type,
+          uploadedAt: new Date(),
+          uploadedBy: currentUser.id
+        });
+      }
+      if (uploaded.length > 0) {
+        await updateDefect(defect.id, { attachments: [...(defect.attachments || []), ...uploaded] }, currentUser.id, currentUser.name);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = async (attId: string) => {
+    if (!currentUser) return;
+    const updated = (defect.attachments || []).filter(a => a.id !== attId);
+    await updateDefect(defect.id, { attachments: updated }, currentUser.id, currentUser.name);
   };
 
   return (
@@ -377,6 +440,25 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
 
           {activeTab === 'attachments' && (
             <div>
+              <div className="flex items-center gap-2 mb-4">
+                <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  <span>{uploading ? 'Uploading...' : 'Upload'}</span>
+                  <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                </label>
+                <button
+                  onClick={() => setShowDrivePicker(!showDrivePicker)}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
+                >
+                  <Folder className="w-4 h-4 text-[#787774]" />
+                  {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+                </button>
+              </div>
+              {showDrivePicker && (
+                <div className="mb-4">
+                  <GoogleDrivePicker onSelect={handleDriveSelect} onClose={() => setShowDrivePicker(false)} />
+                </div>
+              )}
               {(!defect.attachments || defect.attachments.length === 0) ? (
                 <div className="text-center py-12 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
                   <Paperclip className="w-10 h-10 mx-auto mb-3 text-[#9B9A97]" />
@@ -400,6 +482,10 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                           <Download className="w-3 h-3" />
                           Download
                         </a>
+                        <button onClick={() => handleRemoveAttachment(att.id)} className="flex items-center gap-1 text-[12px] text-[#787774] hover:text-[#EB5757] transition-colors duration-150 cursor-pointer">
+                          <Trash2 className="w-3 h-3" />
+                          Remove
+                        </button>
                       </div>
                     </div>
                   ))}

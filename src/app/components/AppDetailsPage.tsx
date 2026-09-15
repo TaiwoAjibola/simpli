@@ -30,7 +30,10 @@ import {
   AlertTriangle,
   Layers,
   Filter,
-  Search
+  Search,
+  Building,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { Phase } from '../types';
 import { EngineeringDocsSection } from './EngineeringDocsSection';
@@ -48,7 +51,7 @@ type AppDetailsPageProps = {
 };
 
 export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
-  const { apps, phases, goals, tasks, defects, repositories, employees, clients, activities, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp, reports, addReport, deleteReport, sprints, addSprint, updateSprint, deleteSprint, getSprintsForApp, getDefectsForApp, getDocumentsForApp } = useApp();
+  const { apps, phases, goals, tasks, defects, repositories, employees, roles, clients, activities, addPhase, updatePhase, deletePhase, getEmployeeById, modules, addModule, deleteModule, getModulesForApp, expectations, addExpectation, updateExpectation, deleteExpectation, getExpectationsForModule, getGoalById, updateApp, reports, addReport, deleteReport, sprints, addSprint, updateSprint, deleteSprint, getSprintsForApp, getDefectsForApp, getDocumentsForApp } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const [showAddPhase, setShowAddPhase] = useState(false);
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null);
@@ -71,11 +74,15 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     deploymentTarget: ''
   });
   const [planningNotesText, setPlanningNotesText] = useState('');
-  const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity'>('Overview');
+  const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Team' | 'Client' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity'>('Overview');
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [overviewEditing, setOverviewEditing] = useState(false);
   const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '' });
   const [overviewSaving, setOverviewSaving] = useState(false);
+  const [teamSelectId, setTeamSelectId] = useState('');
+  const [extraTeamIds, setExtraTeamIds] = useState<string[]>([]);
+  const [clientLinkId, setClientLinkId] = useState('');
+  const [clientLinkSaving, setClientLinkSaving] = useState(false);
 
   const handleSaveProfile = async (field: string, data: any) => {
     await updateApp(appId, { [field]: data });
@@ -204,7 +211,6 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     'post-development': 'Post-Dev'
   };
 
-  const teamMembers = employees.filter(e => e.id === app.projectManagerId || true).slice(0, 10);
   const healthScore = appPhases.length > 0 ? Math.round(appPhases.filter(p => p.status === 'completed').length / appPhases.length * 100) : 0;
 
   if (!app) {
@@ -240,6 +246,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
         <div className="flex gap-6 mb-6 border-b border-[#E9E9E7] overflow-x-auto scrollbar-none">
           {([
             { key: 'Overview', icon: ClipboardCheck },
+            { key: 'Team', icon: Users },
+            { key: 'Client', icon: Building },
             { key: 'Phases', icon: Clock },
             { key: 'Tasks', icon: ListTodo },
             { key: 'Milestones', icon: Target },
@@ -461,36 +469,46 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-[#787774]" />
-                  <span className="text-[13px] font-medium text-[#787774]">Team</span>
+            {(() => {
+              const taskAssigneeIds = new Set<string>();
+              appTasks.forEach(t => (t.assignedTo || []).forEach(id => taskAssigneeIds.add(id)));
+              const overviewTeamIds = new Set<string>([...taskAssigneeIds, ...extraTeamIds]);
+              if (app.projectManagerId) overviewTeamIds.add(app.projectManagerId);
+              const overviewTeam = Array.from(overviewTeamIds).map(id => getEmployeeById(id) || employees.find(e => e.id === id)).filter(Boolean) as typeof employees;
+              return (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-[#787774]" />
+                    <span className="text-[13px] font-medium text-[#787774]">Team</span>
+                  </div>
+                  <p className="text-[#37352F] text-xl font-semibold">{overviewTeam.length}</p>
+                  <div className="mt-2 space-y-1">
+                    {overviewTeam.slice(0, 5).map(emp => (
+                      <p key={emp.id} className="text-xs text-[#787774]">{emp.name}</p>
+                    ))}
+                    {overviewTeam.length === 0 && <p className="text-xs text-[#9B9A97]">No members yet</p>}
+                  </div>
                 </div>
-                <p className="text-[#37352F] text-xl font-semibold">{teamMembers.length}</p>
-                <div className="mt-2 space-y-1">
-                  {teamMembers.slice(0, 5).map(emp => (
-                    <p key={emp.id} className="text-xs text-[#787774]">{emp.name}</p>
-                  ))}
+                <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="w-4 h-4 text-[#787774]" />
+                    <span className="text-[13px] font-medium text-[#787774]">Health</span>
+                  </div>
+                  <p className="text-[#37352F] text-xl font-semibold">{healthScore}%</p>
+                  <p className="text-xs text-[#787774] mt-1">{appPhases.filter(p => p.status === 'completed').length}/{appPhases.length} phases done</p>
+                </div>
+                <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-[#787774]" />
+                    <span className="text-[13px] font-medium text-[#787774]">Key Dates</span>
+                  </div>
+                  <p className="text-[#37352F] text-sm font-medium">{appPhases.length} phases</p>
+                  <p className="text-xs text-[#787774] mt-1">{appPhases.filter(p => p.status === 'in_progress').length} in progress</p>
                 </div>
               </div>
-              <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-4 h-4 text-[#787774]" />
-                  <span className="text-[13px] font-medium text-[#787774]">Health</span>
-                </div>
-                <p className="text-[#37352F] text-xl font-semibold">{healthScore}%</p>
-                <p className="text-xs text-[#787774] mt-1">{appPhases.filter(p => p.status === 'completed').length}/{appPhases.length} phases done</p>
-              </div>
-              <div className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-[#787774]" />
-                  <span className="text-[13px] font-medium text-[#787774]">Key Dates</span>
-                </div>
-                <p className="text-[#37352F] text-sm font-medium">{appPhases.length} phases</p>
-                <p className="text-xs text-[#787774] mt-1">{appPhases.filter(p => p.status === 'in_progress').length} in progress</p>
-              </div>
-            </div>
+              );
+            })()}
 
             <div className="p-6 bg-white border border-[#E9E9E7] rounded-[8px] shadow-none">
               <h3 className="text-[15px] font-semibold text-[#37352F] mb-4">Phase Status</h3>
@@ -534,6 +552,280 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
               )}
             </div>
           </div>
+          );
+        })()}
+
+        {activeProfileTab === 'Team' && (() => {
+          const taskAssigneeIds = new Set<string>();
+          appTasks.forEach(t => (t.assignedTo || []).forEach(id => taskAssigneeIds.add(id)));
+          const teamIds = new Set<string>([...extraTeamIds]);
+          taskAssigneeIds.forEach(id => teamIds.add(id));
+          if (app.projectManagerId) teamIds.add(app.projectManagerId);
+          const teamList = Array.from(teamIds).map(id => getEmployeeById(id) || employees.find(e => e.id === id)).filter(Boolean) as typeof employees;
+          const pmId = app.projectManagerId;
+          const getTaskCount = (empId: string) => appTasks.filter(t => (t.assignedTo || []).includes(empId)).length;
+          const getRoleName = (emp: typeof employees[number]) => roles.find(r => r.id === emp.roleId)?.name || 'Team member';
+          const availableEmployees = employees.filter(e => !teamIds.has(e.id));
+          const initials = (name: string) => name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+          return (
+            <div className="space-y-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-[18px] font-semibold text-[#37352F] tracking-tight">Team</h2>
+                  <p className="text-[13px] text-[#787774] mt-1">Members assigned to this project — from tasks and project manager. {teamList.length} member{teamList.length !== 1 ? 's' : ''} · {appTasks.length} tasks</p>
+                </div>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium shrink-0">{teamList.length} members</span>
+              </div>
+              <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
+                <div className="flex-1">
+                  <label className="block text-[11px] font-medium text-[#787774] uppercase tracking-wide mb-1.5">Assign member</label>
+                  <select
+                    value={teamSelectId}
+                    onChange={e => setTeamSelectId(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] rounded-[6px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                  >
+                    <option value="">Select employee</option>
+                    {availableEmployees.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name} — {getRoleName(emp)}</option>
+                    ))}
+                    {availableEmployees.length === 0 && <option disabled>No more employees to add</option>}
+                  </select>
+                </div>
+                <button
+                  onClick={() => {
+                    if (!teamSelectId) return;
+                    if (teamIds.has(teamSelectId)) return;
+                    setExtraTeamIds(prev => [...prev, teamSelectId]);
+                    setTeamSelectId('');
+                  }}
+                  disabled={!teamSelectId}
+                  className="self-start sm:self-end px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] border border-[#2383E2] hover:bg-[#1A6FBF] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer shrink-0"
+                >
+                  Add
+                </button>
+              </div>
+              {teamList.length === 0 ? (
+                <div className="text-center py-12 bg-white border border-[#E9E9E7] rounded-[8px]">
+                  <Users className="w-10 h-10 text-[#9B9A97] mx-auto mb-3" />
+                  <p className="text-[14px] font-medium text-[#37352F]">No team members yet</p>
+                  <p className="text-[13px] text-[#787774] mt-1 max-w-md mx-auto">Assign members from tasks or add them with the selector above. The project manager will appear highlighted when set.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {teamList.map(emp => {
+                    const isPM = emp.id === pmId;
+                    const taskCount = getTaskCount(emp.id);
+                    const roleName = getRoleName(emp);
+                    return (
+                      <div key={emp.id} className={`bg-white border rounded-[8px] p-4 hover:bg-[#F7F7F5] transition-colors duration-150 ${isPM ? 'border-[#2383E2] ring-1 ring-[#2383E2]' : 'border-[#E9E9E7]'}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`w-9 h-9 flex items-center justify-center rounded-[6px] text-[12px] font-semibold shrink-0 ${isPM ? 'bg-[#2383E2] text-white' : 'bg-[#E9E9E7] text-[#37352F]'}`}>
+                            {initials(emp.name)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-[14px] font-medium text-[#37352F] truncate">{emp.name}</p>
+                              {isPM && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#2383E2] text-white font-medium border border-[#2383E2]">PM</span>}
+                            </div>
+                            <p className="text-[12px] text-[#787774] truncate">{roleName}</p>
+                            <p className="text-[12px] text-[#787774] truncate">{emp.email}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (isPM) {
+                                updateApp(appId, { projectManagerId: '' } as any);
+                              } else {
+                                setExtraTeamIds(prev => prev.filter(id => id !== emp.id));
+                              }
+                            }}
+                            className="p-1 text-[#9B9A97] hover:text-[#37352F] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[4px] transition-colors duration-150 cursor-pointer"
+                            title={isPM ? 'Remove PM' : 'Remove from team'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774] font-medium">{taskCount} task{taskCount !== 1 ? 's' : ''}</span>
+                          {taskCount === 0 && <span className="text-xs text-[#9B9A97]">No tasks assigned</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {activeProfileTab === 'Client' && (() => {
+          const linkedClient = clients.find(c => c.id === app.clientId);
+          const linkedProjects = linkedClient ? apps.filter(a => a.clientId === linkedClient.id) : [];
+          const statusStyle = linkedClient ? (linkedClient.status === 'active' ? 'bg-[#F7F7F5] text-[#37352F] border-[#E9E9E7]' : linkedClient.status === 'inactive' ? 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]' : 'bg-white text-[#787774] border-[#E9E9E7]') : '';
+          return (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-[18px] font-semibold text-[#37352F] tracking-tight">Client</h2>
+                <p className="text-[13px] text-[#787774] mt-1">Client profile linked to this project. Clean, Notion-style page with contact and relationship context.</p>
+              </div>
+              {!linkedClient ? (
+                <div className="space-y-4">
+                  <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-6">
+                    <h3 className="text-[14px] font-medium text-[#37352F] mb-1">No client linked</h3>
+                    <p className="text-[13px] text-[#787774] mb-4">Select a client from your workspace to link it to this project.</p>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-medium text-[#787774] uppercase tracking-wide mb-1.5">Client</label>
+                        <select
+                          value={clientLinkId}
+                          onChange={e => setClientLinkId(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] rounded-[6px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                        >
+                          <option value="">Select client</option>
+                          {clients.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}{c.company ? ` — ${c.company}` : ''}</option>
+                          ))}
+                        </select>
+                        {clients.length === 0 && <p className="text-xs text-[#9B9A97] mt-2">No clients in workspace yet. Create one from the Clients page.</p>}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!clientLinkId) return;
+                          setClientLinkSaving(true);
+                          await updateApp(appId, { clientId: clientLinkId } as any);
+                          setClientLinkSaving(false);
+                          setClientLinkId('');
+                        }}
+                        disabled={!clientLinkId || clientLinkSaving}
+                        className="px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] border border-[#2383E2] hover:bg-[#1A6FBF] disabled:opacity-50 transition-colors duration-150 cursor-pointer shrink-0"
+                      >
+                        {clientLinkSaving ? 'Linking…' : 'Link'}
+                      </button>
+                    </div>
+                  </div>
+                  {clients.length > 0 && (
+                    <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">
+                      <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide mb-3">Available clients · {clients.length}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {clients.slice(0,6).map(c => (
+                          <div key={c.id} className="flex items-center gap-3 p-3 border border-[#E9E9E7] rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150">
+                            <div className="w-8 h-8 bg-[#E9E9E7] rounded-[6px] flex items-center justify-center shrink-0">
+                              <Building className="w-4 h-4 text-[#37352F]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-medium text-[#37352F] truncate">{c.name}</p>
+                              <p className="text-[12px] text-[#787774] truncate">{c.company || '—'}</p>
+                            </div>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border shrink-0 ${c.status === 'active' ? 'bg-[#F7F7F5] text-[#37352F] border-[#E9E9E7]' : 'bg-white text-[#787774] border-[#E9E9E7]'}`}>{c.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-6">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 bg-[#E9E9E7] rounded-[6px] flex items-center justify-center shrink-0">
+                          <Building className="w-5 h-5 text-[#37352F]" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-[16px] font-semibold text-[#37352F] truncate">{linkedClient.name}</h3>
+                          {linkedClient.company && <p className="text-[13px] text-[#787774] truncate">{linkedClient.company}</p>}
+                        </div>
+                      </div>
+                      <span className={`text-[11px] px-2 py-1 rounded-full font-medium border shrink-0 capitalize ${statusStyle}`}>{linkedClient.status}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {linkedClient.email && (
+                        <a href={`mailto:${linkedClient.email}`} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-white border border-[#E9E9E7] rounded-full text-[#2383E2] hover:bg-[#F7F7F5] transition-colors duration-150">
+                          <Mail className="w-3 h-3" />{linkedClient.email}
+                        </a>
+                      )}
+                      {linkedClient.phone && (
+                        <a href={`tel:${linkedClient.phone}`} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-white border border-[#E9E9E7] rounded-full text-[#2383E2] hover:bg-[#F7F7F5] transition-colors duration-150">
+                          <Phone className="w-3 h-3" />{linkedClient.phone}
+                        </a>
+                      )}
+                      {!linkedClient.email && !linkedClient.phone && <span className="text-xs text-[#9B9A97]">No contact details</span>}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#E9E9E7]">
+                      <div>
+                        <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Address</p>
+                        <p className="text-[13px] text-[#787774] mt-1 leading-relaxed">{linkedClient.address || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Linked projects</p>
+                        <p className="text-[13px] text-[#37352F] mt-1 font-medium">{linkedProjects.length} project{linkedProjects.length !== 1 ? 's' : ''}</p>
+                        {linkedProjects.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {linkedProjects.slice(0,5).map(p => (
+                              <span key={p.id} className="text-xs px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full text-[#787774]">{p.name}</span>
+                            ))}
+                            {linkedProjects.length > 5 && <span className="text-xs text-[#9B9A97]">+{linkedProjects.length - 5} more</span>}
+                          </div>
+                        )}
+                      </div>
+                      {linkedClient.contactPerson && (
+                        <div>
+                          <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Contact person</p>
+                          <p className="text-[13px] text-[#37352F] mt-1">{linkedClient.contactPerson}</p>
+                        </div>
+                      )}
+                      {linkedClient.industry && (
+                        <div>
+                          <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide">Industry</p>
+                          <p className="text-[13px] text-[#787774] mt-1">{linkedClient.industry}</p>
+                        </div>
+                      )}
+                    </div>
+                    {linkedClient.notes && (
+                      <div className="mt-4 pt-4 border-t border-[#E9E9E7]">
+                        <p className="text-[11px] font-medium text-[#9B9A97] uppercase tracking-wide mb-1.5">Notes</p>
+                        <p className="text-[13px] text-[#787774] leading-relaxed whitespace-pre-wrap">{linkedClient.notes}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-6 pt-4 border-t border-[#E9E9E7]">
+                      <div className="flex-1">
+                        <label className="block text-[11px] font-medium text-[#787774] uppercase tracking-wide mb-1.5">Switch client</label>
+                        <select
+                          value={clientLinkId}
+                          onChange={e => setClientLinkId(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-[14px] rounded-[6px] outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                        >
+                          <option value="">Select another client</option>
+                          {clients.filter(c => c.id !== linkedClient.id).map(c => (
+                            <option key={c.id} value={c.id}>{c.name}{c.company ? ` — ${c.company}` : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!clientLinkId) return;
+                          setClientLinkSaving(true);
+                          await updateApp(appId, { clientId: clientLinkId } as any);
+                          setClientLinkSaving(false);
+                          setClientLinkId('');
+                        }}
+                        disabled={!clientLinkId || clientLinkSaving}
+                        className="self-end px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] border border-[#2383E2] hover:bg-[#1A6FBF] disabled:opacity-50 transition-colors duration-150 cursor-pointer shrink-0"
+                      >
+                        Link
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await updateApp(appId, { clientId: '' } as any);
+                        }}
+                        className="self-end px-4 py-2 bg-white text-[#37352F] border border-[#E9E9E7] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer shrink-0"
+                      >
+                        Unlink
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })()}
 

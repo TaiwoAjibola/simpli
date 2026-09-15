@@ -24,7 +24,13 @@ import {
   ChevronRight,
   Mail,
   Link2,
-  Github
+  Github,
+  Upload,
+  Paperclip,
+  Folder,
+  Loader,
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { TagBadges } from './TagBadges';
@@ -33,6 +39,9 @@ import { DependenciesPanel } from './DependenciesPanel';
 import { DevelopmentWorkspace } from './DevelopmentWorkspace';
 import { isDevelopmentWork } from '../../utils/workflow';
 import { PRIORITY_COLORS, TASK_STATUS_COLORS } from '../../utils/colors';
+import { GoogleDrivePicker } from './GoogleDrivePicker';
+import { storage } from '../../firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 type TaskDetailModalProps = {
   task: Task;
@@ -365,11 +374,71 @@ function DetailsTab({
   statusColors
 }: any) {
   const { tags, employees, updateTask } = useApp();
+  const { currentUser } = useAuth();
   const [effortInput, setEffortInput] = useState<string>(task.effortHours != null ? String(task.effortHours) : '');
   const [showFollowerPicker, setShowFollowerPicker] = useState(false);
   const [showRecurrence, setShowRecurrence] = useState(false);
   const [recFreq, setRecFreq] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [recInterval, setRecInterval] = useState('1');
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const handleDriveSelect = async (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string }[]) => {
+    if (!currentUser) return;
+    const newAttachments = driveFiles.map(df => ({
+      id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${df.id}`,
+      name: df.name,
+      url: df.webViewLink || `https://drive.google.com/file/d/${df.id}/view`,
+      size: df.size ? parseInt(df.size, 10) : 0,
+      uploadedAt: new Date(),
+      uploadedBy: currentUser.id
+    }));
+    const updated = [...(task.attachments || []), ...newAttachments];
+    await updateTask(task.id, { attachments: updated });
+    setShowDrivePicker(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !currentUser) return;
+    setUploading(true);
+    try {
+      const uploaded: any[] = [];
+      for (const file of Array.from(files)) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileRef = ref(storage, `tasks/${task.id}/${Date.now()}_${safeName}`);
+        await uploadBytes(fileRef, file);
+        const downloadURL = await getDownloadURL(fileRef);
+        uploaded.push({
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          url: downloadURL,
+          size: file.size,
+          uploadedAt: new Date(),
+          uploadedBy: currentUser.id
+        });
+      }
+      if (uploaded.length > 0) {
+        await updateTask(task.id, { attachments: [...(task.attachments || []), ...uploaded] });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = async (attId: string) => {
+    const updated = (task.attachments || []).filter((a: any) => a.id !== attId);
+    await updateTask(task.id, { attachments: updated });
+  };
   return (
     <div className="space-y-6">
       <div>
@@ -563,6 +632,65 @@ function DetailsTab({
             >
               Apply
             </button>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+          <Paperclip className="w-4 h-4 text-[#787774]" />
+          Attachments
+        </h3>
+        <div className="flex items-center gap-2 mb-3">
+          <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+            {uploading ? <Loader className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            <span>{uploading ? 'Uploading...' : 'Upload'}</span>
+            <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+          </label>
+          <button
+            onClick={() => setShowDrivePicker(!showDrivePicker)}
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
+          >
+            <Folder className="w-4 h-4 text-[#787774]" />
+            {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+          </button>
+        </div>
+        {showDrivePicker && (
+          <div className="mb-3">
+            <GoogleDrivePicker onSelect={handleDriveSelect} onClose={() => setShowDrivePicker(false)} />
+          </div>
+        )}
+        {(task.attachments || []).length === 0 ? (
+          <div className="text-center py-8 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
+            <Paperclip className="w-8 h-8 text-[#9B9A97] mx-auto mb-2" />
+            <p className="text-[14px] text-[#787774]">No attachments</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {(task.attachments || []).map((att: any) => (
+              <div key={att.id} className="flex items-center justify-between p-3 bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-colors duration-150">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-8 h-8 rounded-[6px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-[#787774]" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] text-[#37352F] truncate font-medium">{att.name}</p>
+                    <p className="text-[12px] text-[#787774]">{formatFileSize(att.size || 0)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[12px] text-[#2383E2] hover:text-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+                    <ExternalLink className="w-3 h-3" /> View
+                  </a>
+                  <a href={att.url} download className="flex items-center gap-1 text-[12px] text-[#787774] hover:text-[#37352F] transition-colors duration-150 cursor-pointer">
+                    <Download className="w-3 h-3" /> Download
+                  </a>
+                  <button onClick={() => handleRemoveAttachment(att.id)} className="p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition-colors duration-150 cursor-pointer">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
