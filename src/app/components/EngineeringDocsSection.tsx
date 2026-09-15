@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Upload, Download, Trash2, FileText, Loader, Plus, X, Folder } from 'lucide-react';
+import { Upload, Download, Trash2, FileText, Loader, Plus, X } from 'lucide-react';
 import { storage } from '../../firebase/config';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { GoogleDrivePicker } from './GoogleDrivePicker';
 
 type Props = {
   appId: string;
@@ -21,29 +20,9 @@ export function EngineeringDocsSection({ appId }: Props) {
   const [docVersion, setDocVersion] = useState('');
   const [docFile, setDocFile] = useState<File | null>(null);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
-  const [showDrivePicker, setShowDrivePicker] = useState(false);
 
   const docs = getDocumentsForApp(appId);
   const canUpload = hasPermission('manage_documents');
-
-  const handleDriveImport = async (driveFiles: { id: string; name: string; mimeType: string }[]) => {
-    if (!currentUser) return;
-    for (const df of driveFiles) {
-      await addAppDocument({
-        appId,
-        name: df.name.replace(/\.[^/.]+$/, ''),
-        version: '1.0',
-        fileName: df.name,
-        fileUrl: `https://drive.google.com/file/d/${df.id}/view`,
-        fileSize: 0,
-        fileType: df.mimeType,
-        uploadedBy: currentUser.id,
-        uploadedByName: currentUser.name
-      });
-    }
-    showToast({ title: `${driveFiles.length} file(s) imported from Google Drive`, type: 'success' });
-    setShowDrivePicker(false);
-  };
 
   const handleUpload = async () => {
     if (!currentUser || !docFile || !docName.trim()) return;
@@ -107,14 +86,7 @@ export function EngineeringDocsSection({ appId }: Props) {
         {canUpload && (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowDrivePicker(!showDrivePicker)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.15)] text-[#F8FAFC] text-sm font-medium hover:bg-[rgba(34,197,94,0.05)]"
-            >
-              <Folder className="w-4 h-4 text-[#22C55E]" />
-              {showDrivePicker ? 'Cancel' : 'Import from Drive'}
-            </button>
-            <button
-              onClick={() => { setShowForm(!showForm); setShowDrivePicker(false); }}
+              onClick={() => { setShowForm(!showForm); }}
               className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] text-sm font-medium hover:bg-[#16a34a]"
             >
               {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -185,14 +157,6 @@ export function EngineeringDocsSection({ appId }: Props) {
             </button>
           </div>
         </div>
-      )}
-
-      {/* Google Drive Picker */}
-      {showDrivePicker && canUpload && (
-        <GoogleDrivePicker
-          onSelect={handleDriveImport}
-          onClose={() => setShowDrivePicker(false)}
-        />
       )}
 
       {/* Document list */}

@@ -8,24 +8,18 @@ import { ToastProvider } from './context/ToastContext';
 import { SeedPage } from './components/SeedPage';
 
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
-const KanbanBoard = lazy(() => import('./components/KanbanBoard').then(m => ({ default: m.KanbanBoard })));
-const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.MyWork })));
-const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
-const GoalsModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsModule })));
 const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
-const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({ default: m.InsightsPage })));
-const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
-const AppDetailsPage = lazy(() => import('./components/AppDetailsPage').then(m => ({ default: m.AppDetailsPage })));
-const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
-const SprintsPage = lazy(() => import('./components/SprintsPage').then(m => ({ default: m.SprintsPage })));
-const WorkTemplatesPage = lazy(() => import('./components/WorkTemplatesPage').then(m => ({ default: m.WorkTemplatesPage })));
-const AutomationsPage = lazy(() => import('./components/AutomationsPage').then(m => ({ default: m.AutomationsPage })));
-const PortfolioPage = lazy(() => import('./components/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
-const RepositoriesPage = lazy(() => import('./components/RepositoriesPage').then(m => ({ default: m.RepositoriesPage })));
-const IntegrationsPage = lazy(() => import('./components/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
-const LogsPage = lazy(() => import('./components/LogsPage').then(m => ({ default: m.LogsPage })));
-const ClientsPage = lazy(() => import('./components/ClientsPage').then(m => ({ default: m.ClientsPage })));
 const CalendarPage = lazy(() => import('./components/CalendarPage').then(m => ({ default: m.CalendarPage })));
+const ClientsPage = lazy(() => import('./components/ClientsPage').then(m => ({ default: m.ClientsPage })));
+const TeamPage = lazy(() => import('./components/TeamPage').then(m => ({ default: m.TeamPage })));
+const DocumentsPage = lazy(() => import('./components/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
+const MilestonesPage = lazy(() => import('./components/MilestonesPage').then(m => ({ default: m.MilestonesPage })));
+const ReportsPage = lazy(() => import('./components/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const NotificationsPage = lazy(() => import('./components/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const ProjectsPage = lazy(() => import('./components/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const GoalsMilestonesModule = lazy(() => import('./components/GoalsMilestonesModule').then(m => ({ default: m.GoalsMilestonesModule })));
+const InsightsPage = lazy(() => import('./components/InsightsPage').then(m => ({ default: m.InsightsPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -53,25 +47,16 @@ function AppContent() {
         <Suspense fallback={<PageLoader message="Loading..." />}>
           <div key={currentPage} className="animate-fade-up h-full">
             {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-          {currentPage === 'my-work' && <MyWork />}
-          {currentPage === 'kanban' && <KanbanBoard />}
-          {currentPage === 'insights' && <InsightsPage />}
-          {currentPage === 'defects' && <DefectDashboard />}
-          {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
-          {currentPage === 'goals' && <GoalsModule />}
-          {currentPage === 'milestones' && <GoalsModule />}
-          {currentPage === 'tasks' && <TasksModule />}
-          {currentPage === 'action-points' && <ActionPointsPage />}
-          {currentPage === 'sprints' && <SprintsPage />}
-          {currentPage === 'templates' && <WorkTemplatesPage />}
-          {currentPage === 'automations' && <AutomationsPage />}
-          {currentPage === 'portfolio' && <PortfolioPage onNavigate={handleNavigate} />}
-          {currentPage === 'clients' && <ClientsPage />}
-          {currentPage === 'calendar' && <CalendarPage />}
-          {currentPage === 'repositories' && <RepositoriesPage />}
-          {currentPage === 'integrations' && <IntegrationsPage />}
-          {currentPage === 'logs' && <LogsPage />}
-          {currentPage === 'admin' && <AdminPanel />}
+            {currentPage === 'projects' && <ProjectsPage onNavigate={handleNavigate} />}
+            {currentPage === 'tasks' && <TasksModule />}
+            {currentPage === 'calendar' && <CalendarPage />}
+            {currentPage === 'clients' && <ClientsPage />}
+            {currentPage === 'team' && <TeamPage />}
+            {currentPage === 'documents' && <DocumentsPage />}
+            {currentPage === 'milestones' && <MilestonesPage />}
+            {currentPage === 'reports' && <ReportsPage />}
+            {currentPage === 'notifications' && <NotificationsPage />}
+            {currentPage === 'admin' && <AdminPanel />}
           </div>
         </Suspense>
       </main>
