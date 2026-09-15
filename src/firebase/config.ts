@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics } from 'firebase/analytics';
 import { getStorage } from 'firebase/storage';
@@ -22,14 +22,22 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-// Force long-polling + persistent cache for Firestore: WebChannel's QUIC
-// streaming transport is flaky on some networks and throws
-// ERR_QUIC_PROTOCOL_ERROR on the /Listen channel. Long-polling is more
-// robust and avoids those transport errors entirely.
+// Firestore persistence: persistentLocalCache with single-tab manager.
+// Previous config used `tabSettings: { cacheSizeBytes }` (wrong shape for
+// v12) and no tabManager, which threw "Failed to obtain exclusive access
+// to the persistence layer" when a second tab was opened. Fix: use
+// correct `cacheSizeBytes` at top level + `persistentSingleTabManager`
+// with `forceOwningTab: false` so the SDK gracefully falls back to memory
+// cache in a second tab instead of throwing failed-precondition. QUIC
+// errors below are transient network retries (WebChannel reconnects
+// automatically via long-polling) and are not caused by persistence.
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
   experimentalAutoDetectLongPolling: false,
-  localCache: persistentLocalCache({ tabSettings: { cacheSizeBytes: 104857600 } })
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager({ forceOwningTab: false }),
+    cacheSizeBytes: 104857600,
+  }),
 });
 export const functions = getFunctions(app);
 export const storage = getStorage(app);
