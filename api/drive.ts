@@ -83,7 +83,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const url = oauth2Client.generateAuthUrl({
           access_type: 'offline',
           scope: SCOPES,
-          prompt: 'consent'
+          prompt: 'consent',
+          response_type: 'code',
         });
         return res.status(200).json({ url });
       }
