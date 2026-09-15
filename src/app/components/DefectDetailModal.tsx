@@ -26,6 +26,7 @@ import { getAllowedDefectStatuses } from '../../utils/defectPermissions';
 import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
 import { DevelopmentWorkspace } from './DevelopmentWorkspace';
+import { DEFECT_STATUS_COLORS, DEFECT_SEVERITY_COLORS } from '../../utils/colors';
 
 type DefectDetailModalProps = {
   defect: Defect;
@@ -49,19 +50,19 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const allowedStatuses = getAllowedDefectStatuses(hasPermission);
 
   const statusColors: Record<DefectStatus, string> = {
-    open: 'bg-[#dc2626]',
-    in_progress: 'bg-[#f97316]',
-    pending_qa: 'bg-[#8b5cf6]',
-    resolved: 'bg-[#3b82f6]',
-    closed: 'bg-[#10b981]',
-    reopened: 'bg-[#7f1d1d]'
+    open: DEFECT_STATUS_COLORS.open,
+    in_progress: DEFECT_STATUS_COLORS.in_progress,
+    pending_qa: DEFECT_STATUS_COLORS.pending_qa,
+    resolved: DEFECT_STATUS_COLORS.resolved,
+    closed: DEFECT_STATUS_COLORS.closed,
+    reopened: DEFECT_STATUS_COLORS.reopened
   };
 
   const severityColors: Record<string, string> = {
-    blocker: 'bg-[#991b1b]',
-    critical: 'bg-[#dc2626]',
-    major: 'bg-[#f59e0b]',
-    minor: 'bg-[#eab308]'
+    blocker: DEFECT_SEVERITY_COLORS.blocker,
+    critical: DEFECT_SEVERITY_COLORS.critical,
+    major: DEFECT_SEVERITY_COLORS.major,
+    minor: DEFECT_SEVERITY_COLORS.minor
   };
 
   const linkedIssue = defect.github?.issue;

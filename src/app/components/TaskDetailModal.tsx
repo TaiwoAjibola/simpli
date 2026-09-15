@@ -32,6 +32,7 @@ import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
 import { DevelopmentWorkspace } from './DevelopmentWorkspace';
 import { isDevelopmentWork } from '../../utils/workflow';
+import { PRIORITY_COLORS, TASK_STATUS_COLORS } from '../../utils/colors';
 
 type TaskDetailModalProps = {
   task: Task;
@@ -159,19 +160,19 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
     }
   };
 
-  const priorityColors = {
-    low: 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8] border-[rgba(107,107,128,0.2)]',
-    medium: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border-[rgba(34,197,94,0.2)]',
-    high: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border-[rgba(245,158,11,0.2)]',
-    urgent: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c] border-[rgba(255,59,92,0.2)]'
+  const priorityColors: Record<string, string> = {
+    low: `bg-[rgba(148,163,184,0.1)] text-[${PRIORITY_COLORS.low}] border-[rgba(148,163,184,0.2)]`,
+    medium: `bg-[rgba(34,197,94,0.1)] text-[${PRIORITY_COLORS.medium}] border-[rgba(34,197,94,0.2)]`,
+    high: `bg-[rgba(245,158,11,0.1)] text-[${PRIORITY_COLORS.high}] border-[rgba(245,158,11,0.2)]`,
+    urgent: `bg-[rgba(255,59,92,0.1)] text-[${PRIORITY_COLORS.urgent}] border-[rgba(255,59,92,0.2)]`
   };
 
-  const statusColors = {
-    not_started: 'bg-[rgba(107,107,128,0.1)] text-[#94A3B8]',
-    in_progress: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E]',
-    blocked: 'bg-[rgba(255,59,92,0.1)] text-[#ff3b5c]',
-    completed: 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]',
-    approved: 'bg-[rgba(16,185,129,0.1)] text-[#10b981]'
+  const statusColors: Record<string, string> = {
+    not_started: `bg-[rgba(148,163,184,0.1)] text-[${TASK_STATUS_COLORS.not_started}]`,
+    in_progress: `bg-[rgba(34,197,94,0.1)] text-[${TASK_STATUS_COLORS.in_progress}]`,
+    blocked: `bg-[rgba(255,59,92,0.1)] text-[${TASK_STATUS_COLORS.blocked}]`,
+    completed: `bg-[rgba(59,130,246,0.1)] text-[${TASK_STATUS_COLORS.completed}]`,
+    approved: `bg-[rgba(16,185,129,0.1)] text-[${TASK_STATUS_COLORS.approved}]`
   };
 
   const subtaskStatusColors = {

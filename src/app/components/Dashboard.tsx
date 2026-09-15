@@ -64,11 +64,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#F8FAFC] mb-1">Dashboard</h1>
-          <p className="text-[#94A3B8]">Welcome back, {currentUser?.name}</p>
+          <h1 className="text-3xl font-bold text-[#4C1D95] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
+          <p className="text-[#6D28D9]">Welcome back, {currentUser?.name}</p>
         </div>
-        <div className="hidden md:flex items-center gap-3 px-4 py-2 glass rounded-full text-sm text-[#94A3B8]">
-          <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white rounded-full text-sm text-[#6D28D9] shadow-sm border border-[#E9D5FF]">
+          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
           Simpli is running smoothly
         </div>
       </div>
@@ -275,10 +275,10 @@ function StatCard({
   percentage: number;
 }) {
   const colors = {
-    cyan: { bg: '#22C55E', glow: 'rgba(34,197,94,0.2)' },
-    purple: { bg: '#8b5cf6', glow: 'rgba(139,92,246,0.2)' },
-    red: { bg: '#ff3b5c', glow: 'rgba(255,59,92,0.2)' },
-    green: { bg: '#10b981', glow: 'rgba(16,185,129,0.2)' }
+    cyan: { bg: '#7C3AED', glow: 'rgba(124,58,237,0.15)' },
+    purple: { bg: '#A78BFA', glow: 'rgba(167,139,250,0.15)' },
+    red: { bg: '#DC2626', glow: 'rgba(220,38,38,0.15)' },
+    green: { bg: '#10B981', glow: 'rgba(16,185,129,0.15)' }
   };
 
   const { bg, glow } = colors[color];
@@ -286,7 +286,7 @@ function StatCard({
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="group glass-card rounded-xl p-6 relative overflow-hidden hover:border-[rgba(34,197,94,0.3)] cursor-default">
+    <div className="group bg-white rounded-2xl p-6 relative overflow-hidden border border-[#E9D5FF] hover:border-[#7C3AED]/30 cursor-default transition-all duration-200">
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10" style={{ background: `radial-gradient(circle, ${bg} 0%, transparent 70%)` }}></div>
       <div className="flex items-center justify-between mb-4">
         <div className="relative">
@@ -296,7 +296,7 @@ function StatCard({
               cy="40"
               r="36"
               fill="none"
-              stroke="#1E293B"
+              stroke="#F3E8FF"
               strokeWidth="4"
             />
             <circle
@@ -318,9 +318,9 @@ function StatCard({
         </div>
       </div>
       <div>
-        <p className="text-3xl font-bold text-[#F8FAFC]">{value}</p>
-        <p className="text-sm text-[#94A3B8] mt-1">{title}</p>
-        <p className="text-xs text-[#94A3B8] mt-2">{trend}</p>
+        <p className="text-3xl font-bold text-[#4C1D95]">{value}</p>
+        <p className="text-sm text-[#6D28D9] mt-1">{title}</p>
+        <p className="text-xs text-[#6D28D9]/60 mt-2">{trend}</p>
       </div>
     </div>
   );

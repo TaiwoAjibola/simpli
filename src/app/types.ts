@@ -136,6 +136,11 @@ export type App = {
   softwareEngineeringProfile?: SoftwareEngineeringProfile;
   operationsProfile?: OperationsProfile;
   productProfile?: ProductProfile;
+  clientId?: string;
+  projectManagerId?: string;
+  techStack?: string;
+  projectType?: string;
+  expectedCompletionDate?: Date;
 };
 
 export type AppDocument = {
@@ -559,6 +564,21 @@ export type AppReport = {
   model?: string;
   generatedBy: string;
   createdAt: Date;
+};
+
+export type Client = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  industry?: string;
+  address?: string;
+  notes?: string;
+  contactPerson?: string;
+  status: 'active' | 'inactive' | 'archived';
+  createdAt: Date;
+  createdBy: string;
 };
 
 export type TechStackEntry = {

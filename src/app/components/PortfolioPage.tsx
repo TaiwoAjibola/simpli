@@ -23,7 +23,7 @@ import { getCardClasses, getCardInlineStyle } from '../../utils/cardStyles';
 
 const LEVEL_STYLES: Record<string, string> = {
   healthy: 'text-[#10b981] bg-[rgba(16,185,129,0.12)]',
-  at_risk: 'text-[#f59e0b] bg-[rgba(245,158,11,0.12)]',
+  at_risk: 'text-[#F97316] bg-[rgba(245,158,11,0.12)]',
   critical: 'text-[#ef4444] bg-[rgba(239,68,68,0.12)]'
 };
 
@@ -43,6 +43,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    clientId: '',
+    projectManagerId: '',
+    techStack: '',
+    projectType: '',
+    expectedCompletionDate: undefined,
     status: 'active' as 'active' | 'completed' | 'on_hold',
     color: '#22C55E',
     cardStyle: 'default' as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal'
@@ -69,6 +74,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
     setFormData({
       name: app.name,
       description: app.description,
+      clientId: app.clientId || '',
+      projectManagerId: app.projectManagerId || '',
+      techStack: app.techStack || '',
+      projectType: app.projectType || '',
+      expectedCompletionDate: app.expectedCompletionDate,
       status: app.status,
       color: app.color || '#22C55E',
       cardStyle: app.cardStyle || 'default'
@@ -115,8 +125,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
 
   const statusColors = {
     active: 'bg-[rgba(16,185,129,0.1)] text-[#10b981] border border-[rgba(16,185,129,0.2)]',
-    on_hold: 'bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border border-[rgba(245,158,11,0.2)]',
-    completed: 'bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.2)]'
+    on_hold: 'bg-[rgba(245,158,11,0.1)] text-[#F97316] border border-[rgba(245,158,11,0.2)]',
+    completed: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED] border border-[rgba(124,58,237,0.2)]'
   };
 
   const circumference = 2 * Math.PI * 28;
@@ -125,11 +135,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#F8FAFC] flex items-center gap-2">
-            <BarChart3 className="w-6 h-6 text-[#22C55E]" />
+          <h1 className="text-2xl font-bold text-[#4C1D95] flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-[#7C3AED]" />
             Portfolio
           </h1>
-          <p className="text-sm text-[#94A3B8] mt-1">{apps.length} applications · health snapshot and app management</p>
+          <p className="text-sm text-[#6D28D9] mt-1">{apps.length} applications · health snapshot and app management</p>
         </div>
         {canCreateApp && (
           <button
@@ -138,7 +148,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
               setEditingApp(null);
               setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
             }}
-            className="group flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a] transition cursor-pointer btn-primary-glow"
+            className="group flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] transition cursor-pointer btn-primary-glow"
           >
             <Plus className="w-4 h-4 micro-pop" />
             New App
@@ -147,29 +157,29 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
       </div>
 
       {showForm && (
-        <div className="mb-6 p-6 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] glass-card">
-          <h3 className="font-semibold text-[#F8FAFC] mb-4">
+        <div className="mb-6 p-6 bg-white border border-[#E9D5FF] glass-card">
+          <h3 className="font-semibold text-[#4C1D95] mb-4">
             {editingApp ? 'Edit App' : 'Create New App'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">App Name</label>
+              <label className="block text-sm font-medium text-[#4C1D95] mb-2">App Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 placeholder="e.g., Biops"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Description</label>
+              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 rows={3}
                 placeholder="What is this app about?"
                 required
@@ -177,7 +187,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Status</label>
+              <label className="block text-sm font-medium text-[#4C1D95] mb-2">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) =>
@@ -186,7 +196,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                     status: e.target.value as 'active' | 'completed' | 'on_hold'
                   })
                 }
-                className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
               >
                 <option value="active">Active</option>
                 <option value="on_hold">On Hold</option>
@@ -196,7 +206,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Card Color</label>
+                <label className="block text-sm font-medium text-[#4C1D95] mb-2">Card Color</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -204,7 +214,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     className="w-10 h-10 border-0 cursor-pointer bg-transparent"
                   />
-                  <span className="text-sm text-[#94A3B8] font-mono">{formData.color}</span>
+                  <span className="text-sm text-[#6D28D9] font-mono">{formData.color}</span>
                 </div>
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {PRESET_COLORS.map(c => (
@@ -219,11 +229,11 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#F8FAFC] mb-2">Card Style</label>
+                <label className="block text-sm font-medium text-[#4C1D95] mb-2">Card Style</label>
                 <select
                   value={formData.cardStyle}
                   onChange={(e) => setFormData({ ...formData, cardStyle: e.target.value as 'default' | 'rounded' | 'stroked' | 'elevated' | 'minimal' })}
-                  className="w-full px-3 py-2 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] focus:ring-2 focus:ring-[#22C55E] focus:border-transparent outline-none"
                 >
                   <option value="default">Default</option>
                   <option value="rounded">Rounded</option>
@@ -231,14 +241,14 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                   <option value="elevated">Elevated</option>
                   <option value="minimal">Minimal</option>
                 </select>
-                <p className="text-xs text-[#94A3B8] mt-1">Tasks and action points will use this color and style on their cards.</p>
+                <p className="text-xs text-[#6D28D9] mt-1">Tasks and action points will use this color and style on their cards.</p>
               </div>
             </div>
 
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
+                className="px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9]"
               >
                 {editingApp ? 'Update' : 'Create'} App
               </button>
@@ -247,9 +257,9 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                 onClick={() => {
                   setShowForm(false);
                   setEditingApp(null);
-                  setFormData({ name: '', description: '', status: 'active', color: '#22C55E', cardStyle: 'default' });
+setFormData({ name: '', description: '', clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: undefined, status: 'active', color: '#22C55E', cardStyle: 'default' });
                 }}
-                className="px-4 py-2 bg-[#1E293B] text-[#F8FAFC] border border-[rgba(34,197,94,0.1)] hover:bg-[#1E293B]"
+                className="px-4 py-2 bg-[#F5F3FF] text-[#4C1D95] border border-[#E9D5FF] hover:bg-[#F5F3FF]"
               >
                 Cancel
               </button>
@@ -276,16 +286,16 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                   onClick={() => onNavigate?.('app-details', app.id)}
                   className="group flex items-start gap-3 text-left hover:opacity-80 transition flex-1 cursor-pointer"
                 >
-                  <div className="p-3 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
-                    <Layers className="w-6 h-6 text-[#22C55E] micro-pop" />
+                  <div className="p-3 bg-[rgba(124,58,237,0.1)] border border-[rgba(124,58,237,0.2)]">
+                    <Layers className="w-6 h-6 text-[#7C3AED] micro-pop" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-[#F8FAFC] text-lg">{app.name}</h3>
-                    <p className="text-sm text-[#94A3B8] mt-1">
+                    <h3 className="font-bold text-[#4C1D95] text-lg">{app.name}</h3>
+                    <p className="text-sm text-[#6D28D9] mt-1">
                       {currentPhase ? currentPhase.name : 'No active phase'}
                     </p>
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-[#94A3B8] mt-1 micro-slide" />
+                  <ArrowUpRight className="w-4 h-4 text-[#6D28D9] mt-1 micro-slide" />
                 </button>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 text-xs font-medium rounded ${LEVEL_STYLES[health.level]}`}>
@@ -294,7 +304,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                   {canCreateApp && (
                     <button
                       onClick={() => handleEdit(app)}
-                      className="p-2 text-[#22C55E] hover:bg-[rgba(34,197,94,0.1)] transition"
+                      className="p-2 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] transition"
                       title="Edit"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -303,7 +313,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                   {canCreateApp && (
                     <button
                       onClick={() => handleDelete(app.id)}
-                      className="p-2 text-[#ff3b5c] hover:bg-[rgba(255,59,92,0.1)] transition"
+                      className="p-2 text-[#DC2626] hover:bg-[rgba(220,38,38,0.05)] transition"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -312,7 +322,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                 </div>
               </div>
 
-              <p className="text-sm text-[#94A3B8] mb-4">{app.description}</p>
+              <p className="text-sm text-[#6D28D9] mb-4">{app.description}</p>
 
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative">
@@ -325,48 +335,48 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-[#F8FAFC]">{progress}%</span>
+                    <span className="text-sm font-bold text-[#4C1D95]">{progress}%</span>
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-[#94A3B8]">Health Score</p>
-                  <div className="flex-1 h-2 bg-[#020617] rounded-full overflow-hidden mt-1">
+                  <p className="text-sm text-[#6D28D9]">Health Score</p>
+                  <div className="flex-1 h-2 bg-[#FAF5FF] rounded-full overflow-hidden mt-1">
                     <div
                       className={`h-full rounded-full ${health.level === 'healthy' ? 'bg-[#10b981]' : health.level === 'at_risk' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`}
                       style={{ width: `${health.score}%` }}
                     />
                   </div>
-                  <p className="text-xs text-[#94A3B8] mt-1">{completedTasks.length} of {appGoalTasks.length} tasks approved</p>
+                  <p className="text-xs text-[#6D28D9] mt-1">{completedTasks.length} of {appGoalTasks.length} tasks approved</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-4 gap-2">
-                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
-                  <Target className="w-5 h-5 text-[#22C55E] mx-auto mb-1" />
-                  <p className="text-xs text-[#94A3B8]">Goals</p>
-                  <p className="text-lg font-bold text-[#F8FAFC]">{appGoals.length}</p>
+                <div className="text-center p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
+                  <Target className="w-5 h-5 text-[#7C3AED] mx-auto mb-1" />
+                  <p className="text-xs text-[#6D28D9]">Goals</p>
+                  <p className="text-lg font-bold text-[#4C1D95]">{appGoals.length}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+                <div className="text-center p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
                   <CheckSquare className="w-5 h-5 text-[#10b981] mx-auto mb-1" />
-                  <p className="text-xs text-[#94A3B8]">Tasks</p>
-                  <p className="text-lg font-bold text-[#F8FAFC]">{appGoalTasks.length}</p>
+                  <p className="text-xs text-[#6D28D9]">Tasks</p>
+                  <p className="text-lg font-bold text-[#4C1D95]">{appGoalTasks.length}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
+                <div className="text-center p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
                   <Bug className="w-5 h-5 text-[#dc2626] mx-auto mb-1" />
-                  <p className="text-xs text-[#94A3B8]">Defects</p>
-                  <p className="text-lg font-bold text-[#F8FAFC]">{openDefects}</p>
+                  <p className="text-xs text-[#6D28D9]">Defects</p>
+                  <p className="text-lg font-bold text-[#4C1D95]">{openDefects}</p>
                 </div>
-                <div className="text-center p-3 bg-[#1E293B] border border-[rgba(34,197,94,0.1)]">
-                  <AlertCircle className="w-5 h-5 text-[#ff3b5c] mx-auto mb-1" />
-                  <p className="text-xs text-[#94A3B8]">Blocked</p>
-                  <p className="text-lg font-bold text-[#F8FAFC]">{blockedTasks}</p>
+                <div className="text-center p-3 bg-[#F5F3FF] border border-[#E9D5FF]">
+                  <AlertCircle className="w-5 h-5 text-[#DC2626] mx-auto mb-1" />
+                  <p className="text-xs text-[#6D28D9]">Blocked</p>
+                  <p className="text-lg font-bold text-[#4C1D95]">{blockedTasks}</p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-[rgba(34,197,94,0.1)]">
+              <div className="mt-4 pt-4 border-t border-[#E9D5FF]">
                 <div className="flex items-center gap-2 mb-2">
-                  <TagIcon className="w-4 h-4 text-[#94A3B8]" />
-                  <span className="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Tags</span>
+                  <TagIcon className="w-4 h-4 text-[#6D28D9]" />
+                  <span className="text-xs font-medium text-[#6D28D9] uppercase tracking-wider">Tags</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {getTagsForApp(app.id).map(tag => (
@@ -387,7 +397,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                     </span>
                   ))}
                   {getTagsForApp(app.id).length === 0 && (
-                    <span className="text-xs text-[#94A3B8]">No tags</span>
+                    <span className="text-xs text-[#6D28D9]">No tags</span>
                   )}
                 </div>
                 {canCreateApp && (
@@ -397,7 +407,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                       value={newTagName}
                       onChange={(e) => setNewTagName(e.target.value)}
                       placeholder="Tag name..."
-                      className="flex-1 px-2 py-1 bg-[#1E293B] border border-[rgba(34,197,94,0.1)] text-[#F8FAFC] text-xs outline-none"
+                      className="flex-1 px-2 py-1 bg-[#F5F3FF] border border-[#E9D5FF] text-[#4C1D95] text-xs outline-none"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag(app.id))}
                     />
                     <input
@@ -409,7 +419,7 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                     <button
                       onClick={() => handleAddTag(app.id)}
                       disabled={!newTagName.trim()}
-                      className="px-2 py-1 bg-[#22C55E] text-[#020617] text-xs font-medium disabled:opacity-50"
+                      className="px-2 py-1 bg-[#7C3AED] text-[#020617] text-xs font-medium disabled:opacity-50"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -422,22 +432,22 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
       </div>
 
       {apps.length === 0 && !showForm && (
-        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(34,197,94,0.1)] rounded-lg">
-          <Layers className="w-16 h-16 text-[#94A3B8] mx-auto mb-4" />
-          <p className="text-[#94A3B8] mb-4">No apps yet</p>
+        <div className="text-center py-12 bg-white border border-[#E9D5FF] rounded-lg">
+          <Layers className="w-16 h-16 text-[#6D28D9] mx-auto mb-4" />
+          <p className="text-[#6D28D9] mb-4">No apps yet</p>
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-[#22C55E] text-[#020617] font-medium hover:bg-[#16a34a]"
+            className="px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9]"
           >
             Create Your First App
           </button>
         </div>
       )}
 
-      <div className="bg-[#1E293B] border border-[rgba(34,197,94,0.1)] rounded-lg overflow-hidden">
+      <div className="bg-[#F5F3FF] border border-[#E9D5FF] rounded-lg overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-[#94A3B8] border-b border-[rgba(34,197,94,0.1)]">
+            <tr className="text-left text-xs text-[#6D28D9] border-b border-[#E9D5FF]">
               <th className="px-4 py-3 font-medium">Application</th>
               <th className="px-4 py-3 font-medium">Health</th>
               <th className="px-4 py-3 font-medium">Tasks</th>
@@ -448,8 +458,8 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
           </thead>
           <tbody>
             {rows.map(({ app, health }) => (
-              <tr key={app.id} className="border-b border-[rgba(34,197,94,0.05)] last:border-0 hover:bg-[rgba(34,197,94,0.03)] cursor-pointer" onClick={() => onNavigate?.('app-details', app.id)}>
-                <td className="px-4 py-3 text-[#F8FAFC]">{app.name}</td>
+              <tr key={app.id} className="border-b border-[rgba(124,58,237,0.05)] last:border-0 hover:bg-[rgba(124,58,237,0.03)] cursor-pointer" onClick={() => onNavigate?.('app-details', app.id)}>
+                <td className="px-4 py-3 text-[#4C1D95]">{app.name}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded ${LEVEL_STYLES[health.level]}`}>
                     <HeartPulse className="w-3 h-3" />
@@ -458,13 +468,13 @@ export function PortfolioPage({ onNavigate }: { onNavigate?: (page: string, appI
                 </td>
                 <td className="px-4 py-3 text-[#CBD5E1]">{health.openTasks}</td>
                 <td className="px-4 py-3 text-[#CBD5E1]">{health.openDefects}</td>
-                <td className="px-4 py-3 text-[#8b5cf6]">{health.qaPending}</td>
+                <td className="px-4 py-3 text-[#A78BFA]">{health.qaPending}</td>
                 <td className="px-4 py-3 text-[#ef4444]">{health.blocked}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="text-sm text-[#94A3B8] p-4">No applications yet.</p>}
+        {rows.length === 0 && <p className="text-sm text-[#6D28D9] p-4">No applications yet.</p>}
       </div>
     </div>
   );

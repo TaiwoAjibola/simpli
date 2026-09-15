@@ -25,6 +25,7 @@ import { Defect, DefectSeverity, DefectStatus } from '../types';
 import { DefectDetailModal } from './DefectDetailModal';
 import { DefectCreateModal } from './DefectCreateModal';
 import { DefectBulkCreateModal } from './DefectBulkCreateModal';
+import { DEFECT_STATUS_COLORS, DEFECT_SEVERITY_COLORS } from '../../utils/colors';
 
 export function DefectDashboard() {
   const { apps, defects, employees, deleteDefect, sendDefectNotification } = useApp();
@@ -97,19 +98,19 @@ export function DefectDashboard() {
   }, [appDefects]);
 
   const severityColors: Record<DefectSeverity, string> = {
-    blocker: 'bg-[#991b1b]',
-    critical: 'bg-[#dc2626]',
-    major: 'bg-[#f59e0b]',
-    minor: 'bg-[#eab308]'
+    blocker: DEFECT_SEVERITY_COLORS.blocker,
+    critical: DEFECT_SEVERITY_COLORS.critical,
+    major: DEFECT_SEVERITY_COLORS.major,
+    minor: DEFECT_SEVERITY_COLORS.minor
   };
 
   const statusColors: Record<DefectStatus, string> = {
-    open: 'bg-[#dc2626]',
-    in_progress: 'bg-[#f97316]',
-    pending_qa: 'bg-[#8b5cf6]',
-    resolved: 'bg-[#3b82f6]',
-    closed: 'bg-[#10b981]',
-    reopened: 'bg-[#7f1d1d]'
+    open: DEFECT_STATUS_COLORS.open,
+    in_progress: DEFECT_STATUS_COLORS.in_progress,
+    pending_qa: DEFECT_STATUS_COLORS.pending_qa,
+    resolved: DEFECT_STATUS_COLORS.resolved,
+    closed: DEFECT_STATUS_COLORS.closed,
+    reopened: DEFECT_STATUS_COLORS.reopened
   };
 
   const getEmployeeName = (id: string) => employees.find(e => e.id === id)?.name || 'Unassigned';

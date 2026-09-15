@@ -55,7 +55,8 @@ import {
   AutomationTriggerEvent,
   Repository,
   GithubSubDoc,
-  AppReport
+  AppReport,
+  Client
 } from '../types';
 
 type AppContextType = {
@@ -79,6 +80,11 @@ type AppContextType = {
   qaCycles: QaCycle[];
   workDependencies: WorkDependency[];
   reports: AppReport[];
+  clients: Client[];
+  addClient: (client: Omit<Client, 'id' | 'createdAt'>) => Promise<void>;
+  updateClient: (clientId: string, updates: Partial<Client>) => Promise<void>;
+  deleteClient: (clientId: string) => Promise<void>;
+  getClientById: (clientId: string) => Client | undefined;
   loading: boolean;
   addApp: (app: Omit<App, 'id' | 'createdAt'>) => Promise<void>;
   updateApp: (appId: string, updates: Partial<App>) => Promise<void>;
@@ -171,6 +177,15 @@ function safeDate(value: any): Date | undefined {
 }
 
 function docToApp(doc: any): App {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date()
+  };
+}
+
+function docToClient(doc: any): Client {
   const data = doc.data();
   return {
     id: doc.id,
@@ -457,6 +472,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [reports, setReports] = useState<AppReport[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -486,7 +502,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: collection(db, 'workTemplates'), setter: setWorkTemplates, transformer: docToWorkTemplate },
       { ref: collection(db, 'automations'), setter: setAutomations, transformer: docToAutomation },
       { ref: collection(db, 'repositories'), setter: setRepositories, transformer: docToRepository },
-      { ref: query(collection(db, 'reports'), orderBy('createdAt', 'desc')), setter: setReports, transformer: docToReport }
+      { ref: query(collection(db, 'reports'), orderBy('createdAt', 'desc')), setter: setReports, transformer: docToReport },
+      { ref: query(collection(db, 'clients'), orderBy('createdAt', 'desc')), setter: setClients, transformer: docToClient }
     ];
 
     collections.forEach(({ ref, setter, transformer }) => {
@@ -1778,6 +1795,22 @@ await createNotification(
     return tags.filter(t => t.appId === appId);
   }, [tags]);
 
+  const addClient = useCallback(async (client: Omit<Client, 'id' | 'createdAt'>) => {
+    await addDoc(collection(db, 'clients'), { ...client, createdAt: serverTimestamp() });
+  }, []);
+
+  const updateClient = useCallback(async (clientId: string, updates: Partial<Client>) => {
+    await updateDoc(doc(db, 'clients', clientId), updates);
+  }, []);
+
+  const deleteClient = useCallback(async (clientId: string) => {
+    await deleteDoc(doc(db, 'clients', clientId));
+  }, []);
+
+  const getClientById = useCallback((clientId: string) => {
+    return clients.find(c => c.id === clientId);
+  }, [clients]);
+
   const addReport = useCallback(async (report: Omit<AppReport, 'id' | 'createdAt'>) => {
     const reportId = `report-${Date.now()}`;
     await setDoc(doc(db, 'reports', reportId), {
@@ -2284,6 +2317,11 @@ await createNotification(
         updateTag,
         deleteTag,
         reports,
+        clients,
+        addClient,
+        updateClient,
+        deleteClient,
+        getClientById,
         addReport,
         deleteReport,
         getTagsForApp,

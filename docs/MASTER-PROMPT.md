@@ -302,7 +302,7 @@ GITHUB
 
 13. ✅ **Groq AI progress reports** — live-data snapshot + Markdown report in Insights
     (`src/utils/reportLogic.ts` + `api/report.ts`, key `GROQ_API_KEY` server env, `GROQ_MODEL`
-    default `llama-3.3-70b-versatile`); "Never invent metrics" grounding rule; 7 unit tests.
+    default `openai/gpt-oss-20b`); "Never invent metrics" grounding rule; 7 unit tests.
 14. ✅ **Design-system overhaul** — aurora ambient background, glass surfaces (`glass`, `glass-card`,
     `glass-strong`), shimmer-border CTAs, glow primary buttons, active-nav accent bar + tinted icon
     tiles, animated orbiting brand mark (`brand-orb*`), staggered nav entrance. Dark palette

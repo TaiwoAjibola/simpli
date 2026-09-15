@@ -24,6 +24,8 @@ const PortfolioPage = lazy(() => import('./components/PortfolioPage').then(m => 
 const RepositoriesPage = lazy(() => import('./components/RepositoriesPage').then(m => ({ default: m.RepositoriesPage })));
 const IntegrationsPage = lazy(() => import('./components/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
 const LogsPage = lazy(() => import('./components/LogsPage').then(m => ({ default: m.LogsPage })));
+const ClientsPage = lazy(() => import('./components/ClientsPage').then(m => ({ default: m.ClientsPage })));
+const CalendarPage = lazy(() => import('./components/CalendarPage').then(m => ({ default: m.CalendarPage })));
 
 function AppContent() {
   const { currentUser, loading: authLoading } = useAuth();
@@ -45,12 +47,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen flex bg-[#020617]">
-      <div className="aurora-bg">
-        <span className="aurora-orb aurora-orb-1" />
-        <span className="aurora-orb aurora-orb-2" />
-        <span className="aurora-orb aurora-orb-3" />
-      </div>
+    <div className="h-screen flex bg-[#FAF5FF]">
       <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="flex-1 overflow-y-auto">
         <Suspense fallback={<PageLoader message="Loading..." />}>
@@ -62,12 +59,15 @@ function AppContent() {
           {currentPage === 'defects' && <DefectDashboard />}
           {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
           {currentPage === 'goals' && <GoalsModule />}
+          {currentPage === 'milestones' && <GoalsModule />}
           {currentPage === 'tasks' && <TasksModule />}
           {currentPage === 'action-points' && <ActionPointsPage />}
           {currentPage === 'sprints' && <SprintsPage />}
           {currentPage === 'templates' && <WorkTemplatesPage />}
           {currentPage === 'automations' && <AutomationsPage />}
           {currentPage === 'portfolio' && <PortfolioPage onNavigate={handleNavigate} />}
+          {currentPage === 'clients' && <ClientsPage />}
+          {currentPage === 'calendar' && <CalendarPage />}
           {currentPage === 'repositories' && <RepositoriesPage />}
           {currentPage === 'integrations' && <IntegrationsPage />}
           {currentPage === 'logs' && <LogsPage />}
