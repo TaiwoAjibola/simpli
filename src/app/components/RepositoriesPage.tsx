@@ -103,19 +103,19 @@ export function RepositoriesPage() {
   const linkedTasks = (repo: Repository) => tasks.filter(t => t.github?.repositoryId === `${repo.owner}/${repo.name}`);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto bg-white min-h-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Layers className="w-6 h-6 text-[#7C3AED]" />
+          <h1 className="text-xl font-semibold text-[#37352F] tracking-[-0.01em] flex items-center gap-2">
+            <Layers className="w-5 h-5 text-[#787774]" />
             Repositories
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">GitHub repositories linked to Simpli applications.</p>
+          <p className="text-sm text-[#787774] mt-1">GitHub repositories linked to Simpli applications.</p>
         </div>
         {canManage && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9]"
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#2383E2] text-white font-medium hover:bg-[#1A6FC0] transition duration-150 rounded-[6px] text-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Repository
@@ -124,73 +124,73 @@ export function RepositoriesPage() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-5 rounded-lg mb-6 space-y-4">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-5 mb-6 space-y-4">
           <div>
-            <h3 className="font-semibold text-foreground mb-1">Link a GitHub repository</h3>
-            <p className="text-xs text-muted-foreground">
+            <h3 className="font-semibold text-[#37352F] mb-1 text-sm">Link a GitHub repository</h3>
+            <p className="text-xs text-[#787774]">
               Connect an existing GitHub repository to an application so Simpli can track branches, commits, pull requests, and reviews.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Application</label>
+              <label className="block text-sm font-medium text-[#37352F] mb-1.5">Application</label>
               <select
                 value={form.appId}
                 onChange={e => setForm({ ...form, appId: e.target.value })}
-                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm rounded"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="">Select application...</option>
                 {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
-              <p className="text-xs text-muted-foreground mt-1">Which application does this repo belong to? Work items from this app will link to it.</p>
+              <p className="text-xs text-[#787774] mt-1.5">Which application does this repo belong to? Work items from this app will link to it.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Git Repository URL</label>
+              <label className="block text-sm font-medium text-[#37352F] mb-1.5">Git Repository URL</label>
               <input
                 value={form.repoUrl}
                 onChange={e => setForm({ ...form, repoUrl: e.target.value })}
                 placeholder="https://github.com/owner/name"
-                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm rounded font-mono"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] placeholder:text-[#9B9A97] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] font-mono transition duration-150"
               />
-              <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+              <p className="text-xs text-[#787774] mt-1.5 flex items-start gap-1">
                 <HelpCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                 Paste the full repo URL — e.g. <span className="font-mono">https://github.com/acme/webapp</span>,{' '}
                 <span className="font-mono">git@github.com:acme/webapp.git</span>, or just <span className="font-mono">acme/webapp</span>.
                 The owner and repo name are read from the URL for you.
               </p>
               {parsed && (
-                <div className="mt-2 px-3 py-2 bg-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.2)] rounded text-sm flex items-center gap-2">
-                  <Github className="w-4 h-4 text-[#7C3AED]" />
-                  <span className="text-foreground">Owner: <span className="font-mono text-[#7C3AED]">{parsed.owner}</span></span>
-                  <span className="text-muted-foreground">/</span>
-                  <span className="text-foreground">Repo: <span className="font-mono text-[#7C3AED]">{parsed.name}</span></span>
+                <div className="mt-2 px-3 py-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-sm flex items-center gap-2">
+                  <Github className="w-4 h-4 text-[#787774]" />
+                  <span className="text-[#37352F]">Owner: <span className="font-mono text-[#2383E2]">{parsed.owner}</span></span>
+                  <span className="text-[#787774]">/</span>
+                  <span className="text-[#37352F]">Repo: <span className="font-mono text-[#2383E2]">{parsed.name}</span></span>
                 </div>
               )}
               {form.repoUrl && !parsed && (
-                <div className="mt-2 px-3 py-2 bg-[rgba(255,59,92,0.08)] border border-[rgba(255,59,92,0.2)] rounded text-sm text-[#7C3AED]">
+                <div className="mt-2 px-3 py-2 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-sm text-[#EB5757]">
                   Couldn't parse that URL. Use a format like <span className="font-mono">https://github.com/owner/name</span>.
                 </div>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Default branch</label>
+              <label className="block text-sm font-medium text-[#37352F] mb-1.5">Default branch</label>
               <input
                 value={form.defaultBranch}
                 onChange={e => setForm({ ...form, defaultBranch: e.target.value })}
                 placeholder="main"
-                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm rounded font-mono"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] placeholder:text-[#9B9A97] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] font-mono transition duration-150"
               />
-              <p className="text-xs text-muted-foreground mt-1">The branch Simpli treats as the default (usually <span className="font-mono">main</span>). Commits and PRs are based on it.</p>
+              <p className="text-xs text-[#787774] mt-1.5">The branch Simpli treats as the default (usually <span className="font-mono">main</span>). Commits and PRs are based on it.</p>
             </div>
           </div>
 
           <button
             onClick={handleAdd}
             disabled={!form.appId || !parsed}
-            className="px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] rounded disabled:opacity-50"
+            className="px-4 py-2 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#1A6FC0] rounded-[6px] disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 cursor-pointer"
           >
             Add Repository
           </button>
@@ -207,124 +207,126 @@ export function RepositoriesPage() {
 
       <div className="space-y-4">
         {!browsing && repositories.length === 0 && (
-          <p className="text-sm text-muted-foreground">No repositories yet. Add one to enable GitHub integration.</p>
+          <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-12 text-center">
+            <p className="text-sm text-[#787774]">No repositories yet. Add one to enable GitHub integration.</p>
+          </div>
         )}
         {repositories.map(repo => {
           const appName = apps.find(a => a.id === repo.appId)?.name || 'Unknown app';
           const linked = linkedTasks(repo);
           return (
-            <div key={repo.id} className={`bg-white border border-[rgba(124,58,237,0.1)] p-5 rounded-lg ${browsing ? 'hidden' : ''}`}>
-              <div className="flex items-start justify-between">
+            <div key={repo.id} className={`bg-white border border-[#E9E9E7] rounded-[8px] p-5 hover:bg-[#F7F7F5] transition duration-150 ${browsing ? 'hidden' : ''}`}>
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-[#020617] border border-[rgba(124,58,237,0.1)] rounded flex items-center justify-center">
-                    <Github className="w-5 h-5 text-[#7C3AED]" />
+                  <div className="w-10 h-10 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] flex items-center justify-center flex-shrink-0">
+                    <Github className="w-5 h-5 text-[#787774]" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-foreground">{repo.owner}/{repo.name}</h3>
-                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[220px]">{repo.url}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-[#37352F] text-sm">{repo.owner}/{repo.name}</h3>
+                      <span className="text-xs text-[#787774] font-mono truncate max-w-[220px]">{repo.url}</span>
                       <a
                         href={repo.url || `https://github.com/${repo.owner}/${repo.name}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-muted-foreground hover:text-[#7C3AED]"
+                        className="text-[#787774] hover:text-[#2383E2] transition duration-150"
                         title={`Open ${repo.url || `https://github.com/${repo.owner}/${repo.name}`}`}
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-[#787774] mt-0.5">
                       App: {appName} · Default branch: {repo.defaultBranch}
                     </p>
-                    <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-xs rounded ${
+                    <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-xs rounded-[4px] border font-medium ${
                       repo.connectionStatus === 'connected'
-                        ? 'bg-[rgba(124,58,237,0.12)] text-[#A78BFA]'
-                        : 'bg-[rgba(245,158,11,0.12)] text-[#f59e0b]'
+                        ? 'bg-[rgba(15,123,108,0.08)] text-[#0F7B6C] border-[rgba(15,123,108,0.15)]'
+                        : 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'
                     }`}>
                       <GitBranch className="w-3 h-3" />
                       {repo.connectionStatus === 'connected' ? 'Connected' : 'Not connected'}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => setBrowsing({ repo })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] transition duration-150 cursor-pointer"
                     title="Browse branches, code and commits"
                   >
-                    <FolderKanban className="w-4 h-4" />
+                    <FolderKanban className="w-4 h-4 text-[#787774]" />
                     Browse code
                   </button>
                   <button
                     onClick={() => handleSync(repo)}
                     disabled={busy === repo.id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded disabled:opacity-50"
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] disabled:opacity-50 transition duration-150 cursor-pointer"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${busy === repo.id ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-3.5 h-3.5 text-[#787774] ${busy === repo.id ? 'animate-spin' : ''}`} />
                     {busy === repo.id ? 'Syncing' : 'Sync'}
                   </button>
                   {canManage && (
-                    <button onClick={() => deleteRepository(repo.id)} className="p-1.5 text-muted-foreground hover:text-[#ef4444]">
+                    <button onClick={() => deleteRepository(repo.id)} className="p-1.5 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] transition duration-150 cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className="mt-4 border-t border-[rgba(124,58,237,0.1)] pt-3">
-                <p className="text-xs text-muted-foreground mb-2">
-                  Linked work: <span className="text-foreground">{linked.length}</span> item{linked.length === 1 ? '' : 's'}
+              <div className="mt-4 border-t border-[#E9E9E7] pt-3">
+                <p className="text-xs text-[#787774] mb-2">
+                  Linked work: <span className="text-[#37352F] font-medium">{linked.length}</span> item{linked.length === 1 ? '' : 's'}
                 </p>
                 <div className="max-h-28 overflow-y-auto space-y-1">
                   {linked.map(t => (
-                    <div key={t.id} className="flex items-center gap-2 text-sm text-[#CBD5E1]">
-                      <GitPullRequest className="w-3.5 h-3.5 text-[#8b5cf6]" />
-                      <span>{t.name}</span>
-                      <span className="text-xs text-muted-foreground capitalize">{t.github?.status?.replace(/_/g, ' ') || 'not_started'}</span>
-                      {t.github?.branchName && <span className="text-xs text-[#7C3AED]">{t.github.branchName}</span>}
+                    <div key={t.id} className="flex items-center gap-2 text-sm text-[#37352F]">
+                      <GitPullRequest className="w-3.5 h-3.5 text-[#787774] flex-shrink-0" />
+                      <span className="truncate">{t.name}</span>
+                      <span className="text-xs text-[#787774] capitalize">{t.github?.status?.replace(/_/g, ' ') || 'not_started'}</span>
+                      {t.github?.branchName && <span className="text-xs text-[#2383E2] font-mono">{t.github.branchName}</span>}
                     </div>
                   ))}
-                  {linked.length === 0 && <p className="text-xs text-muted-foreground">No work items linked to this repository yet.</p>}
+                  {linked.length === 0 && <p className="text-xs text-[#787774]">No work items linked to this repository yet.</p>}
                 </div>
               </div>
 
               {repo.lastSyncedAt && (
                 <>
-                  <div className="mt-3 border-t border-[rgba(124,58,237,0.1)] pt-3">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Branches: <span className="text-foreground">{repo.branches?.length ?? 0}</span>
-                      <span className="text-[#64748B]"> · Last synced {new Date(repo.lastSyncedAt).toLocaleString()}</span>
+                  <div className="mt-3 border-t border-[#E9E9E7] pt-3">
+                    <p className="text-xs text-[#787774] mb-2">
+                      Branches: <span className="text-[#37352F]">{repo.branches?.length ?? 0}</span>
+                      <span className="text-[#9B9A97]"> · Last synced {new Date(repo.lastSyncedAt).toLocaleString()}</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {(repo.branches ?? []).map(b => (
                         <button
                           key={b}
                           onClick={() => setBrowsing({ repo, branch: b })}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-[#7C3AED] bg-[rgba(124,58,237,0.1)] hover:bg-[rgba(124,58,237,0.2)] rounded"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-[#37352F] bg-white border border-[#E9E9E7] hover:bg-[#F7F7F5] rounded-[4px] transition duration-150 cursor-pointer"
                           title={`Browse ${b} branch code`}
                         >
-                          <GitBranch className="w-3 h-3" />
+                          <GitBranch className="w-3 h-3 text-[#787774]" />
                           {b}
                         </button>
                       ))}
-                      {(repo.branches ?? []).length === 0 && <p className="text-xs text-muted-foreground">No branches synced.</p>}
+                      {(repo.branches ?? []).length === 0 && <p className="text-xs text-[#787774]">No branches synced.</p>}
                     </div>
                   </div>
                   {(repo.commits?.length ?? 0) > 0 && (
-                    <div className="mt-3 border-t border-[rgba(124,58,237,0.1)] pt-3">
-                      <p className="text-xs text-muted-foreground mb-2">Recent commits on {repo.defaultBranch}</p>
+                    <div className="mt-3 border-t border-[#E9E9E7] pt-3">
+                      <p className="text-xs text-[#787774] mb-2">Recent commits on {repo.defaultBranch}</p>
                       <div className="max-h-28 overflow-y-auto space-y-1">
                         {(repo.commits ?? []).map(c => (
                           <button
                             key={c.sha}
                             onClick={() => setBrowsing({ repo })}
-                            className="w-full flex items-center gap-2 text-sm text-[#CBD5E1] hover:bg-[rgba(255,255,255,0.03)] rounded px-1"
+                            className="w-full flex items-center gap-2 text-sm text-[#37352F] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] px-2 py-1 transition duration-150 cursor-pointer text-left"
                             title={`Browse code (${repo.defaultBranch})`}
                           >
-                            <GitPullRequest className="w-3.5 h-3.5 text-[#7C3AED]" />
-                            <span className="truncate">{c.message.split('\n')[0]}</span>
-                            <span className="ml-auto text-xs text-muted-foreground truncate">{c.author}</span>
-                            <span className="text-xs text-[#64748B]">{new Date(c.date).toLocaleDateString()}</span>
+                            <GitPullRequest className="w-3.5 h-3.5 text-[#787774] flex-shrink-0" />
+                            <span className="truncate flex-1">{c.message.split('\n')[0]}</span>
+                            <span className="text-xs text-[#787774] truncate hidden sm:inline">{c.author}</span>
+                            <span className="text-xs text-[#9B9A97] flex-shrink-0">{new Date(c.date).toLocaleDateString()}</span>
                           </button>
                         ))}
                       </div>

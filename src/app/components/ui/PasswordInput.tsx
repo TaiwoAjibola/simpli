@@ -18,7 +18,7 @@ export function PasswordInput({ value, onChange, placeholder, className, require
         type={showPassword ? 'text' : 'password'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={className || 'w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none pr-10'}
+        className={className || 'w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150 pr-10 text-sm placeholder:text-[#9B9A97]'}
         placeholder={placeholder}
         required={required}
       />

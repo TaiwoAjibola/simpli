@@ -7,8 +7,6 @@ import {
   Edit2,
   Trash2,
   Rocket,
-  PauseCircle,
-  CheckCircle2,
   Calendar,
   Target,
   CheckSquare,
@@ -19,7 +17,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { Sprint, SprintStatus, WorkType } from '../types';
+import { Sprint, SprintStatus } from '../types';
 import { WorkItem, allWork } from '../../utils/work';
 
 export function SprintsPage() {
@@ -117,19 +115,19 @@ export function SprintsPage() {
   };
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8 bg-white min-h-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-1">Sprints</h1>
-          <p className="text-sm text-muted-foreground">
-            {sprints.length} sprints &middot; {sprints.filter(s => s.status === 'active').length} active
+          <h1 className="text-2xl font-semibold text-[#37352F] tracking-[-0.01em] mb-1">Sprints</h1>
+          <p className="text-sm text-[#787774]">
+            {sprints.length} sprints · {sprints.filter(s => s.status === 'active').length} active
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select
             value={filterApp}
             onChange={(e) => setFilterApp(e.target.value)}
-            className="px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+            className="px-3 py-1.5 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] cursor-pointer"
           >
             <option value="all">All Apps</option>
             {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
@@ -137,7 +135,7 @@ export function SprintsPage() {
           {canManage && (
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium text-sm hover:bg-[#00d5ef] transition"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1A6FC0] transition duration-150 rounded-[6px] cursor-pointer"
             >
               <Plus className="w-4 h-4" /> New Sprint
             </button>
@@ -146,69 +144,69 @@ export function SprintsPage() {
       </div>
 
       {showForm && (
-        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.2)] p-6 mb-6">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-[#37352F]">
               {editingSprint ? 'Edit Sprint' : 'New Sprint'}
             </h2>
-            <button onClick={resetForm} className="text-muted-foreground hover:text-foreground">✕</button>
+            <button onClick={resetForm} className="text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] p-1 rounded-[6px] transition duration-150 cursor-pointer">✕</button>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">App</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">App</label>
               <select
                 value={formData.appId}
                 onChange={(e) => setFormData({ ...formData, appId: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="">Select app</option>
                 {apps.map(app => <option key={app.id} value={app.id}>{app.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Name</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Sprint 12 — Dashboard v2"
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] placeholder:text-[#9B9A97] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Goal / Theme (optional)</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">Goal / Theme (optional)</label>
               <input
                 type="text"
                 value={formData.goal}
                 onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
                 placeholder="Sprint objective"
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] placeholder:text-[#9B9A97] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Start</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">Start</label>
               <input
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">End</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">End</label>
               <input
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Status</label>
+              <label className="block text-xs font-medium text-[#37352F] mb-1">Status</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as SprintStatus })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] text-sm rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="planned">Planned</option>
                 <option value="active">Active</option>
@@ -219,13 +217,13 @@ export function SprintsPage() {
           <div className="flex gap-2 mt-5">
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium text-sm hover:bg-[#00d5ef] transition"
+              className="px-4 py-2 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1A6FC0] transition duration-150 rounded-[6px] cursor-pointer"
             >
               {editingSprint ? 'Save Changes' : 'Create Sprint'}
             </button>
             <button
               onClick={resetForm}
-              className="px-4 py-2 text-muted-foreground hover:text-foreground text-sm border border-[rgba(255,255,255,0.1)]"
+              className="px-4 py-2 bg-white text-[#37352F] hover:bg-[#F7F7F5] text-sm border border-[#E9E9E7] rounded-[6px] transition duration-150 cursor-pointer"
             >
               Cancel
             </button>
@@ -235,9 +233,9 @@ export function SprintsPage() {
 
       <div className="space-y-4">
         {filteredSprints.length === 0 && (
-          <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-12 text-center">
-            <Rocket className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No sprints yet. Create your first sprint to start planning work.</p>
+          <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-12 text-center">
+            <Rocket className="w-10 h-10 text-[#9B9A97] mx-auto mb-3" />
+            <p className="text-sm text-[#787774]">No sprints yet. Create your first sprint to start planning work.</p>
           </div>
         )}
 
@@ -246,27 +244,27 @@ export function SprintsPage() {
           const items = itemsForSprint(sprint.id);
           const isExpanded = !!expanded[sprint.id];
           const statusColor = sprint.status === 'active'
-            ? 'text-[#A78BFA] bg-[rgba(124,58,237,0.1)]'
+            ? 'text-[#2383E2] bg-[rgba(35,131,226,0.08)] border-[rgba(35,131,226,0.15)]'
             : sprint.status === 'completed'
-            ? 'text-muted-foreground bg-[rgba(107,107,128,0.1)]'
-            : 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]';
+            ? 'text-[#787774] bg-[#F7F7F5] border-[#E9E9E7]'
+            : 'text-[#787774] bg-[#F7F7F5] border-[#E9E9E7]';
 
           return (
-            <div key={sprint.id} className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
+            <div key={sprint.id} className="bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition duration-150">
               <div className="flex items-start justify-between gap-4 p-5">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button onClick={() => toggleExpand(sprint.id)} className="flex items-center gap-2 text-left group">
-                      {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
-                      <h2 className="text-lg font-semibold text-foreground group-hover:text-[#7C3AED] transition">
+                    <button onClick={() => toggleExpand(sprint.id)} className="flex items-center gap-2 text-left group cursor-pointer">
+                      {isExpanded ? <ChevronDown className="w-4 h-4 text-[#787774]" /> : <ChevronRight className="w-4 h-4 text-[#787774]" />}
+                      <h2 className="text-[15px] font-semibold text-[#37352F] group-hover:text-[#2383E2] transition duration-150">
                         {sprint.name}
                       </h2>
                     </button>
-                    <span className={`text-xs font-medium px-2 py-1 ${statusColor}`}>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-[4px] border ${statusColor}`}>
                       {sprint.status.toUpperCase()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-4 mt-2 text-xs text-[#787774] flex-wrap">
                     {app && (
                       <span className="flex items-center gap-1">
                         <Layers className="w-3.5 h-3.5" /> {app.name}
@@ -293,7 +291,7 @@ export function SprintsPage() {
                     <select
                       value={sprint.status}
                       onChange={(e) => handleStatusChange(sprint, e.target.value as SprintStatus)}
-                      className="text-xs bg-white border border-[rgba(124,58,237,0.1)] text-foreground px-2 py-1"
+                      className="text-xs bg-white border border-[#E0E0DE] text-[#37352F] px-2 py-1 rounded-[6px] focus:border-[#2383E2] focus:outline-none cursor-pointer"
                     >
                       <option value="planned">Planned</option>
                       <option value="active">Active</option>
@@ -308,14 +306,14 @@ export function SprintsPage() {
                         endDate: sprint.endDate ? format(sprint.endDate, 'yyyy-MM-dd') : '',
                         status: sprint.status
                       }); setShowForm(true); }}
-                      className="p-2 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] rounded transition"
+                      className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-white rounded-[6px] transition duration-150 cursor-pointer border border-transparent hover:border-[#E9E9E7]"
                       title="Edit sprint"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(sprint)}
-                      className="p-2 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] rounded transition"
+                      className="p-1.5 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition duration-150 cursor-pointer border border-transparent hover:border-[#E9E9E7]"
                       title="Delete sprint"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -325,10 +323,10 @@ export function SprintsPage() {
               </div>
 
               {isExpanded && (
-                <div className="border-t border-[rgba(124,58,237,0.1)] p-5">
+                <div className="border-t border-[#E9E9E7] p-5 bg-[#F7F7F5] rounded-b-[8px]">
                   {items.length === 0 ? (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-3">No work assigned yet. Pick from unassigned work below.</p>
+                      <p className="text-xs text-[#787774] mb-3">No work assigned yet. Pick from unassigned work below.</p>
                       <UnassignedList
                         items={unassignedItems(sprint.appId)}
                         sprintId={sprint.id}
@@ -368,22 +366,22 @@ function UnassignedList({ items, sprintId, onAssign, emptyText }: {
   emptyText: string;
 }) {
   if (items.length === 0) {
-    return <p className="text-xs text-muted-foreground">{emptyText}</p>;
+    return <p className="text-xs text-[#787774]">{emptyText}</p>;
   }
   return (
     <div>
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Unassigned work for this app</p>
-      <div className="border border-[rgba(124,58,237,0.1)] divide-y divide-[rgba(124,58,237,0.05)]">
+      <p className="text-xs text-[#787774] uppercase tracking-wider mb-2 font-medium">Unassigned work for this app</p>
+      <div className="border border-[#E9E9E7] rounded-[8px] overflow-hidden divide-y divide-[#E9E9E7] bg-white">
         {items.slice(0, 15).map(item => (
-          <div key={`${item.workKind}-${item.id}`} className="flex items-center gap-3 px-3 py-2">
-            <span className={`text-xs font-medium px-2 py-0.5 ${item.workKind === 'defect' ? 'text-[#dc2626] bg-[rgba(124,58,237,0.1)]' : item.workKind === 'action_point' ? 'text-[#f59e0b] bg-[rgba(245,158,11,0.1)]' : 'text-[#7C3AED] bg-[rgba(124,58,237,0.1)]'}`}>
+          <div key={`${item.workKind}-${item.id}`} className="flex items-center gap-3 px-3 py-2 hover:bg-[#F7F7F5] transition duration-150">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-[4px] border ${item.workKind === 'defect' ? 'text-[#EB5757] bg-[rgba(235,87,87,0.08)] border-[rgba(235,87,87,0.15)]' : item.workKind === 'action_point' ? 'text-[#787774] bg-[#F7F7F5] border-[#E9E9E7]' : 'text-[#2383E2] bg-[rgba(35,131,226,0.08)] border-[rgba(35,131,226,0.15)]'}`}>
               {item.workKind === 'defect' ? 'DEFECT' : item.workKind === 'action_point' ? 'AP' : 'TASK'}
             </span>
-            <span className="flex-1 min-w-0 truncate text-sm text-foreground">{item.title}</span>
-            {item.code && <span className="text-xs font-mono text-muted-foreground">{item.code}</span>}
+            <span className="flex-1 min-w-0 truncate text-sm text-[#37352F]">{item.title}</span>
+            {item.code && <span className="text-xs font-mono text-[#787774]">{item.code}</span>}
             <button
               onClick={() => onAssign(item, sprintId)}
-              className="text-xs px-2 py-1 text-[#7C3AED] border border-[rgba(124,58,237,0.2)] hover:bg-[rgba(124,58,237,0.1)] transition flex-shrink-0"
+              className="text-xs px-2 py-1 text-[#2383E2] border border-[#E9E9E7] bg-white hover:bg-[#F7F7F5] rounded-[6px] transition duration-150 flex-shrink-0 cursor-pointer"
             >
               Add
             </button>
@@ -391,7 +389,7 @@ function UnassignedList({ items, sprintId, onAssign, emptyText }: {
         ))}
       </div>
       {items.length > 15 && (
-        <p className="text-xs text-muted-foreground mt-2">+{items.length - 15} more unassigned items</p>
+        <p className="text-xs text-[#787774] mt-2">+{items.length - 15} more unassigned items</p>
       )}
     </div>
   );
@@ -399,20 +397,20 @@ function UnassignedList({ items, sprintId, onAssign, emptyText }: {
 
 function WorkRow({ item, onUnassign }: { item: WorkItem; onUnassign: () => void }) {
   const kindIcon = item.workKind === 'defect'
-    ? <Bug className="w-4 h-4 text-[#dc2626] flex-shrink-0" />
+    ? <Bug className="w-4 h-4 text-[#EB5757] flex-shrink-0" />
     : item.workKind === 'action_point'
-    ? <FileText className="w-4 h-4 text-[#f59e0b] flex-shrink-0" />
-    : <CheckSquare className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />;
+    ? <FileText className="w-4 h-4 text-[#787774] flex-shrink-0" />
+    : <CheckSquare className="w-4 h-4 text-[#2383E2] flex-shrink-0" />;
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.05)]">
+    <div className="flex items-center gap-3 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px]">
       {kindIcon}
-      <span className="flex-1 min-w-0 truncate text-sm text-foreground">{item.title}</span>
-      {item.code && <span className="text-xs font-mono text-muted-foreground">{item.code}</span>}
-      <span className="text-xs capitalize text-muted-foreground">{item.status.replace(/_/g, ' ')}</span>
+      <span className="flex-1 min-w-0 truncate text-sm text-[#37352F]">{item.title}</span>
+      {item.code && <span className="text-xs font-mono text-[#787774]">{item.code}</span>}
+      <span className="text-xs capitalize text-[#787774]">{item.status.replace(/_/g, ' ')}</span>
       <button
         onClick={onUnassign}
-        className="text-xs px-2 py-1 text-muted-foreground hover:text-[#7C3AED] border border-[rgba(255,255,255,0.1)] transition flex-shrink-0"
+        className="text-xs px-2 py-1 text-[#787774] hover:text-[#37352F] border border-[#E9E9E7] bg-white hover:bg-[#F7F7F5] rounded-[6px] transition duration-150 flex-shrink-0 cursor-pointer"
         title="Remove from sprint"
       >
         Remove

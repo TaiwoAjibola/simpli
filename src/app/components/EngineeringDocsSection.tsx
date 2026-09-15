@@ -61,7 +61,7 @@ export function EngineeringDocsSection({ appId }: Props) {
     if (!confirm(`Delete "${doc.name}" v${doc.version}?`)) return;
     try {
       const fileRef = ref(storage, doc.fileUrl);
-      await deleteObject(fileRef).catch(() => {}); // ignore if file already gone
+      await deleteObject(fileRef).catch(() => {});
       await deleteAppDocument(doc.id);
       showToast({ type: 'success', title: 'Deleted', message: `${doc.name} removed.` });
     } catch (error: any) {
@@ -76,66 +76,68 @@ export function EngineeringDocsSection({ appId }: Props) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="max-w-[900px] mx-auto space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Engineering Documents</h2>
-          <p className="text-sm text-muted-foreground mt-1">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-[16px] font-semibold text-[#37352F] tracking-[-0.01em]">Engineering Documents</h2>
+          <p className="text-[12px] text-[#787774] mt-0.5">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
         </div>
         {canUpload && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => { setShowForm(!showForm); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9]"
-            >
-              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {showForm ? 'Cancel' : 'Upload Document'}
-            </button>
-          </div>
+          <button
+            onClick={() => { setShowForm(!showForm); }}
+            className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
+            style={showForm ? { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' } : { background: '#2383E2', color: '#FFFFFF', border: '1px solid #2383E2' }}
+          >
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {showForm ? 'Cancel' : 'Upload document'}
+          </button>
         )}
       </div>
 
-      {/* Upload form */}
       {showForm && canUpload && (
-        <div className="p-6 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] space-y-4">
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Upload New Document</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4 space-y-4">
+          <h3 className="text-[12px] font-semibold text-[#37352F] tracking-wider uppercase">Upload new document</h3>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Document Name *</label>
+              <label className="block text-[12px] font-medium text-[#787774] mb-1">Document name *</label>
               <input
                 type="text"
                 value={docName}
                 onChange={(e) => setDocName(e.target.value)}
                 placeholder="e.g. System Architecture v2"
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground text-sm outline-none"
+                className="w-full px-2.5 py-[6px] bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150"
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Version</label>
+              <label className="block text-[12px] font-medium text-[#787774] mb-1">Version</label>
               <input
                 type="text"
                 value={docVersion}
                 onChange={(e) => setDocVersion(e.target.value)}
                 placeholder="e.g. 1.0, 2.3"
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground text-sm outline-none"
+                className="w-full px-2.5 py-[6px] bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">File *</label>
-            <div className="border-2 border-dashed border-[rgba(124,58,237,0.2)] p-6 text-center hover:border-[rgba(124,58,237,0.4)] transition-colors">
+            <label className="block text-[12px] font-medium text-[#787774] mb-1">File *</label>
+            <div className="border border-dashed border-[#E0E0DE] rounded-[8px] p-6 text-center hover:border-[#2383E2] hover:bg-[#F7F7F5] transition-colors duration-150">
               {docFile ? (
-                <div className="flex items-center justify-center gap-2 text-sm text-foreground">
-                  <FileText className="w-4 h-4 text-[#7C3AED]" />
-                  <span>{docFile.name}</span>
-                  <span className="text-muted-foreground">({formatSize(docFile.size)})</span>
-                  <button onClick={() => setDocFile(null)} className="text-[#7C3AED] hover:underline text-xs ml-2">Remove</button>
+                <div className="flex items-center justify-center gap-2 text-[14px] text-[#37352F]">
+                  <span className="w-8 h-8 rounded-[6px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-[#787774]" />
+                  </span>
+                  <span className="truncate">{docFile.name}</span>
+                  <span className="text-[#787774] text-[12px]">({formatSize(docFile.size)})</span>
+                  <button onClick={() => setDocFile(null)} className="text-[#2383E2] hover:underline text-[12px] ml-2 cursor-pointer">Remove</button>
                 </div>
               ) : (
-                <label className="cursor-pointer">
-                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to select a file (PDF, Word, Markdown, etc.)</p>
+                <label className="cursor-pointer flex flex-col items-center">
+                  <span className="w-10 h-10 rounded-[6px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center mb-2">
+                    <Upload className="w-5 h-5 text-[#787774]" />
+                  </span>
+                  <p className="text-[14px] text-[#787774]">Click to select a file</p>
+                  <p className="text-[12px] text-[#9B9A97] mt-0.5">PDF, Word, Markdown, etc.</p>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx,.md,.txt,.xlsx,.pptx"
@@ -150,7 +152,7 @@ export function EngineeringDocsSection({ appId }: Props) {
             <button
               onClick={handleUpload}
               disabled={uploading || !docName.trim() || !docFile}
-              className="flex items-center gap-2 px-6 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               {uploading && <Loader className="w-4 h-4 animate-spin" />}
               {uploading ? 'Uploading...' : 'Upload'}
@@ -159,15 +161,16 @@ export function EngineeringDocsSection({ appId }: Props) {
         </div>
       )}
 
-      {/* Document list */}
       {docs.length === 0 ? (
-        <div className="text-center py-12 bg-[#0F172A] border border-[rgba(124,58,237,0.1)]">
-          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No engineering documents uploaded yet.</p>
+        <div className="text-center py-12 bg-white border border-[#E9E9E7] rounded-[8px]">
+          <span className="w-12 h-12 rounded-[8px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center mx-auto mb-3">
+            <FileText className="w-6 h-6 text-[#9B9A97]" />
+          </span>
+          <p className="text-[14px] text-[#787774]">No engineering documents yet.</p>
           {canUpload && (
             <button
               onClick={() => setShowForm(true)}
-              className="mt-3 text-sm text-[#7C3AED] hover:underline"
+              className="mt-3 text-[14px] font-medium text-[#2383E2] hover:underline cursor-pointer"
             >
               Upload the first document
             </button>
@@ -178,30 +181,30 @@ export function EngineeringDocsSection({ appId }: Props) {
           {docs.map(doc => (
             <div
               key={doc.id}
-              className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] p-4 flex items-center gap-4 hover:bg-[rgba(124,58,237,0.05)] cursor-pointer"
+              className="bg-white border border-[#E9E9E7] rounded-[8px] p-3 flex items-center gap-3 hover:bg-[#F7F7F5] cursor-pointer transition-colors duration-150"
               onClick={() => setPreviewDoc(previewDoc === doc.id ? null : doc.id)}
             >
-              <div className="p-2 bg-[rgba(124,58,237,0.05)] flex-shrink-0">
-                <FileText className="w-5 h-5 text-[#7C3AED]" />
-              </div>
+              <span className="w-8 h-8 rounded-[6px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-[#787774]" />
+              </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-foreground truncate">{doc.name}</h3>
-                  <span className="text-xs px-1.5 py-0.5 bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]">
+                  <h3 className="text-[14px] font-medium text-[#37352F] truncate">{doc.name}</h3>
+                  <span className="text-[11px] font-medium px-1.5 py-0.5 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] text-[#787774]">
                     v{doc.version}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {doc.uploadedByName} &middot; {new Date(doc.createdAt).toLocaleDateString()} &middot; {formatSize(doc.fileSize)}
+                <p className="text-[12px] text-[#787774] mt-0.5 truncate">
+                  {doc.uploadedByName} · {new Date(doc.createdAt).toLocaleDateString()} · {formatSize(doc.fileSize)}
                 </p>
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <a
                   href={doc.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   download
-                  className="p-2 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] rounded"
+                  className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] cursor-pointer transition-colors duration-150"
                   title="Download"
                 >
                   <Download className="w-4 h-4" />
@@ -209,7 +212,7 @@ export function EngineeringDocsSection({ appId }: Props) {
                 {canUpload && (
                   <button
                     onClick={() => handleDelete(doc)}
-                    className="p-2 text-muted-foreground hover:text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] rounded"
+                    className="p-1.5 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] cursor-pointer transition-colors duration-150"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -221,9 +224,8 @@ export function EngineeringDocsSection({ appId }: Props) {
         </div>
       )}
 
-      {/* Preview */}
       {previewDoc && (
-        <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] overflow-hidden">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] overflow-hidden">
           {(() => {
             const doc = docs.find(d => d.id === previewDoc);
             if (!doc) return null;
@@ -233,36 +235,38 @@ export function EngineeringDocsSection({ appId }: Props) {
 
             return (
               <div>
-                <div className="flex items-center justify-between p-4 border-b border-[rgba(124,58,237,0.1)]">
+                <div className="flex items-center justify-between p-4 border-b border-[#E9E9E7]">
                   <div>
-                    <h3 className="font-medium text-foreground">{doc.name}</h3>
-                    <p className="text-xs text-muted-foreground">v{doc.version} &middot; {doc.uploadedByName} &middot; {new Date(doc.createdAt).toLocaleDateString()}</p>
+                    <h3 className="text-[14px] font-semibold text-[#37352F]">{doc.name}</h3>
+                    <p className="text-[12px] text-[#787774]">v{doc.version} · {doc.uploadedByName} · {new Date(doc.createdAt).toLocaleDateString()}</p>
                   </div>
                   <a
                     href={doc.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     download
-                    className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9]"
+                    className="flex items-center gap-2 px-3 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] cursor-pointer transition-colors duration-150"
                   >
                     <Download className="w-4 h-4" />
                     Download
                   </a>
                 </div>
-                <div className="p-4" style={{ height: '70vh' }}>
+                <div className="p-4 bg-white" style={{ height: '70vh' }}>
                   {isPdf ? (
-                    <iframe src={doc.fileUrl} className="w-full h-full border-0" title={doc.name} />
+                    <iframe src={doc.fileUrl} className="w-full h-full border border-[#E9E9E7] rounded-[6px]" title={doc.name} />
                   ) : isImage ? (
-                    <img src={doc.fileUrl} alt={doc.name} className="max-w-full max-h-full mx-auto" />
+                    <img src={doc.fileUrl} alt={doc.name} className="max-w-full max-h-full mx-auto rounded-[6px] border border-[#E9E9E7]" />
                   ) : isText ? (
-                    <iframe src={doc.fileUrl} className="w-full h-full border-0" title={doc.name} />
+                    <iframe src={doc.fileUrl} className="w-full h-full border border-[#E9E9E7] rounded-[6px]" title={doc.name} />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <div className="flex items-center justify-center h-full text-[#787774]">
                       <p className="text-center">
-                        <FileText className="w-12 h-12 mx-auto mb-3" />
-                        Preview not available for this file type.
+                        <span className="w-12 h-12 rounded-[8px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center mx-auto mb-3">
+                          <FileText className="w-6 h-6 text-[#9B9A97]" />
+                        </span>
+                        <span className="text-[14px]">Preview not available for this file type.</span>
                         <br />
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download className="text-[#7C3AED] hover:underline mt-2 inline-block">
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download className="text-[#2383E2] hover:underline mt-2 inline-block text-[14px] cursor-pointer">
                           Download to view
                         </a>
                       </p>

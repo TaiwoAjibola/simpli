@@ -43,18 +43,18 @@ const GUIDE_W = 15;
 
 function fileMeta(node: TreeNode): { Icon: any; color: string } {
   if (node.type === 'dir') {
-    return { Icon: Folder, color: '#fbbf24' };
+    return { Icon: Folder, color: '#787774' };
   }
   const name = node.name.toLowerCase();
-  if (name.endsWith('.ts') || name.endsWith('.tsx')) return { Icon: FileCode, color: '#38bdf8' };
-  if (name.endsWith('.js') || name.endsWith('.jsx') || name.endsWith('.mjs') || name.endsWith('.cjs')) return { Icon: FileCode, color: '#eab308' };
-  if (name.endsWith('.json') || name === '.env' || name.endsWith('.env')) return { Icon: Braces, color: '#f59e0b' };
-  if (name.endsWith('.css') || name.endsWith('.scss') || name.endsWith('.sass') || name.endsWith('.less') || name.endsWith('.html')) return { Icon: Palette, color: '#f472b6' };
-  if (name.endsWith('.md') || name.endsWith('.mdx') || name.endsWith('.txt')) return { Icon: FileText, color: '#94a3b8' };
-  if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.gif') || name.endsWith('.svg') || name.endsWith('.webp') || name.endsWith('.ico')) return { Icon: FileImage, color: '#a78bfa' };
-  if (name.endsWith('.yml') || name.endsWith('.yaml') || name.endsWith('.toml') || name.endsWith('.ini') || name.includes('lock')) return { Icon: Settings, color: '#fb923c' };
-  if (name.endsWith('.sh') || name.endsWith('.bash') || name.endsWith('.zsh') || name.endsWith('.py')) return { Icon: Terminal, color: '#7C3AED' };
-  return { Icon: File, color: '#64748b' };
+  if (name.endsWith('.ts') || name.endsWith('.tsx')) return { Icon: FileCode, color: '#2383E2' };
+  if (name.endsWith('.js') || name.endsWith('.jsx') || name.endsWith('.mjs') || name.endsWith('.cjs')) return { Icon: FileCode, color: '#787774' };
+  if (name.endsWith('.json') || name === '.env' || name.endsWith('.env')) return { Icon: Braces, color: '#787774' };
+  if (name.endsWith('.css') || name.endsWith('.scss') || name.endsWith('.sass') || name.endsWith('.less') || name.endsWith('.html')) return { Icon: Palette, color: '#787774' };
+  if (name.endsWith('.md') || name.endsWith('.mdx') || name.endsWith('.txt')) return { Icon: FileText, color: '#787774' };
+  if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.gif') || name.endsWith('.svg') || name.endsWith('.webp') || name.endsWith('.ico')) return { Icon: FileImage, color: '#787774' };
+  if (name.endsWith('.yml') || name.endsWith('.yaml') || name.endsWith('.toml') || name.endsWith('.ini') || name.includes('lock')) return { Icon: Settings, color: '#787774' };
+  if (name.endsWith('.sh') || name.endsWith('.bash') || name.endsWith('.zsh') || name.endsWith('.py')) return { Icon: Terminal, color: '#787774' };
+  return { Icon: File, color: '#787774' };
 }
 
 function formatBytes(bytes?: number): string {
@@ -64,7 +64,6 @@ function formatBytes(bytes?: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** New-side (RIGHT) line numbers present in a unified diff patch. */
 function diffNewLines(patch?: string): Set<number> {
   const set = new Set<number>();
   if (!patch) return set;
@@ -252,8 +251,6 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
     }
   }, [params, viewBranch, repo.defaultBranch, showToast]);
 
-  // --- PR / CODE REVIEW flow (mirrors the development workspace) ---
-
   const loadPrs = useCallback(async () => {
     try {
       const res = await fetch('/api/github/pull-requests', {
@@ -433,7 +430,6 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
 
   useEffect(() => {
     loadBranches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repo.id]);
 
   useEffect(() => {
@@ -450,7 +446,6 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
     setPrDetail(null);
     setPendingComments([]);
     setCommentable(new Set());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewBranch, ready]);
 
   useEffect(() => {
@@ -459,7 +454,6 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
 
   useEffect(() => {
     if (prNumber) loadPr();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prNumber, selectedFile]);
 
   const filteredTree = useMemo(() => {
@@ -495,14 +489,14 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
 
   const renderTree = (nodes: TreeNode[] | null, depth = 0, guides: boolean[] = []) => {
     if (!nodes || nodes.length === 0) {
-      return <p className="px-3 py-3 text-xs text-muted-foreground">{treeLoading ? 'Loading files...' : 'No files'}</p>;
+      return <p className="px-3 py-3 text-[12px] text-[#787774]">{treeLoading ? 'Loading files…' : 'No files'}</p>;
     }
     return nodes.map((node, i) => {
       const isLast = i === nodes.length - 1;
       const isDir = node.type === 'dir';
       const isOpen = isDir && expanded.has(node.path);
       const isActive = !isDir && selectedFile === node.path;
-      const { Icon, color } = isDir ? { Icon: isOpen ? FolderOpen : Folder, color: '#fbbf24' } : fileMeta(node);
+      const { Icon, color } = isDir ? { Icon: isOpen ? FolderOpen : Folder, color: '#787774' } : fileMeta(node);
 
       return (
         <React.Fragment key={node.path}>
@@ -511,11 +505,11 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
             tabIndex={0}
             onClick={() => (isDir ? toggleDir(node.path) : (setSelectedFile(node.path), setTab('code')))}
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); isDir ? toggleDir(node.path) : (setSelectedFile(node.path), setTab('code')); } }}
-            className={`group relative flex items-center h-[26px] cursor-pointer select-none transition-colors ${
-              isActive ? 'bg-[rgba(124,58,237,0.12)]' : 'hover:bg-[rgba(255,255,255,0.04)]'
+            className={`group relative flex items-center h-[26px] cursor-pointer select-none transition-colors duration-150 ${
+              isActive ? 'bg-[#E9E9E7]' : 'hover:bg-[#F7F7F5]'
             }`}
           >
-            {isActive && <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#7C3AED]" />}
+            {isActive && <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#2383E2]" />}
             {guides.map((gd, k) => {
               const isCorner = k === guides.length - 1;
               const drawVertical = isCorner ? (gd || !isLast) : gd;
@@ -526,22 +520,22 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                   style={{ width: GUIDE_W }}
                 >
                   {drawVertical && (
-                    <span className="absolute left-0 top-0 bottom-0 w-px bg-[rgba(148,163,184,0.18)]" />
+                    <span className="absolute left-0 top-0 bottom-0 w-px bg-[#E9E9E7]" />
                   )}
                   {isCorner && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-[rgba(148,163,184,0.25)]" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-[#E9E9E7]" />
                   )}
                 </span>
               );
             })}
             <span className="flex items-center gap-1.5 mr-2 min-w-0">
               {isDir ? (
-                <ChevronRight className={`w-3.5 h-3.5 shrink-0 text-muted-foreground transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} />
+                <ChevronRight className={`w-3.5 h-3.5 shrink-0 text-[#787774] transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} />
               ) : (
                 <span className="w-3.5 shrink-0" />
               )}
               <Icon className="w-4 h-4 shrink-0" style={{ color }} />
-              <span className={`truncate text-[13px] leading-none ${isActive ? 'text-[#7C3AED] font-medium' : 'text-[#CBD5E1] group-hover:text-foreground'}`}>
+              <span className={`truncate text-[13px] leading-none ${isActive ? 'text-[#2383E2] font-medium' : 'text-[#37352F] group-hover:text-[#37352F]'}`}>
                 {node.name}
               </span>
             </span>
@@ -562,18 +556,18 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
   const commentableLine = (n: number) => reviewOpen && canReview && commentable.has(n);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-[900px] mx-auto" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="p-1.5 text-muted-foreground hover:text-foreground">
+        <button onClick={onBack} className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] cursor-pointer transition-colors duration-150">
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <h3 className="font-medium text-foreground">{repo.owner}/{repo.name}</h3>
+        <h3 className="text-[14px] font-semibold text-[#37352F] tracking-[-0.01em]">{repo.owner}/{repo.name}</h3>
         <div className="flex items-center gap-1.5">
-          <GitBranch className="w-4 h-4 text-[#7C3AED]" />
+          <GitBranch className="w-3.5 h-3.5 text-[#787774]" />
           <select
             value={viewBranch}
             onChange={e => setViewBranch(e.target.value)}
-            className="bg-[#0F172A] border border-[rgba(124,58,237,0.2)] text-[#7C3AED] text-xs px-2 py-1 rounded outline-none"
+            className="bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[12px] px-2 py-1 outline-none focus:border-[#2383E2] cursor-pointer"
           >
             <option value={viewBranch}>{viewBranch}</option>
             {branchList.filter(b => b !== viewBranch).map(b => (
@@ -581,24 +575,23 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
             ))}
           </select>
         </div>
-        <a href={repo.url || `https://github.com/${repo.owner}/${repo.name}`} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-[#7C3AED] ml-auto">
+        <a href={repo.url || `https://github.com/${repo.owner}/${repo.name}`} target="_blank" rel="noreferrer" className="text-[#787774] hover:text-[#2383E2] ml-auto p-1 rounded-[6px] hover:bg-[#F7F7F5] cursor-pointer transition-colors duration-150">
           <ExternalLink className="w-4 h-4" />
         </a>
       </div>
 
-      {/* PR review bar */}
       {(canReview || canMerge) && (
-        <div className="border border-[rgba(124,58,237,0.1)] rounded-lg bg-[#0F172A] p-3 space-y-2">
+        <div className="border border-[#E9E9E7] rounded-[8px] bg-white p-3 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 text-[#8b5cf6]">
+            <div className="flex items-center gap-1.5 text-[#787774]">
               <GitPullRequest className="w-4 h-4" />
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Code Review</span>
+              <span className="text-[12px] font-medium uppercase tracking-wider">Code review</span>
             </div>
             {prs.length > 0 ? (
               <select
                 value={prNumber || ''}
                 onChange={e => { setPrNumber(e.target.value ? Number(e.target.value) : null); setPrDetail(null); setPendingComments([]); }}
-                className="flex-1 min-w-[220px] bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-xs px-2 py-1.5 rounded outline-none"
+                className="flex-1 min-w-[220px] bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[12px] px-2 py-1.5 outline-none focus:border-[#2383E2] cursor-pointer"
               >
                 <option value="">Select pull request…</option>
                 {prs.map((p: any) => (
@@ -606,26 +599,26 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                 ))}
               </select>
             ) : (
-              <span className="text-xs text-muted-foreground">No open PRs. Open one to review code inline and merge from here.</span>
+              <span className="text-[12px] text-[#787774]">No open PRs. Open one to review and merge.</span>
             )}
             {prNumber && prDetail && (
               <div className="flex items-center gap-2">
-                <span className={`px-1.5 py-0.5 text-[10px] rounded ${
-                  prDetail.state === 'open' ? 'bg-[rgba(124,58,237,0.15)] text-[#7C3AED]'
-                  : prDetail.state === 'merged' ? 'bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]'
-                  : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+                <span className={`px-1.5 py-0.5 text-[11px] font-medium rounded-[6px] border ${
+                  prDetail.state === 'open' ? 'bg-[#F7F7F5] border-[#E9E9E7] text-[#0F7B6C]'
+                  : prDetail.state === 'merged' ? 'bg-[#F7F7F5] border-[#E9E9E7] text-[#2383E2]'
+                  : 'bg-[#F7F7F5] border-[#E9E9E7] text-[#EB5757]'
                 }`}>
                   {prDetail.state}
                 </span>
-                <span className={`px-1.5 py-0.5 text-[10px] rounded ${
-                  prDetail.reviewState === 'approved' ? 'bg-[rgba(124,58,237,0.15)] text-[#A78BFA]'
-                  : prDetail.reviewState === 'changes_requested' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
-                  : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+                <span className={`px-1.5 py-0.5 text-[11px] font-medium rounded-[6px] border ${
+                  prDetail.reviewState === 'approved' ? 'bg-[#F7F7F5] border-[#E9E9E7] text-[#0F7B6C]'
+                  : prDetail.reviewState === 'changes_requested' ? 'bg-[#F7F7F5] border-[#E9E9E7] text-[#EB5757]'
+                  : 'bg-[#F7F7F5] border-[#E9E9E7] text-[#787774]'
                 }`}>
                   {prDetail.reviewState || 'pending'}
                 </span>
                 {prDetail.url && (
-                  <a href={prDetail.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80 text-xs flex items-center gap-1">
+                  <a href={prDetail.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:underline text-[12px] flex items-center gap-1 cursor-pointer">
                     <ExternalLink className="w-3 h-3" />
                     View on GitHub
                   </a>
@@ -635,7 +628,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
             <button
               onClick={openPr}
               disabled={!viewBranch || busy === 'openpr'}
-              className="ml-auto flex items-center gap-1 px-2.5 py-1.5 text-xs bg-[rgba(124,58,237,0.12)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded cursor-pointer disabled:opacity-50"
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium bg-[#2383E2] text-white rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               <GitPullRequest className="w-3.5 h-3.5" />
               {busy === 'openpr' ? 'Opening…' : 'Open PR'}
@@ -643,29 +636,29 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
           </div>
 
           {reviewOpen && (canReview || canMerge) && (
-            <div className="pt-2 border-t border-[rgba(124,58,237,0.1)] space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="pt-3 border-t border-[#E9E9E7] space-y-3">
+              <div className="flex items-center gap-2 text-[12px] text-[#787774]">
                 {pendingComments.length > 0 ? (
-                  <span className="text-[#7C3AED]">
+                  <span className="text-[#2383E2] font-medium">
                     {pendingComments.length} inline comment{pendingComments.length === 1 ? '' : 's'} ready — submit with a review below
                   </span>
                 ) : (
                   <span>Click a changed line in the viewer to add an inline comment.</span>
                 )}
-                {prDetail.headSha && <span className="ml-auto font-mono text-muted-foreground">{prDetail.headSha.slice(0, 7)}</span>}
+                {prDetail.headSha && <span className="ml-auto font-mono text-[#9B9A97] text-[11px]">{prDetail.headSha.slice(0, 7)}</span>}
               </div>
               <textarea
                 value={reviewSummary}
                 onChange={e => setReviewSummary(e.target.value)}
                 placeholder="Review summary (optional)…"
                 rows={2}
-                className="w-full px-3 py-2 bg-[#020617] border border-[rgba(124,58,237,0.2)] text-xs text-foreground rounded resize-none outline-none placeholder:text-[#475569]"
+                className="w-full px-2.5 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[12px] text-[#37352F] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] resize-none transition-colors duration-150"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleReview('COMMENT')}
                   disabled={busy === 'review'}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F172A] border border-[#94A3B8]/30 text-[#CBD5E1] text-sm font-medium hover:bg-white rounded cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] disabled:opacity-50 cursor-pointer transition-colors duration-150"
                 >
                   <MessageSquare className="w-4 h-4" />
                   {busy === 'review' ? 'Submitting…' : 'Comment'}
@@ -674,27 +667,27 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                   <button
                     onClick={() => handleReview('APPROVE')}
                     disabled={busy === 'review'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#A78BFA] text-[#020617] text-sm font-medium hover:bg-[#059669] rounded cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Approve Review
+                    Approve
                   </button>
                 )}
                 {canReview && (
                   <button
                     onClick={() => handleReview('REQUEST_CHANGES')}
                     disabled={busy === 'review'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ef4444] text-white text-sm font-medium hover:bg-[#dc2626] rounded cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E9E9E7] text-[#EB5757] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] disabled:opacity-50 cursor-pointer transition-colors duration-150"
                   >
                     <XCircle className="w-4 h-4" />
-                    Request Changes
+                    Request changes
                   </button>
                 )}
                 {canMerge && (
                   <button
                     onClick={handleMerge}
                     disabled={busy === 'merge' || prDetail.state === 'merged'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#8b5cf6] text-white text-sm font-medium hover:bg-[#7c3aed] rounded cursor-pointer disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#37352F] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#2a2926] disabled:opacity-50 cursor-pointer transition-colors duration-150"
                     title={prDetail.reviewState === 'approved' ? 'Merge this PR' : `Review not yet approved (${prDetail.reviewState}) — merge anyway?`}
                   >
                     <GitPullRequest className="w-4 h-4" />
@@ -707,12 +700,12 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
         </div>
       )}
 
-      <div className="flex gap-1">
+      <div className="flex gap-6 border-b border-[#E9E9E7]">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded cursor-pointer transition-colors ${tab === t.id ? 'bg-[rgba(124,58,237,0.12)] text-[#7C3AED]' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`flex items-center gap-1.5 px-1 py-2 text-[14px] border-b-2 -mb-px cursor-pointer transition-colors duration-150 ${tab === t.id ? 'border-[#2383E2] text-[#37352F] font-medium' : 'border-transparent text-[#787774] hover:text-[#37352F]'}`}
           >
             <t.icon className="w-4 h-4" />
             {t.label}
@@ -720,83 +713,80 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
         ))}
         <button
           onClick={() => { loadTree(); loadCommits(); loadDiff(); loadPrs(); }}
-          className="flex items-center gap-1 px-2 py-1.5 text-sm text-muted-foreground hover:text-[#7C3AED] ml-auto cursor-pointer"
+          className="flex items-center gap-1 px-2 py-2 text-[14px] text-[#787774] hover:text-[#37352F] ml-auto cursor-pointer transition-colors duration-150"
           title="Refresh"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* CODE TAB */}
       {tab === 'code' && (
-        <div className="grid grid-cols-[300px_1fr] border border-[rgba(124,58,237,0.1)] rounded-lg overflow-hidden bg-[#0F172A] h-[540px]">
-          {/* Sidebar: file tree */}
-          <div className="border-r border-[rgba(124,58,237,0.1)] flex flex-col min-h-0 overflow-hidden">
-            <div className="px-2.5 pt-2 pb-1.5 space-y-1.5 border-b border-[rgba(124,58,237,0.1)]">
+        <div className="grid grid-cols-[300px_1fr] border border-[#E9E9E7] rounded-[8px] overflow-hidden bg-white h-[540px]">
+          <div className="bg-[#FBFBFA] border-r border-[#E9E9E7] flex flex-col min-h-0 overflow-hidden">
+            <div className="px-2.5 pt-2.5 pb-2 space-y-2 border-b border-[#E9E9E7] bg-white">
               <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Explorer</span>
-                <span className="text-[10px] text-muted-foreground">{fileCount} files · {dirCount} dirs</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#787774]">Explorer</span>
+                <span className="text-[11px] text-[#9B9A97]">{fileCount} files · {dirCount} dirs</span>
               </div>
-              <div className="flex items-center gap-1.5 px-2 py-1.5 bg-[#020617] border border-[rgba(124,58,237,0.15)] rounded">
-                <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white border border-[#E0E0DE] rounded-[6px] focus-within:border-[#2383E2] focus-within:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150">
+                <Search className="w-3.5 h-3.5 text-[#9B9A97] shrink-0" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search files..."
-                  className="flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-[#475569]"
+                  placeholder="Search files…"
+                  className="flex-1 bg-transparent text-[12px] text-[#37352F] outline-none placeholder:text-[#9B9A97]"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} className="text-muted-foreground hover:text-foreground cursor-pointer" title="Clear search">
+                  <button onClick={() => setSearch('')} className="text-[#787774] hover:text-[#37352F] cursor-pointer" title="Clear search">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-1.5 overscroll-contain [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#334155] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#475569]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#334155 transparent' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-1.5 overscroll-contain [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E9E9E7] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#E0E0DE]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#E9E9E7 transparent' }}>
               {treeLoading && !tree ? (
-                <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#7C3AED]" />
-                  Fetching repo tree...
+                <div className="flex items-center gap-2 p-3 text-[12px] text-[#787774]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+                  Fetching repo tree…
                 </div>
               ) : filteredTree === null ? (
-                <p className="text-xs text-muted-foreground p-3">Loading...</p>
+                <p className="text-[12px] text-[#787774] p-3">Loading…</p>
               ) : filteredTree.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-40 gap-2 text-center px-4">
-                  <Search className="w-8 h-8 text-[#334155]" />
-                  <p className="text-xs text-muted-foreground">No files match "{search}"</p>
+                  <Search className="w-8 h-8 text-[#E9E9E7]" />
+                  <p className="text-[12px] text-[#787774]">No files match "{search}"</p>
                 </div>
               ) : (
                 renderTree(filteredTree)
               )}
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 border-t border-[rgba(124,58,237,0.1)] text-[10px] text-muted-foreground">
-              <GitBranch className="w-3 h-3 text-[#7C3AED]" />
+            <div className="flex items-center gap-2 px-3 py-2 border-t border-[#E9E9E7] text-[11px] text-[#787774] bg-white">
+              <GitBranch className="w-3 h-3 text-[#787774]" />
               <span className="font-mono truncate">{viewBranch}</span>
             </div>
           </div>
 
-          {/* Viewer */}
-          <div className="bg-[#020617] overflow-auto relative">
+          <div className="bg-white overflow-auto relative">
             {selectedFile ? (
               fileLoading ? (
-                <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#7C3AED]" />
-                  Loading {selectedFile}...
+                <div className="flex items-center gap-2 p-4 text-[14px] text-[#787774]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+                  Loading {selectedFile}…
                 </div>
               ) : (
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[rgba(124,58,237,0.1)] text-xs text-muted-foreground sticky top-0 bg-[#0F172A] z-10">
-                    <span className="font-mono truncate">{selectedFile}</span>
-                    <span className="text-[10px] text-[#475569] shrink-0">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E9E9E7] text-[12px] text-[#787774] sticky top-0 bg-white z-10">
+                    <span className="font-mono truncate text-[#37352F]">{selectedFile}</span>
+                    <span className="text-[11px] text-[#9B9A97] shrink-0">
                       {selectedFile.split('.').pop()?.toUpperCase()}{fileSize ? ` · ${formatBytes(fileSize)}` : ''}
                     </span>
                     {reviewOpen && canReview && (
-                      <span className="flex items-center gap-1 text-[#7C3AED] shrink-0">
+                      <span className="flex items-center gap-1 text-[#2383E2] shrink-0 text-[11px]">
                         <MessageSquarePlus className="w-3 h-3" />
                         Click a changed line to comment
                       </span>
                     )}
-                    <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${viewBranch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#7C3AED] hover:opacity-80 ml-auto shrink-0">
+                    <a href={`https://github.com/${repo.owner}/${repo.name}/blob/${viewBranch}/${selectedFile}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#2383E2] hover:underline ml-auto shrink-0 text-[12px] cursor-pointer">
                       <ExternalLink className="w-3 h-3" />
                       View on GitHub
                     </a>
@@ -810,71 +800,71 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                       const clickable = commentableLine(num);
                       const hasComments = existing.length > 0 || pending.length > 0;
                       return (
-                        <div key={num} className={hasComments ? 'bg-[rgba(250,204,21,0.04)]' : ''}>
+                        <div key={num} className={hasComments ? 'bg-[#F7F7F5]' : ''}>
                           <div
                             onClick={() => clickable && startComment(num)}
-                            className={`group flex items-start hover:bg-[rgba(255,255,255,0.03)] ${clickable ? 'cursor-pointer' : ''}`}
+                            className={`group flex items-start hover:bg-[#F7F7F5] ${clickable ? 'cursor-pointer' : ''}`}
                           >
-                            <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#facc15]' : 'text-[#334155]'} group-hover:text-muted-foreground`}>
-                              {hasComments && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#facc15] mr-2 align-middle" />}
+                            <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-[12px] leading-5 font-mono ${hasComments ? 'text-[#2383E2]' : 'text-[#9B9A97]'} group-hover:text-[#787774]`}>
+                              {hasComments && <span className="inline-block w-1 h-1 rounded-full bg-[#2383E2] mr-1.5 align-middle" />}
                               {num}
                             </span>
-                            <span className="flex-1 whitespace-pre text-[12px] leading-5 py-px font-mono text-[#CBD5E1]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+                            <span className="flex-1 whitespace-pre text-[13px] leading-5 py-px font-mono text-[#37352F]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
                               {line || '\u00A0'}
                             </span>
                             {clickable && !composing && (
-                              <span className="opacity-0 group-hover:opacity-100 px-2 pt-px text-[#7C3AED]">
+                              <span className="opacity-0 group-hover:opacity-100 px-2 pt-px text-[#2383E2]">
                                 <MessageSquarePlus className="w-3.5 h-3.5" />
                               </span>
                             )}
                           </div>
 
                           {existing.map((c: any) => (
-                            <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(250,204,21,0.15)] rounded p-2 text-xs">
-                              <div className="flex items-center gap-2 text-[#facc15]">
-                                <MessageSquare className="w-3 h-3" />
+                            <div key={c.id} className="ml-10 mr-4 mb-1 bg-white border border-[#E9E9E7] rounded-[6px] p-2 text-[12px]">
+                              <div className="flex items-center gap-2 text-[#37352F]">
+                                <MessageSquare className="w-3 h-3 text-[#787774]" />
                                 <span className="font-medium">{c.author}</span>
-                                <span className="text-muted-foreground">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
+                                <span className="text-[#787774] text-[11px]">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
                               </div>
-                              <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                              <p className="text-[#37352F] mt-1 whitespace-pre-wrap leading-[1.5]">{c.body}</p>
                             </div>
                           ))}
 
                           {pending.map(c => (
-                            <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(124,58,237,0.25)] rounded p-2 text-xs">
-                              <div className="flex items-center gap-2 text-[#7C3AED]">
-                                <MessageSquare className="w-3 h-3" />
+                            <div key={c.id} className="ml-10 mr-4 mb-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] p-2 text-[12px]">
+                              <div className="flex items-center gap-2 text-[#37352F]">
+                                <MessageSquare className="w-3 h-3 text-[#2383E2]" />
                                 <span className="font-medium">You</span>
-                                <span className="text-muted-foreground">pending · line {c.line}</span>
-                                <button onClick={() => removeComment(c.id)} className="ml-auto text-muted-foreground hover:text-[#ef4444] cursor-pointer">
+                                <span className="text-[#787774] text-[11px]">pending · line {c.line}</span>
+                                <button onClick={() => removeComment(c.id)} className="ml-auto text-[#787774] hover:text-[#EB5757] cursor-pointer">
                                   <Trash2 className="w-3 h-3" />
                                 </button>
                               </div>
-                              <p className="text-[#CBD5E1] mt-1 whitespace-pre-wrap">{c.body}</p>
+                              <p className="text-[#37352F] mt-1 whitespace-pre-wrap leading-[1.5]">{c.body}</p>
                             </div>
                           ))}
 
                           {composing && (
-                            <div className="ml-10 mr-4 mb-1 bg-[#0F172A] border border-[rgba(124,58,237,0.4)] rounded p-2">
+                            <div className="ml-10 mr-4 mb-1 bg-white border border-[#E0E0DE] rounded-[6px] p-2 focus-within:border-[#2383E2] focus-within:shadow-[0_0_0_1px_#2383E2]">
                               <textarea
                                 autoFocus
                                 value={commentText}
                                 onChange={e => setCommentText(e.target.value)}
                                 rows={2}
                                 placeholder={`Comment on line ${num}…`}
-                                className="w-full bg-transparent text-xs text-foreground outline-none resize-none placeholder:text-[#475569]"
+                                className="w-full bg-transparent text-[12px] text-[#37352F] outline-none resize-none placeholder:text-[#9B9A97]"
                               />
-                              <div className="flex items-center justify-end gap-2 mt-1">
+                              <div className="flex items-center justify-end gap-2 mt-2">
                                 <button
                                   onClick={() => setCommentComposer(null)}
-                                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                                  className="text-[12px] text-[#787774] hover:text-[#37352F] cursor-pointer px-2 py-1 rounded-[6px] hover:bg-[#F7F7F5]"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   onClick={() => saveComment(num)}
                                   disabled={!commentText.trim()}
-                                  className="flex items-center gap-1 px-2 py-1 text-xs bg-[#7C3AED] text-[#020617] font-medium rounded cursor-pointer disabled:opacity-40"
+                                  className="flex items-center gap-1 px-3 py-1 text-[12px] bg-[#2383E2] text-white font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-40 cursor-pointer transition-colors duration-150"
                                 >
                                   <Send className="w-3 h-3" />
                                   Add to review
@@ -889,13 +879,13 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
                 </div>
               )
             ) : (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-[#475569]">
-                <div className="w-14 h-14 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded-lg flex items-center justify-center">
-                  <FileSearch className="w-7 h-7 text-[#7C3AED]" />
-                </div>
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-[#9B9A97] p-8">
+                <span className="w-14 h-14 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] flex items-center justify-center">
+                  <FileSearch className="w-7 h-7 text-[#787774]" />
+                </span>
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground font-medium">Select a file</p>
-                  <p className="text-xs text-muted-foreground mt-1">Pick a file from the explorer to view its source</p>
+                  <p className="text-[14px] text-[#37352F] font-medium">Select a file</p>
+                  <p className="text-[12px] text-[#787774] mt-1">Pick a file from the explorer to view its source</p>
                 </div>
               </div>
             )}
@@ -903,37 +893,38 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
         </div>
       )}
 
-      {/* COMMITS TAB */}
       {tab === 'commits' && (
-        <div className="h-[540px] overflow-auto border border-[rgba(124,58,237,0.1)] rounded-lg bg-[#020617] p-2">
+        <div className="h-[540px] overflow-auto border border-[#E9E9E7] rounded-[8px] bg-white p-2">
           {commitsLoading ? (
-            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin text-[#7C3AED]" />
-              Loading commits...
+            <div className="flex items-center gap-2 p-4 text-[14px] text-[#787774]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+              Loading commits…
             </div>
           ) : commits.length === 0 ? (
             <div className="text-center py-10">
-              <GitCommit className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No commits on this branch yet.</p>
+              <span className="w-12 h-12 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] flex items-center justify-center mx-auto mb-3">
+                <GitCommit className="w-6 h-6 text-[#9B9A97]" />
+              </span>
+              <p className="text-[14px] text-[#787774]">No commits on this branch yet.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {commits.map((c: any) => (
-                <div key={c.sha} className="flex gap-3 p-3 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded-lg">
-                  <div className="w-8 h-8 rounded-full bg-[rgba(124,58,237,0.1)] flex items-center justify-center shrink-0">
-                    <GitCommit className="w-4 h-4 text-[#7C3AED]" />
-                  </div>
+                <div key={c.sha} className="flex gap-3 p-3 bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-colors duration-150">
+                  <span className="w-8 h-8 rounded-[6px] bg-[#F7F7F5] border border-[#E9E9E7] flex items-center justify-center shrink-0">
+                    <GitCommit className="w-4 h-4 text-[#787774]" />
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground break-words">{c.message}</p>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <p className="text-[14px] text-[#37352F] break-words leading-[1.5]">{c.message}</p>
+                    <div className="flex items-center gap-2 mt-1 text-[12px] text-[#787774]">
                       <span>{c.author}</span>
                       <span>·</span>
-                      <span className="font-mono">{c.sha?.slice(0, 7)}</span>
+                      <span className="font-mono text-[11px]">{c.sha?.slice(0, 7)}</span>
                       {c.date && <span>· {new Date(c.date).toLocaleString()}</span>}
                     </div>
                   </div>
                   {c.url && (
-                    <a href={c.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80 shrink-0">
+                    <a href={c.url} target="_blank" rel="noreferrer" className="text-[#787774] hover:text-[#2383E2] shrink-0 p-1 rounded-[6px] hover:bg-white border border-transparent hover:border-[#E9E9E7] cursor-pointer transition-colors duration-150">
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
@@ -944,48 +935,49 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
         </div>
       )}
 
-      {/* CHANGES TAB */}
       {tab === 'changes' && (
-        <div className="h-[540px] overflow-auto border border-[rgba(124,58,237,0.1)] rounded-lg bg-[#020617]">
+        <div className="h-[540px] overflow-auto border border-[#E9E9E7] rounded-[8px] bg-white">
           {diffLoading ? (
-            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin text-[#7C3AED]" />
-              Loading diff...
+            <div className="flex items-center gap-2 p-4 text-[14px] text-[#787774]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+              Loading diff…
             </div>
           ) : diff.length === 0 ? (
             <div className="text-center py-10">
-              <GitCompareArrows className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
+              <span className="w-12 h-12 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] flex items-center justify-center mx-auto mb-3">
+                <GitCompareArrows className="w-6 h-6 text-[#9B9A97]" />
+              </span>
+              <p className="text-[14px] text-[#787774]">
                 {diffMeta ? `No changes between ${diffMeta.base || 'base'} and head.` : 'No diff available yet.'}
               </p>
             </div>
           ) : (
-            <div className="space-y-4 p-2">
+            <div className="space-y-3 p-2">
               {diff.map((f: any) => (
-                <div key={f.filename} className="border border-[rgba(124,58,237,0.1)] rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-[#0F172A] text-xs">
-                    <span className="font-mono text-foreground">{f.filename}</span>
-                    <span className="flex items-center gap-3">
-                      <span className="text-foreground">+{f.additions}</span>
-                      <span className="text-[#f87171]">-{f.deletions}</span>
-                      <span className={`px-1.5 py-0.5 rounded ${
-                        f.status === 'added' ? 'bg-[rgba(124,58,237,0.15)] text-[#7C3AED]'
-                        : f.status === 'removed' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
-                        : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+                <div key={f.filename} className="border border-[#E9E9E7] rounded-[8px] overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2 bg-[#FBFBFA] border-b border-[#E9E9E7] text-[12px]">
+                    <span className="font-mono text-[#37352F] truncate">{f.filename}</span>
+                    <span className="flex items-center gap-2 shrink-0 ml-3">
+                      <span className="text-[#0F7B6C] font-medium">+{f.additions}</span>
+                      <span className="text-[#EB5757]">-{f.deletions}</span>
+                      <span className={`px-1.5 py-0.5 rounded-[6px] text-[11px] font-medium border ${
+                        f.status === 'added' ? 'bg-white border-[#E9E9E7] text-[#0F7B6C]'
+                        : f.status === 'removed' ? 'bg-white border-[#E9E9E7] text-[#EB5757]'
+                        : 'bg-white border-[#E9E9E7] text-[#787774]'
                       }`}>{f.status}</span>
                     </span>
                   </div>
-                  <div className="max-h-[320px] overflow-auto">
+                  <div className="max-h-[320px] overflow-auto bg-white">
                     <div className="font-mono text-[12px] leading-5">
                       {(f.patch || '').split('\n').map((line: string, i: number) => {
                         let bg = '';
-                        if (line.startsWith('+')) bg = 'bg-[rgba(124,58,237,0.08)]';
-                        else if (line.startsWith('-')) bg = 'bg-[rgba(255,59,92,0.08)]';
-                        else if (line.startsWith('@@')) bg = 'bg-[rgba(139,92,246,0.08)]';
+                        if (line.startsWith('+')) bg = 'bg-[#F7F7F5]';
+                        else if (line.startsWith('-')) bg = 'bg-[#FBFBFA]';
+                        else if (line.startsWith('@@')) bg = 'bg-[#F7F7F5]';
                         return (
                           <div key={i} className={`${bg} px-3 whitespace-pre`}>
-                            <span className="select-none text-[#334155]">{line[0] === '+' ? '+' : line[0] === '-' ? '-' : ' '}</span>
-                            {line.slice(1) || '\u00A0'}
+                            <span className="select-none text-[#9B9A97]">{line[0] === '+' ? '+' : line[0] === '-' ? '-' : ' '}</span>
+                            <span className={line.startsWith('+') ? 'text-[#37352F]' : line.startsWith('-') ? 'text-[#EB5757]' : line.startsWith('@@') ? 'text-[#2383E2]' : 'text-[#787774]'}>{line.slice(1) || '\u00A0'}</span>
                           </div>
                         );
                       })}

@@ -161,113 +161,76 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   };
 
   const priorityColors: Record<string, string> = {
-    low: `bg-[rgba(148,163,184,0.1)] text-[${PRIORITY_COLORS.low}] border-[rgba(148,163,184,0.2)]`,
-    medium: `bg-[rgba(124,58,237,0.1)] text-[${PRIORITY_COLORS.medium}] border-[rgba(124,58,237,0.2)]`,
-    high: `bg-[rgba(245,158,11,0.1)] text-[${PRIORITY_COLORS.high}] border-[rgba(245,158,11,0.2)]`,
-    urgent: `bg-[rgba(124,58,237,0.1)] text-[${PRIORITY_COLORS.urgent}] border-[rgba(255,59,92,0.2)]`
+    low: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    medium: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    high: 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]',
+    urgent: 'bg-[#FBE9E9] text-[#EB5757] border border-[#FBE9E9]'
   };
 
   const statusColors: Record<string, string> = {
-    not_started: `bg-[rgba(148,163,184,0.1)] text-[${TASK_STATUS_COLORS.not_started}]`,
-    in_progress: `bg-[rgba(124,58,237,0.1)] text-[${TASK_STATUS_COLORS.in_progress}]`,
-    blocked: `bg-[rgba(124,58,237,0.1)] text-[${TASK_STATUS_COLORS.blocked}]`,
-    completed: `bg-[rgba(59,130,246,0.1)] text-[${TASK_STATUS_COLORS.completed}]`,
-    approved: `bg-[rgba(124,58,237,0.1)] text-[${TASK_STATUS_COLORS.approved}]`
+    not_started: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    in_progress: 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]',
+    blocked: 'bg-[#FBE9E9] text-[#EB5757] border border-[#FBE9E9]',
+    completed: 'bg-[#F7F7F5] text-[#0F7B6C] border border-[#E9E9E7]',
+    approved: 'bg-[#EDF7ED] text-[#0F7B6C] border border-[#E9E9E7]'
   };
 
-  const subtaskStatusColors = {
-    pending: 'bg-[rgba(107,107,128,0.1)] text-muted-foreground',
-    in_progress: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
-    completed: 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]'
+  const subtaskStatusColors: Record<string, string> = {
+    pending: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    in_progress: 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]',
+    completed: 'bg-[#EDF7ED] text-[#0F7B6C] border border-[#E9E9E7]'
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] max-w-5xl w-full max-h-[90vh] flex flex-col">
-        <div className="flex items-start justify-between p-6 border-b border-[rgba(124,58,237,0.1)]">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-2xl font-bold text-foreground">{task.name}</h2>
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] flex items-center justify-center z-50 p-4" style={{ fontFamily: 'Inter, ui-sans-system, sans-serif' }}>
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] max-w-[900px] w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-start justify-between p-6 border-b border-[#E9E9E7]">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-1.5">
+              <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#37352F] truncate">{task.name}</h2>
               {task.priority === 'urgent' && (
-                <Star className="w-6 h-6 text-[#7C3AED] fill-[#7C3AED]" />
+                <Star className="w-4 h-4 text-[#EB5757] fill-[#EB5757] flex-shrink-0" />
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-[14px] text-[#787774]">
               {app?.name} → {goal?.name}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-              <button
-                onClick={handleSendEmail}
-                disabled={sendingEmail}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
-                  task.lastEmailSentAt
-                    ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)]'
-                    : 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA] hover:bg-[rgba(124,58,237,0.2)]'
-                } ${sendingEmail ? 'opacity-50 cursor-wait' : ''}`}
-              >
-                <Mail className="w-3.5 h-3.5" />
-                {sendingEmail ? 'Sending...' : task.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
-              </button>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+            <button
+              onClick={handleSendEmail}
+              disabled={sendingEmail}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[14px] font-medium rounded-[6px] border transition-colors duration-150 cursor-pointer ${
+                task.lastEmailSentAt
+                  ? 'bg-white border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5]'
+                  : 'bg-white border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]'
+              } ${sendingEmail ? 'opacity-50 cursor-wait' : ''}`}
+            >
+              <Mail className="w-3.5 h-3.5 text-[#787774]" />
+              {sendingEmail ? 'Sending...' : task.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
+            </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[rgba(124,58,237,0.05)] transition"
+              className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer"
             >
-              <X className="w-6 h-6 text-muted-foreground" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="border-b border-[rgba(124,58,237,0.1)]">
-          <div className="flex gap-1 px-6">
-            <TabButton
-              active={activeTab === 'details'}
-              onClick={() => setActiveTab('details')}
-              icon={FileText}
-              label="Details"
-            />
-            <TabButton
-              active={activeTab === 'subtasks'}
-              onClick={() => setActiveTab('subtasks')}
-              icon={CheckCircle}
-              label="Subtasks"
-              count={subtasks.length}
-            />
-            <TabButton
-              active={activeTab === 'comments'}
-              onClick={() => setActiveTab('comments')}
-              icon={MessageSquare}
-              label="Comments"
-              count={comments.length}
-            />
-            <TabButton
-              active={activeTab === 'activity'}
-              onClick={() => setActiveTab('activity')}
-              icon={Activity}
-              label="Activity"
-            />
-            <TabButton
-              active={activeTab === 'qa'}
-              onClick={() => setActiveTab('qa')}
-              icon={CheckCircle}
-              label="QA"
-            />
-            <TabButton
-              active={activeTab === 'deps'}
-              onClick={() => setActiveTab('deps')}
-              icon={Link2}
-              label="Deps"
-            />
-            <TabButton
-              active={activeTab === 'github'}
-              onClick={() => setActiveTab('github')}
-              icon={Github}
-              label={isDevelopmentWork(task.workType) ? 'Dev Workspace' : 'GitHub'}
-            />
+        <div className="border-b border-[#E9E9E7] px-6">
+          <div className="flex gap-6 overflow-x-auto">
+            <TabButton active={activeTab === 'details'} onClick={() => setActiveTab('details')} icon={FileText} label="Details" />
+            <TabButton active={activeTab === 'subtasks'} onClick={() => setActiveTab('subtasks')} icon={CheckCircle} label="Subtasks" count={subtasks.length} />
+            <TabButton active={activeTab === 'comments'} onClick={() => setActiveTab('comments')} icon={MessageSquare} label="Comments" count={comments.length} />
+            <TabButton active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} icon={Activity} label="Activity" />
+            <TabButton active={activeTab === 'qa'} onClick={() => setActiveTab('qa')} icon={CheckCircle} label="QA" />
+            <TabButton active={activeTab === 'deps'} onClick={() => setActiveTab('deps')} icon={Link2} label="Deps" />
+            <TabButton active={activeTab === 'github'} onClick={() => setActiveTab('github')} icon={Github} label={isDevelopmentWork(task.workType) ? 'Dev Workspace' : 'GitHub'} />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-white">
           {activeTab === 'details' && (
             <DetailsTab
               task={task}
@@ -372,20 +335,16 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-3 border-b-2 transition ${
+      className={`flex items-center gap-2 px-1 py-3 border-b-2 text-[14px] font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer -mb-px ${
         active
-          ? 'border-[#7C3AED] text-[#7C3AED] font-medium'
-          : 'border-transparent text-muted-foreground hover:text-foreground'
+          ? 'border-[#2383E2] text-[#37352F]'
+          : 'border-transparent text-[#787774] hover:text-[#37352F]'
       }`}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className={`w-4 h-4 ${active ? 'text-[#2383E2]' : 'text-[#787774]'}`} />
       <span>{label}</span>
       {count !== undefined && count > 0 && (
-        <span
-          className={`px-2 py-0.5 text-xs ${
-            active ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]' : 'bg-[rgba(107,107,128,0.1)] text-muted-foreground'
-          }`}
-        >
+        <span className={`px-1.5 py-0.5 text-[12px] rounded-[4px] border ${active ? 'bg-[#E9E9E7] text-[#37352F] border-[#E9E9E7]' : 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'}`}>
           {count}
         </span>
       )}
@@ -414,28 +373,28 @@ function DetailsTab({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Description</h3>
-        <p className="text-foreground leading-relaxed">{task.description}</p>
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-2">Description</h3>
+        <p className="text-[14px] text-[#37352F] leading-relaxed">{task.description}</p>
       </div>
 
       <TagBadges tagIds={task.tags} allTags={tags} size="sm" />
 
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <User className="w-4 h-4" />
+          <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+            <User className="w-4 h-4 text-[#787774]" />
             Assigned To
           </h3>
           {assignees && assignees.length > 0 && (
             <div className="space-y-2">
               {assignees.map((emp: any, idx: number) => (
-                <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-[rgba(124,58,237,0.1)]">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#7C3AED] to-[#8b5cf6] flex items-center justify-center text-[#020617] font-bold">
+                <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-[#E9E9E7] rounded-[8px]">
+                  <div className="w-8 h-8 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full flex items-center justify-center text-[#37352F] font-medium text-[14px] flex-shrink-0">
                     {emp.name.charAt(0)}
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{emp.name}</p>
-                    <p className="text-sm text-muted-foreground">{emp.email}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-[#37352F] text-[14px]">{emp.name}</p>
+                    <p className="text-[12px] text-[#787774] truncate">{emp.email}</p>
                   </div>
                 </div>
               ))}
@@ -444,43 +403,37 @@ function DetailsTab({
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Flag className="w-4 h-4" />
+          <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+            <Flag className="w-4 h-4 text-[#787774]" />
             Priority
           </h3>
-          <div
-            className={`inline-flex px-4 py-2 border-2 font-medium ${
-              priorityColors[task.priority]
-            }`}
-          >
+          <div className={`inline-flex px-3 py-1.5 text-[12px] font-medium rounded-[4px] ${priorityColors[task.priority]}`}>
             {task.priority.toUpperCase()}
           </div>
         </div>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Status</h3>
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-2">Status</h3>
         <select
           value={task.status}
           onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
           disabled={task.status === 'approved'}
-          className="w-full px-4 py-3 bg-white border border-[rgba(124,58,237,0.1)] text-foreground font-medium"
+          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <option value="not_started">Not Started</option>
           <option value="in_progress">In Progress</option>
           <option value="blocked">Blocked</option>
           <option value="pending_qa">Pending QA</option>
           <option value="completed">Completed</option>
-          <option value="approved" disabled>
-            Approved
-          </option>
+          <option value="approved" disabled>Approved</option>
         </select>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
+          <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#787774]" />
             Effort (hours)
           </h3>
           <div className="flex gap-2">
@@ -490,37 +443,37 @@ function DetailsTab({
               value={effortInput}
               onChange={e => setEffortInput(e.target.value)}
               placeholder="Estimated hours"
-              className="flex-1 px-4 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground w-24"
+              className="flex-1 px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
             />
             <button
               onClick={() => {
                 const v = parseFloat(effortInput);
                 if (!isNaN(v) && v >= 0) updateTask(task.id, { effortHours: v });
               }}
-              className="px-3 py-2 bg-[rgba(124,58,237,0.1)] text-[#7C3AED] text-sm hover:bg-[rgba(124,58,237,0.2)]"
+              className="px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
             >
               Save
             </button>
           </div>
           {task.effortHours != null && (
-            <p className="text-xs text-muted-foreground mt-1">Current estimate: {task.effortHours} h</p>
+            <p className="text-[12px] text-[#787774] mt-1.5">Current estimate: {task.effortHours} h</p>
           )}
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Star className="w-4 h-4" />
+          <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+            <Star className="w-4 h-4 text-[#787774]" />
             Followers
           </h3>
           <div className="flex flex-wrap gap-2 mb-2">
-            {(task.followers || []).map(fid => {
-              const emp = employees.find(e => e.id === fid);
+            {(task.followers || []).map((fid: string) => {
+              const emp = employees.find((e: any) => e.id === fid);
               return (
-                <span key={fid} className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-[rgba(124,58,237,0.1)] text-sm text-foreground">
+                <span key={fid} className="inline-flex items-center gap-1.5 px-2 py-1 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[4px] text-[14px] text-[#787774]">
                   {emp?.name || fid}
                   <button
-                    onClick={() => updateTask(task.id, { followers: (task.followers || []).filter(x => x !== fid) })}
-                    className="text-muted-foreground hover:text-[#ef4444]"
+                    onClick={() => updateTask(task.id, { followers: (task.followers || []).filter((x: string) => x !== fid) })}
+                    className="text-[#787774] hover:text-[#37352F] ml-1 cursor-pointer"
                   >
                     ×
                   </button>
@@ -529,7 +482,7 @@ function DetailsTab({
             })}
             <button
               onClick={() => setShowFollowerPicker(!showFollowerPicker)}
-              className="px-2 py-1 text-sm bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)]"
+              className="px-2 py-1 text-[14px] bg-white border border-[#E9E9E7] rounded-[6px] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F] transition-colors duration-150 cursor-pointer"
             >
               + Add
             </button>
@@ -542,10 +495,10 @@ function DetailsTab({
                 if (fid) updateTask(task.id, { followers: [...new Set([...(task.followers || []), fid])] });
                 setShowFollowerPicker(false);
               }}
-              className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+              className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
             >
               <option value="">Select employee...</option>
-              {employees.filter(e => !(task.followers || []).includes(e.id)).map(e => (
+              {employees.filter((e: any) => !(task.followers || []).includes(e.id)).map((e: any) => (
                 <option key={e.id} value={e.id}>{e.name}</option>
               ))}
             </select>
@@ -554,41 +507,36 @@ function DetailsTab({
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4" />
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-[#787774]" />
           Recurrence
         </h3>
         {task.recurrence ? (
-          <div className="flex items-center gap-3 bg-white border border-[rgba(124,58,237,0.1)] p-3">
-            <span className="text-sm text-foreground capitalize">
+          <div className="flex items-center gap-3 bg-white border border-[#E9E9E7] rounded-[8px] p-3">
+            <span className="text-[14px] text-[#37352F] capitalize">
               Every {task.recurrence.interval} {task.recurrence.frequency}{task.recurrence.interval > 1 ? 's' : ''}
             </span>
-            <span className="text-xs text-muted-foreground">
-              Next occurrence auto-created on completion
-            </span>
-            <button
-              onClick={() => updateTask(task.id, { recurrence: undefined })}
-              className="text-xs text-[#ef4444] hover:underline"
-            >
+            <span className="text-[12px] text-[#787774]">Next occurrence auto-created on completion</span>
+            <button onClick={() => updateTask(task.id, { recurrence: undefined })} className="text-[12px] text-[#EB5757] hover:underline cursor-pointer ml-auto">
               Remove
             </button>
           </div>
         ) : (
           <button
             onClick={() => setShowRecurrence(!showRecurrence)}
-            className="px-3 py-2 text-sm bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)]"
+            className="px-3 py-1.5 text-[14px] bg-white border border-[#E9E9E7] rounded-[6px] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F] transition-colors duration-150 cursor-pointer"
           >
             + Set Recurrence
           </button>
         )}
         {showRecurrence && (
-          <div className="mt-2 flex gap-2 items-end">
+          <div className="mt-3 flex gap-2 items-end">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Frequency</label>
+              <label className="block text-[12px] text-[#787774] mb-1">Frequency</label>
               <select
                 value={recFreq}
                 onChange={e => setRecFreq(e.target.value as any)}
-                className="px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
@@ -596,13 +544,13 @@ function DetailsTab({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Interval</label>
+              <label className="block text-[12px] text-[#787774] mb-1">Interval</label>
               <input
                 type="number"
                 min="1"
                 value={recInterval}
                 onChange={e => setRecInterval(e.target.value)}
-                className="px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground text-sm w-20"
+                className="px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] w-20"
               />
             </div>
             <button
@@ -611,7 +559,7 @@ function DetailsTab({
                 updateTask(task.id, { recurrence: { frequency: recFreq, interval: Math.max(1, i) } });
                 setShowRecurrence(false);
               }}
-              className="px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9]"
+              className="px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer"
             >
               Apply
             </button>
@@ -621,31 +569,31 @@ function DetailsTab({
 
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+          <h3 className="text-[14px] font-semibold text-[#37352F] mb-2 flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#787774]" />
             Created
           </h3>
-          <p className="text-foreground">{format(task.createdAt, 'MMMM d, yyyy')}</p>
-          <p className="text-sm text-muted-foreground">{format(task.createdAt, 'h:mm a')}</p>
+          <p className="text-[14px] text-[#37352F]">{format(task.createdAt, 'MMMM d, yyyy')}</p>
+          <p className="text-[12px] text-[#787774]">{format(task.createdAt, 'h:mm a')}</p>
         </div>
 
         {task.completedAt && (
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
+            <h3 className="text-[14px] font-semibold text-[#37352F] mb-2 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-[#787774]" />
               Completed
             </h3>
-            <p className="text-foreground">{format(task.completedAt, 'MMMM d, yyyy')}</p>
-            <p className="text-sm text-muted-foreground">{format(task.completedAt, 'h:mm a')}</p>
+            <p className="text-[14px] text-[#37352F]">{format(task.completedAt, 'MMMM d, yyyy')}</p>
+            <p className="text-[12px] text-[#787774]">{format(task.completedAt, 'h:mm a')}</p>
           </div>
         )}
       </div>
 
       {task.status === 'completed' && !task.approvedBy && canApprove && (
-        <div className="pt-4 border-t border-[rgba(124,58,237,0.1)]">
+        <div className="pt-4 border-t border-[#E9E9E7]">
           <button
             onClick={onApprove}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#A78BFA] text-[#020617] font-medium hover:bg-[#0d9668] transition"
+            className="w-full flex items-center justify-center gap-2 px-6 py-2.5 bg-[#2383E2] text-white font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer text-[14px]"
           >
             <CheckCircle className="w-5 h-5" />
             Approve Task
@@ -654,11 +602,10 @@ function DetailsTab({
       )}
 
       {task.approvedBy && approver && (
-        <div className="p-4 bg-[rgba(124,58,237,0.1)] border border-[rgba(124,58,237,0.2)]">
-          <p className="text-sm font-medium text-[#A78BFA] mb-1">✓ Task Approved</p>
-          <p className="text-sm text-[#A78BFA]">
-            Approved by {approver.name} on{' '}
-            {task.approvedAt && format(task.approvedAt, 'MMMM d, yyyy')}
+        <div className="p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px]">
+          <p className="text-[14px] font-medium text-[#0F7B6C] mb-1">✓ Task Approved</p>
+          <p className="text-[14px] text-[#787774]">
+            Approved by {approver.name} on {task.approvedAt && format(task.approvedAt, 'MMMM d, yyyy')}
           </p>
         </div>
       )}
@@ -694,12 +641,10 @@ function SubtasksTab({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">
-          Subtasks ({subtasks.length})
-        </h3>
+        <h3 className="text-[14px] font-semibold text-[#37352F]">Subtasks ({subtasks.length})</h3>
         <button
           onClick={() => setShowAddSubtask(!showAddSubtask)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] transition"
+          className="flex items-center gap-2 px-3 py-1.5 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Subtask
@@ -707,25 +652,25 @@ function SubtasksTab({
       </div>
 
       {showAddSubtask && (
-        <form onSubmit={handleAddSubtask} className="p-4 bg-white border border-[rgba(124,58,237,0.1)] space-y-3">
+        <form onSubmit={handleAddSubtask} className="p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] space-y-3">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Subtask Name</label>
+            <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Subtask Name</label>
             <input
               type="text"
               value={newSubtask.name}
               onChange={(e) => setNewSubtask({ ...newSubtask, name: e.target.value })}
-              className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+              className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
               placeholder="Enter subtask name"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Priority</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Priority</label>
               <select
                 value={newSubtask.priority}
                 onChange={(e) => setNewSubtask({ ...newSubtask, priority: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -734,7 +679,7 @@ function SubtasksTab({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Assign To</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Assign To</label>
               <div className="flex flex-wrap gap-1">
                 {employees.map((emp: any) => {
                   const selected = newSubtask.assignedTo.includes(emp.id);
@@ -743,10 +688,8 @@ function SubtasksTab({
                       key={emp.id}
                       type="button"
                       onClick={() => toggleAssignee(emp.id)}
-                      className={`px-2 py-1 text-xs border transition ${
-                        selected
-                          ? 'bg-[rgba(124,58,237,0.1)] border-[#7C3AED] text-[#7C3AED]'
-                          : 'bg-[#0F172A] border-[rgba(124,58,237,0.1)] text-foreground'
+                      className={`px-2 py-1 text-[12px] border rounded-[6px] transition-colors duration-150 cursor-pointer ${
+                        selected ? 'bg-[#E9E9E7] border-[#E9E9E7] text-[#37352F] font-medium' : 'bg-white border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]'
                       }`}
                     >
                       {emp.name.split(' ')[0]}
@@ -758,32 +701,32 @@ function SubtasksTab({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Start Date</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Start Date</label>
               <input
                 type="date"
                 value={newSubtask.startDate}
                 onChange={(e) => setNewSubtask({ ...newSubtask, startDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">End Date</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">End Date</label>
               <input
                 type="date"
                 value={newSubtask.endDate}
                 onChange={(e) => setNewSubtask({ ...newSubtask, endDate: e.target.value })}
-                className="w-full px-3 py-2 bg-[#0F172A] border border-[rgba(124,58,237,0.1)] text-foreground text-sm"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
               />
             </div>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9]">
+            <button type="submit" className="px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
               Add Subtask
             </button>
             <button
               type="button"
               onClick={() => { setShowAddSubtask(false); setNewSubtask({ name: '', assignedTo: [], priority: 'medium', status: 'pending', startDate: '', endDate: '' }); }}
-              className="px-4 py-2 bg-[#0F172A] text-foreground text-sm border border-[rgba(124,58,237,0.1)]"
+              className="px-4 py-2 bg-white text-[#37352F] text-[14px] font-medium border border-[#E9E9E7] rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
             >
               Cancel
             </button>
@@ -792,16 +735,16 @@ function SubtasksTab({
       )}
 
       {subtasks.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto border border-[#E9E9E7] rounded-[8px]">
+          <table className="w-full text-[14px]">
             <thead>
-              <tr className="border-b border-[rgba(124,58,237,0.1)]">
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Subtask</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Assigned To</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Priority</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Updated</th>
-                <th className="text-right py-3 px-4 text-muted-foreground font-medium">Actions</th>
+              <tr className="border-b border-[#E9E9E7] bg-[#F7F7F5]">
+                <th className="text-left py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Subtask</th>
+                <th className="text-left py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Assigned To</th>
+                <th className="text-left py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Status</th>
+                <th className="text-left py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Priority</th>
+                <th className="text-left py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Updated</th>
+                <th className="text-right py-2.5 px-4 text-[#787774] font-medium text-[12px] uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -809,36 +752,26 @@ function SubtasksTab({
                 const assignees = subtask.assignedTo.map((id: string) => getEmployeeById(id)).filter(Boolean);
                 const subtaskComments = getCommentsForSubtask(subtask.id);
                 const isExpanded = expandedComments === subtask.id;
-
                 return (
                   <React.Fragment key={subtask.id}>
-                    <tr className="border-b border-[rgba(124,58,237,0.05)] hover:bg-[rgba(124,58,237,0.05)]">
+                    <tr className="border-b border-[#E9E9E7] hover:bg-[#F7F7F5] transition-colors duration-150">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setExpandedComments(isExpanded ? null : subtask.id)}
-                            className="p-1 hover:bg-[rgba(255,255,255,0.05)] rounded"
-                          >
-                            {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                          <button onClick={() => setExpandedComments(isExpanded ? null : subtask.id)} className="p-1 hover:bg-white rounded-[4px] transition-colors duration-150 cursor-pointer">
+                            {isExpanded ? <ChevronDown className="w-4 h-4 text-[#787774]" /> : <ChevronRight className="w-4 h-4 text-[#787774]" />}
                           </button>
-                          <span className="text-foreground font-medium">{subtask.name}</span>
+                          <span className="text-[#37352F] font-medium text-[14px]">{subtask.name}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex -space-x-2">
+                        <div className="flex -space-x-1.5">
                           {assignees.slice(0, 3).map((emp: any, idx: number) => (
-                            <div
-                              key={idx}
-                              className="w-6 h-6 bg-gradient-to-br from-[#7C3AED] to-[#8b5cf6] rounded-full flex items-center justify-center text-[#020617] text-xs font-bold border-2 border-[#0F172A]"
-                              title={emp?.name}
-                            >
+                            <div key={idx} className="w-6 h-6 bg-[#F7F7F5] border border-white rounded-full flex items-center justify-center text-[#37352F] text-[12px] font-medium" title={emp?.name}>
                               {emp?.name.charAt(0)}
                             </div>
                           ))}
                           {assignees.length > 3 && (
-                            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-muted-foreground text-xs font-bold border-2 border-[#0F172A]">
-                              +{assignees.length - 3}
-                            </div>
+                            <div className="w-6 h-6 bg-white border border-[#E9E9E7] rounded-full flex items-center justify-center text-[#787774] text-[12px] font-medium">+{assignees.length - 3}</div>
                           )}
                         </div>
                       </td>
@@ -846,7 +779,7 @@ function SubtasksTab({
                         <select
                           value={subtask.status}
                           onChange={(e) => handleSubtaskStatusChange(subtask.id, e.target.value as SubtaskStatus)}
-                          className={`text-xs px-2 py-1 border ${subtaskStatusColors[subtask.status]} bg-transparent`}
+                          className={`text-[12px] px-2 py-1 rounded-[4px] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2383E2] ${subtaskStatusColors[subtask.status]}`}
                         >
                           <option value="pending">Pending</option>
                           <option value="in_progress">In Progress</option>
@@ -857,7 +790,7 @@ function SubtasksTab({
                         <select
                           value={subtask.priority}
                           onChange={(e) => handleSubtaskPriorityChange(subtask.id, e.target.value as Subtask['priority'])}
-                          className={`text-xs px-2 py-1 border ${priorityColors[subtask.priority]} bg-transparent`}
+                          className={`text-[12px] px-2 py-1 rounded-[4px] cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#2383E2] ${priorityColors[subtask.priority]}`}
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
@@ -865,43 +798,33 @@ function SubtasksTab({
                           <option value="urgent">Urgent</option>
                         </select>
                       </td>
-                      <td className="py-3 px-4 text-muted-foreground text-xs">
-                        {format(subtask.updatedAt, 'MMM d, h:mm a')}
-                      </td>
+                      <td className="py-3 px-4 text-[#787774] text-[12px]">{format(subtask.updatedAt, 'MMM d, h:mm a')}</td>
                       <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => handleDeleteSubtask(subtask.id)}
-                          className="p-1.5 text-[#7C3AED] hover:bg-[rgba(124,58,237,0.1)] rounded transition"
-                          title="Delete"
-                        >
+                        <button onClick={() => handleDeleteSubtask(subtask.id)} className="p-1.5 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition-colors duration-150 cursor-pointer" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
                     {isExpanded && (
                       <tr>
-                        <td colSpan={6} className="px-4 pb-4">
-                          <div className="ml-6 pl-4 border-l-2 border-[rgba(124,58,237,0.1)]">
+                        <td colSpan={6} className="px-4 pb-4 bg-white">
+                          <div className="ml-6 pl-4 border-l-2 border-[#E9E9E7]">
                             <div className="flex items-center gap-2 mb-3">
-                              <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]">
-                                Subtask
-                              </span>
-                              <h4 className="text-sm font-medium text-foreground">Comments ({subtaskComments.length})</h4>
+                              <span className="px-2 py-0.5 text-[12px] font-medium bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7] rounded-[4px]">Subtask</span>
+                              <h4 className="text-[14px] font-medium text-[#37352F]">Comments ({subtaskComments.length})</h4>
                             </div>
                             <div className="space-y-3 mb-3">
                               {subtaskComments.map((comment: any) => (
-                                <div key={comment.id} className="flex gap-2 p-3 bg-white border border-[rgba(139,92,246,0.1)]">
-                                  <div className="w-8 h-8 bg-gradient-to-br from-[#8b5cf6] to-[#7C3AED] rounded-full flex items-center justify-center text-[#020617] text-xs font-bold flex-shrink-0">
+                                <div key={comment.id} className="flex gap-2 p-3 bg-white border border-[#E9E9E7] rounded-[8px]">
+                                  <div className="w-7 h-7 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full flex items-center justify-center text-[#37352F] text-[12px] font-medium flex-shrink-0">
                                     {comment.userName.charAt(0)}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <p className="font-semibold text-foreground text-sm">{comment.userName}</p>
-                                      <span className="text-xs text-muted-foreground">
-                                        {format(comment.timestamp, 'MMM d, h:mm a')}
-                                      </span>
+                                      <p className="font-medium text-[#37352F] text-[14px]">{comment.userName}</p>
+                                      <span className="text-[12px] text-[#9B9A97]">{format(comment.timestamp, 'MMM d, h:mm a')}</span>
                                     </div>
-                                    <p className="text-foreground text-sm whitespace-pre-wrap">{comment.content}</p>
+                                    <p className="text-[#37352F] text-[14px] whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                                   </div>
                                 </div>
                               ))}
@@ -912,7 +835,7 @@ function SubtasksTab({
                                 value={subtaskCommentText}
                                 onChange={(e) => setSubtaskCommentText(e.target.value)}
                                 placeholder="Add a comment to this subtask..."
-                                className="flex-1 px-3 py-2 bg-[#0F172A] border border-[rgba(139,92,246,0.1)] text-foreground text-sm"
+                                className="flex-1 px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -923,7 +846,7 @@ function SubtasksTab({
                               <button
                                 onClick={() => handleAddSubtaskComment(subtask.id)}
                                 disabled={!subtaskCommentText.trim()}
-                                className="px-3 py-2 bg-[#8b5cf6] text-[#020617] text-sm font-medium hover:bg-[#7c4fe0] disabled:opacity-50"
+                                className="px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
                               >
                                 <Send className="w-4 h-4" />
                               </button>
@@ -941,13 +864,10 @@ function SubtasksTab({
       )}
 
       {subtasks.length === 0 && !showAddSubtask && (
-        <div className="text-center py-12 bg-white border border-[rgba(124,58,237,0.1)]">
-          <CheckCircle className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">No subtasks yet</p>
-          <button
-            onClick={() => setShowAddSubtask(true)}
-            className="mt-3 px-4 py-2 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9]"
-          >
+        <div className="text-center py-12 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
+          <CheckCircle className="w-10 h-10 text-[#9B9A97] mx-auto mb-3" />
+          <p className="text-[14px] text-[#787774]">No subtasks yet</p>
+          <button onClick={() => setShowAddSubtask(true)} className="mt-3 px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
             Add First Subtask
           </button>
         </div>
@@ -958,22 +878,21 @@ function SubtasksTab({
 
 function CommentsTab({ comments, commentText, setCommentText, onAddComment, currentUser, getSubtasksForTask, task }: any) {
   const subtasks = getSubtasksForTask ? getSubtasksForTask(task.id) : [];
-
   return (
     <div className="space-y-6">
       <form onSubmit={onAddComment} className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Add Comment</h3>
+        <h3 className="text-[14px] font-semibold text-[#37352F]">Add Comment</h3>
         <textarea
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="Share updates, ask questions, or provide feedback..."
-          className="w-full px-4 py-3 bg-white border border-[rgba(124,58,237,0.1)] text-foreground resize-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] resize-none focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
           rows={4}
         />
         <button
           type="submit"
           disabled={!commentText.trim()}
-          className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="w-4 h-4" />
           Post Comment
@@ -981,50 +900,34 @@ function CommentsTab({ comments, commentText, setCommentText, onAddComment, curr
       </form>
 
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-4">
-          Comments ({comments.length})
-        </h3>
-
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-4">Comments ({comments.length})</h3>
         {comments.length === 0 ? (
-          <div className="text-center py-8 bg-white border border-[rgba(124,58,237,0.1)]">
-            <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground text-sm">No comments yet</p>
-            <p className="text-muted-foreground text-xs mt-1">Be the first to comment</p>
+          <div className="text-center py-8 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
+            <MessageSquare className="w-10 h-10 text-[#9B9A97] mx-auto mb-3" />
+            <p className="text-[14px] text-[#787774]">No comments yet</p>
+            <p className="text-[12px] text-[#9B9A97] mt-1">Be the first to comment</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {comments.map((comment: any) => {
               const isSubtaskComment = comment.subtaskId;
               const relatedSubtask = isSubtaskComment ? subtasks.find((s: any) => s.id === comment.subtaskId) : null;
-
               return (
-                <div key={comment.id} className={`flex gap-3 p-4 border ${
-                  isSubtaskComment
-                    ? 'bg-white border-[rgba(139,92,246,0.1)]'
-                    : 'bg-white border-[rgba(124,58,237,0.1)]'
-                }`}>
-                  <div className={`w-10 h-10 bg-gradient-to-br flex items-center justify-center text-[#020617] font-bold flex-shrink-0 ${
-                    isSubtaskComment ? 'from-[#8b5cf6] to-[#7C3AED]' : 'from-[#7C3AED] to-[#8b5cf6]'
-                  }`}>
+                <div key={comment.id} className="flex gap-3 p-4 bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-colors duration-150">
+                  <div className="w-8 h-8 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full flex items-center justify-center text-[#37352F] font-medium text-[14px] flex-shrink-0">
                     {comment.userName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-foreground">{comment.userName}</p>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="font-medium text-[#37352F] text-[14px]">{comment.userName}</p>
                       {isSubtaskComment ? (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(139,92,246,0.1)] text-[#8b5cf6] border border-[rgba(139,92,246,0.2)]">
-                          Subtask: {relatedSubtask?.name || 'Unknown'}
-                        </span>
+                        <span className="px-2 py-0.5 text-[12px] font-medium bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7] rounded-[4px]">Subtask: {relatedSubtask?.name || 'Unknown'}</span>
                       ) : (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-[rgba(124,58,237,0.1)] text-[#7C3AED] border border-[rgba(124,58,237,0.2)]">
-                          Task
-                        </span>
+                        <span className="px-2 py-0.5 text-[12px] font-medium bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7] rounded-[4px]">Task</span>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {format(comment.timestamp, 'MMM d, yyyy · h:mm a')}
-                      </span>
+                      <span className="text-[12px] text-[#9B9A97]">{format(comment.timestamp, 'MMM d, yyyy · h:mm a')}</span>
                     </div>
-                    <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
+                    <p className="text-[14px] text-[#37352F] whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                   </div>
                 </div>
               );
@@ -1039,71 +942,41 @@ function CommentsTab({ comments, commentText, setCommentText, onAddComment, curr
 function ActivityTab({ task, assignees, approver }: any) {
   const activities = [];
   const assigneeNames = assignees?.map((e: any) => e.name).join(', ') || 'Unknown';
-
-  activities.push({
-    id: '1',
-    type: 'created',
-    description: `Task created and assigned to ${assigneeNames}`,
-    timestamp: task.createdAt
-  });
-
+  activities.push({ id: '1', type: 'created', description: `Task created and assigned to ${assigneeNames}`, timestamp: task.createdAt });
   if (task.completedAt) {
-    activities.push({
-      id: '2',
-      type: 'completed',
-      description: `Task marked as completed by ${assigneeNames}`,
-      timestamp: task.completedAt
-    });
+    activities.push({ id: '2', type: 'completed', description: `Task marked as completed by ${assigneeNames}`, timestamp: task.completedAt });
   }
-
   if (task.approvedAt && approver) {
-    activities.push({
-      id: '3',
-      type: 'approved',
-      description: `Task approved by ${approver.name}`,
-      timestamp: task.approvedAt
-    });
+    activities.push({ id: '3', type: 'approved', description: `Task approved by ${approver.name}`, timestamp: task.approvedAt });
   }
-
   activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-  const activityIcons = {
-    created: Clock,
-    completed: CheckCircle,
-    approved: CheckCircle
+  const activityIcons: Record<string, any> = { created: Clock, completed: CheckCircle, approved: CheckCircle };
+  const activityColors: Record<string, string> = {
+    created: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    completed: 'bg-[#F7F7F5] text-[#0F7B6C] border border-[#E9E9E7]',
+    approved: 'bg-[#EDF7ED] text-[#0F7B6C] border border-[#E9E9E7]'
   };
-
-  const activityColors = {
-    created: 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED]',
-    completed: 'bg-[rgba(139,92,246,0.1)] text-[#8b5cf6]',
-    approved: 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA]'
-  };
-
   return (
     <div>
-      <h3 className="text-sm font-semibold text-foreground mb-4">Activity Timeline</h3>
-
+      <h3 className="text-[14px] font-semibold text-[#37352F] mb-4">Activity Timeline</h3>
       {activities.length === 0 ? (
-        <div className="text-center py-8 bg-white border border-[rgba(124,58,237,0.1)]">
-          <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">No activity yet</p>
+        <div className="text-center py-8 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
+          <Activity className="w-10 h-10 text-[#9B9A97] mx-auto mb-3" />
+          <p className="text-[14px] text-[#787774]">No activity yet</p>
         </div>
       ) : (
         <div className="space-y-4">
           {activities.map((activity: any) => {
             const Icon = activityIcons[activity.type as keyof typeof activityIcons];
             const colorClass = activityColors[activity.type as keyof typeof activityColors];
-
             return (
-              <div key={activity.id} className="flex gap-4">
-                <div className={`w-10 h-10 flex items-center justify-center ${colorClass} flex-shrink-0`}>
-                  <Icon className="w-5 h-5" />
+              <div key={activity.id} className="flex gap-3">
+                <div className={`w-8 h-8 flex items-center justify-center rounded-[6px] flex-shrink-0 ${colorClass}`}>
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 pt-1">
-                  <p className="text-foreground font-medium">{activity.description}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {format(activity.timestamp, 'MMMM d, yyyy · h:mm a')}
-                  </p>
+                  <p className="text-[14px] text-[#37352F] font-medium">{activity.description}</p>
+                  <p className="text-[12px] text-[#787774] mt-1">{format(activity.timestamp, 'MMMM d, yyyy · h:mm a')}</p>
                 </div>
               </div>
             );

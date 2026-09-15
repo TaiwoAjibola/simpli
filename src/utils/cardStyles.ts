@@ -2,44 +2,41 @@ export type CardStyle = 'default' | 'rounded' | 'stroked' | 'elevated' | 'minima
 
 export function getCardClasses(style: CardStyle, color: string, compact = false): string {
   const base = compact ? 'p-3' : 'p-5';
-  const common = 'cursor-pointer transition';
+  const common = 'cursor-pointer transition-[background] duration-150 ease-out bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5]';
 
   switch (style) {
     case 'rounded':
-      return `${base} bg-[#0F172A] border border-[rgba(124,58,237,0.1)] rounded-xl shadow-sm hover:shadow-md ${common}`;
+      return `${base} ${common}`;
 
     case 'stroked':
-      return `${base} bg-[#0F172A] border-2 ${compact ? '' : 'shadow-sm'} ${common}`;
+      return `${base} ${common}`;
 
     case 'elevated':
-      return `${base} bg-[#0F172A] border border-transparent hover:border-[rgba(124,58,237,0.2)] shadow-lg ${common}`;
+      return `${base} ${common}`;
 
     case 'minimal':
-      return `${base} bg-transparent border border-transparent border-b hover:border-b-[rgba(124,58,237,0.3)] ${common}`;
+      return `${base} bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-[background] duration-150 ease-out ${common.split(' ').slice(1).join(' ')}`.replace('  ', ' ');
 
     default:
-      return `${base} bg-[#0F172A] border border-[rgba(124,58,237,0.1)] hover:shadow-lg ${common}`;
+      return `${base} ${common}`;
   }
 }
 
 export function getCardInlineStyle(style: CardStyle, color: string): React.CSSProperties {
   switch (style) {
     case 'rounded':
-      return { borderLeft: `4px solid ${color}` };
+      return { borderColor: '#E9E9E7' };
 
     case 'stroked':
-      return { borderColor: color, borderLeft: `4px solid ${color}` };
+      return { borderColor: '#E9E9E7' };
 
     case 'elevated':
-      return {
-        borderLeft: `4px solid ${color}`,
-        boxShadow: `0 4px 14px 0 ${color}15, 0 0 0 1px ${color}08`
-      };
+      return { borderColor: '#E9E9E7' };
 
     case 'minimal':
-      return { borderBottomColor: color };
+      return { borderColor: '#E9E9E7' };
 
     default:
-      return { borderLeft: `4px solid ${color}` };
+      return { borderColor: '#E9E9E7' };
   }
 }

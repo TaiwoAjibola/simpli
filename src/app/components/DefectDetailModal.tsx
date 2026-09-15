@@ -50,19 +50,19 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   const allowedStatuses = getAllowedDefectStatuses(hasPermission);
 
   const statusColors: Record<DefectStatus, string> = {
-    open: DEFECT_STATUS_COLORS.open,
-    in_progress: DEFECT_STATUS_COLORS.in_progress,
-    pending_qa: DEFECT_STATUS_COLORS.pending_qa,
-    resolved: DEFECT_STATUS_COLORS.resolved,
-    closed: DEFECT_STATUS_COLORS.closed,
-    reopened: DEFECT_STATUS_COLORS.reopened
+    open: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]',
+    in_progress: 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]',
+    pending_qa: 'bg-[#F7F7F5] text-[#2383E2] border border-[#E9E9E7]',
+    resolved: 'bg-[#EDF7ED] text-[#0F7B6C] border border-[#E9E9E7]',
+    closed: 'bg-[#F7F7F5] text-[#9B9A97] border border-[#E9E9E7]',
+    reopened: 'bg-[#FBE9E9] text-[#EB5757] border border-[#FBE9E9]'
   };
 
   const severityColors: Record<string, string> = {
-    blocker: DEFECT_SEVERITY_COLORS.blocker,
-    critical: DEFECT_SEVERITY_COLORS.critical,
-    major: DEFECT_SEVERITY_COLORS.major,
-    minor: DEFECT_SEVERITY_COLORS.minor
+    blocker: 'bg-[#FBE9E9] text-[#EB5757] border border-[#FBE9E9]',
+    critical: 'bg-[#FBE9E9] text-[#EB5757] border border-[#FBE9E9]',
+    major: 'bg-[#F7F7F5] text-[#37352F] border border-[#E9E9E7]',
+    minor: 'bg-[#F7F7F5] text-[#787774] border border-[#E9E9E7]'
   };
 
   const linkedIssue = defect.github?.issue;
@@ -142,88 +142,78 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-[rgba(124,58,237,0.1)] sticky top-0 bg-[#0F172A] z-10">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-sm text-[#7C3AED]">{defect.defectCode}</span>
-            <h2 className="text-xl font-bold text-foreground">{defect.title}</h2>
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] flex items-center justify-center z-50 p-4" style={{ fontFamily: 'Inter, ui-sans-system, sans-serif' }}>
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] w-full max-w-[900px] max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E9E9E7] flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-mono text-[12px] px-2 py-0.5 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[4px] text-[#787774]">{defect.defectCode}</span>
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#37352F] truncate">{defect.title}</h2>
           </div>
-          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground">
+          <button onClick={onClose} className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer flex-shrink-0 ml-4">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-[rgba(124,58,237,0.1)] flex items-center gap-4 flex-wrap">
+        <div className="px-6 py-3 border-b border-[#E9E9E7] flex items-center gap-3 flex-wrap bg-white">
           <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-1 ${statusColors[defect.status]} text-white`}>
+            <span className={`text-[12px] px-2 py-1 rounded-[4px] font-medium capitalize ${statusColors[defect.status]}`}>
               {defect.status.replace('_', ' ')}
             </span>
-            <span className={`text-xs px-2 py-1 ${severityColors[defect.severity]} text-white`}>
+            <span className={`text-[12px] px-2 py-1 rounded-[4px] font-medium capitalize ${severityColors[defect.severity]}`}>
               {defect.severity}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-[12px] text-[#787774]">
             <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
+              <User className="w-3 h-3 text-[#9B9A97]" />
               {getEmployeeName(defect.assignedTo)}
             </span>
             <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <Calendar className="w-3 h-3 text-[#9B9A97]" />
               Reported {formatDate(defect.dateReported)}
             </span>
             {defect.dueDate && (
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3 h-3 text-[#9B9A97]" />
                 Due {formatDate(defect.dueDate)}
               </span>
             )}
             {defect.reopenedCount > 0 && (
-              <span className="text-[#ef4444]">Reopened {defect.reopenedCount}x</span>
+              <span className="text-[#EB5757] font-medium">Reopened {defect.reopenedCount}x</span>
             )}
           </div>
           <div className="ml-auto flex items-center gap-2">
             {defect.status === 'pending_qa' && hasPermission('verify_defects') && (
-              <button
-                onClick={handleVerifyFix}
-                className="flex items-center gap-1 px-3 py-1.5 bg-[#A78BFA] text-white text-sm hover:bg-[#059669]"
-              >
+              <button onClick={handleVerifyFix} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
                 <CheckCircle className="w-4 h-4" />
                 Verify Fix
               </button>
             )}
             {defect.status === 'closed' && hasPermission('manage_defects') && (
-              <button
-                onClick={handleReopen}
-                className="flex items-center gap-1 px-3 py-1.5 bg-[#dc2626] text-white text-sm hover:bg-[#b91c1c]"
-              >
+              <button onClick={handleReopen} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer">
                 Reopen
               </button>
             )}
             <button
               onClick={handleSendDefectEmail}
               disabled={sendingEmail}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition ${
-                defect.lastEmailSentAt
-                  ? 'bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)]'
-                  : 'bg-[rgba(124,58,237,0.1)] text-[#A78BFA] hover:bg-[rgba(124,58,237,0.2)]'
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[14px] font-medium rounded-[6px] border transition-colors duration-150 cursor-pointer ${
+                defect.lastEmailSentAt ? 'bg-white border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5]' : 'bg-white border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]'
               } ${sendingEmail ? 'opacity-50 cursor-wait' : ''}`}
             >
-              <Mail className="w-3.5 h-3.5" />
+              <Mail className="w-3.5 h-3.5 text-[#787774]" />
               {sendingEmail ? 'Sending...' : defect.lastEmailSentAt ? 'Resend Mail' : 'Send Mail'}
             </button>
           </div>
         </div>
 
-        <div className="flex border-b border-[rgba(124,58,237,0.1)]">
+        <div className="flex border-b border-[#E9E9E7] px-6 gap-6 overflow-x-auto">
           {(['overview', 'reproduction', 'attachments', 'activity', 'qa', 'deps', 'github'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-sm font-medium capitalize ${
-                activeTab === tab
-                  ? 'text-[#7C3AED] border-b-2 border-[#7C3AED]'
-                  : 'text-muted-foreground hover:text-foreground'
+              className={`px-1 py-3 text-[14px] font-medium capitalize border-b-2 -mb-px whitespace-nowrap transition-colors duration-150 cursor-pointer ${
+                activeTab === tab ? 'text-[#37352F] border-[#2383E2]' : 'text-[#787774] border-transparent hover:text-[#37352F]'
               }`}
             >
               {tab}
@@ -231,99 +221,97 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
           ))}
         </div>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1 bg-white">
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Application</label>
-                  <p className="text-foreground mt-1">{getAppName(defect.applicationId)}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Application</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{getAppName(defect.applicationId)}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Module</label>
-                  <p className="text-foreground mt-1">{defect.module || '-'}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Module</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{defect.module || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Environment</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.environment}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Environment</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.environment}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Issue Type</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.issueType.replace('_', ' ')}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Issue Type</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.issueType.replace('_', ' ')}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Priority</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.priority}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Priority</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.priority}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Reproducibility</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.reproducibility}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Reproducibility</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.reproducibility}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Frequency</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.frequency}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Frequency</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.frequency}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Test Cycle</label>
-                  <p className="text-foreground mt-1">{defect.testCycle || '-'}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Test Cycle</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{defect.testCycle || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Followers</label>
-                  <p className="text-foreground mt-1">
-                    {(defect.followers || []).length > 0
-                      ? defect.followers!.map(f => getEmployeeName(f)).join(', ')
-                      : '-'}
-                  </p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Followers</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{(defect.followers || []).length > 0 ? defect.followers!.map(f => getEmployeeName(f)).join(', ') : '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Reported By</label>
-                  <p className="text-foreground mt-1">{getEmployeeName(defect.reportedBy)}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Reported By</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{getEmployeeName(defect.reportedBy)}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Assigned To</label>
-                  <p className="text-foreground mt-1">{getEmployeeName(defect.assignedTo)}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Assigned To</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{getEmployeeName(defect.assignedTo)}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">QA Tester</label>
-                  <p className="text-foreground mt-1">{defect.testedBy ? getEmployeeName(defect.testedBy) : '-'}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">QA Tester</label>
+                  <p className="text-[14px] text-[#37352F] mt-1">{defect.testedBy ? getEmployeeName(defect.testedBy) : '-'}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Resolution</label>
-                  <p className="text-foreground mt-1 capitalize">{defect.resolutionStatus?.replace('_', ' ') || '-'}</p>
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Resolution</label>
+                  <p className="text-[14px] text-[#37352F] mt-1 capitalize">{defect.resolutionStatus?.replace('_', ' ') || '-'}</p>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">Description</label>
-                <p className="text-foreground mt-2 whitespace-pre-wrap">{defect.description || 'No description provided'}</p>
+                <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Description</label>
+                <p className="text-[14px] text-[#37352F] mt-2 whitespace-pre-wrap leading-relaxed">{defect.description || 'No description provided'}</p>
               </div>
 
               {(defect.qaComments || defect.developerNotes) && (
                 <div className="grid grid-cols-2 gap-4">
                   {defect.qaComments && (
-                    <div>
-                      <label className="text-xs text-muted-foreground uppercase tracking-wider">QA Comments</label>
-                      <p className="text-foreground mt-2 whitespace-pre-wrap">{defect.qaComments}</p>
+                    <div className="p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px]">
+                      <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">QA Comments</label>
+                      <p className="text-[14px] text-[#37352F] mt-2 whitespace-pre-wrap leading-relaxed">{defect.qaComments}</p>
                     </div>
                   )}
                   {defect.developerNotes && (
-                    <div>
-                      <label className="text-xs text-muted-foreground uppercase tracking-wider">Developer Notes</label>
-                      <p className="text-foreground mt-2 whitespace-pre-wrap">{defect.developerNotes}</p>
+                    <div className="p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px]">
+                      <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Developer Notes</label>
+                      <p className="text-[14px] text-[#37352F] mt-2 whitespace-pre-wrap leading-relaxed">{defect.developerNotes}</p>
                     </div>
                   )}
                 </div>
               )}
 
               <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Change Status</label>
+                <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium mb-2 block">Change Status</label>
                 <div className="flex flex-wrap gap-2">
                   {allowedStatuses.map(status => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
                       disabled={defect.status === status}
-                      className={`px-3 py-1.5 text-sm ${statusColors[status]} text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
+                      className={`px-3 py-1.5 text-[14px] font-medium rounded-[6px] border transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        defect.status === status ? 'bg-[#E9E9E7] text-[#37352F] border-[#E9E9E7]' : 'bg-white text-[#787774] border-[#E9E9E7] hover:bg-[#F7F7F5] hover:text-[#37352F]'
+                      }`}
                     >
                       {status.replace('_', ' ')}
                     </button>
@@ -332,16 +320,16 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
               </div>
 
               <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">GitHub Issue</label>
+                <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium mb-2 block">GitHub Issue</label>
                 {linkedIssue ? (
-                  <div className="flex items-center gap-3 p-3 bg-white border border-[rgba(124,58,237,0.1)]">
-                    <span className={`text-xs px-2 py-1 ${linkedIssue.state === 'closed' ? 'bg-[#A78BFA]' : 'bg-[#7C3AED]'} text-white`}>
+                  <div className="flex items-center gap-3 p-3 bg-white border border-[#E9E9E7] rounded-[8px]">
+                    <span className={`text-[12px] px-2 py-1 rounded-[4px] font-medium border ${linkedIssue.state === 'closed' ? 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]' : 'bg-[#EDF7ED] text-[#0F7B6C] border-[#E9E9E7]'}`}>
                       {linkedIssue.state}
                     </span>
-                    <span className="text-sm text-foreground font-mono">#{linkedIssue.issueNumber}</span>
-                    <span className="text-sm text-foreground flex-1 truncate">{linkedIssue.title}</span>
+                    <span className="text-[14px] text-[#787774] font-mono">#{linkedIssue.issueNumber}</span>
+                    <span className="text-[14px] text-[#37352F] flex-1 truncate">{linkedIssue.title}</span>
                     {linkedRepo && (
-                      <a href={linkedIssue.url} target="_blank" rel="noreferrer" className="text-[#7C3AED] hover:opacity-80">
+                      <a href={linkedIssue.url} target="_blank" rel="noreferrer" className="text-[#2383E2] hover:text-[#1A6FC0] transition-colors duration-150">
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     )}
@@ -349,16 +337,14 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
                       <button
                         onClick={() => syncIssueState(defect.status === 'closed' ? 'reopened' : 'closed')}
                         disabled={syncingIssue}
-                        className="text-xs px-3 py-1.5 bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] disabled:opacity-50"
+                        className="text-[14px] px-3 py-1.5 bg-white border border-[#E9E9E7] rounded-[6px] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F] disabled:opacity-50 transition-colors duration-150 cursor-pointer"
                       >
                         {syncingIssue ? 'Syncing...' : linkedIssue.state === 'closed' ? 'Reopen issue' : 'Close issue'}
                       </button>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No GitHub issue linked. Create the defect with a linked repository to sync an issue.
-                  </p>
+                  <p className="text-[14px] text-[#787774]">No GitHub issue linked. Create the defect with a linked repository to sync an issue.</p>
                 )}
               </div>
             </div>
@@ -367,21 +353,21 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
           {activeTab === 'reproduction' && (
             <div className="space-y-6">
               <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">Steps to Reproduce</label>
-                <div className="mt-2 p-4 bg-white border border-[rgba(124,58,237,0.1)] whitespace-pre-wrap text-foreground">
+                <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Steps to Reproduce</label>
+                <div className="mt-2 p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] whitespace-pre-wrap text-[14px] text-[#37352F] leading-relaxed">
                   {defect.stepsToReproduce || 'No steps provided'}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Expected Result</label>
-                  <div className="mt-2 p-4 bg-white border border-[rgba(124,58,237,0.1)] whitespace-pre-wrap text-foreground">
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Expected Result</label>
+                  <div className="mt-2 p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] whitespace-pre-wrap text-[14px] text-[#37352F] leading-relaxed">
                     {defect.expectedResult || 'Not specified'}
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground uppercase tracking-wider">Actual Result</label>
-                  <div className="mt-2 p-4 bg-white border border-[rgba(124,58,237,0.1)] whitespace-pre-wrap text-foreground">
+                  <label className="text-[12px] text-[#787774] uppercase tracking-wide font-medium">Actual Result</label>
+                  <div className="mt-2 p-4 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] whitespace-pre-wrap text-[14px] text-[#37352F] leading-relaxed">
                     {defect.actualResult || 'Not specified'}
                   </div>
                 </div>
@@ -392,34 +378,25 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
           {activeTab === 'attachments' && (
             <div>
               {(!defect.attachments || defect.attachments.length === 0) ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Paperclip className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No attachments</p>
+                <div className="text-center py-12 bg-white border border-dashed border-[#E9E9E7] rounded-[8px]">
+                  <Paperclip className="w-10 h-10 mx-auto mb-3 text-[#9B9A97]" />
+                  <p className="text-[14px] text-[#787774]">No attachments</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
                   {defect.attachments.map((att: any) => (
-                    <div key={att.id} className="p-4 bg-white border border-[rgba(124,58,237,0.1)]">
+                    <div key={att.id} className="p-4 bg-white border border-[#E9E9E7] rounded-[8px] hover:bg-[#F7F7F5] transition-colors duration-150">
                       <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-[#7C3AED]" />
-                        <span className="text-sm text-foreground truncate">{att.name}</span>
+                        <FileText className="w-4 h-4 text-[#787774]" />
+                        <span className="text-[14px] text-[#37352F] truncate font-medium">{att.name}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">{formatFileSize(att.size)}</p>
-                      <div className="flex gap-2">
-                        <a
-                          href={att.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-[#7C3AED] hover:underline"
-                        >
+                      <p className="text-[12px] text-[#9B9A97] mb-3">{formatFileSize(att.size)}</p>
+                      <div className="flex gap-3">
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[12px] text-[#2383E2] hover:text-[#1A6FC0] transition-colors duration-150">
                           <ExternalLink className="w-3 h-3" />
                           View
                         </a>
-                        <a
-                          href={att.url}
-                          download
-                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                        >
+                        <a href={att.url} download className="flex items-center gap-1 text-[12px] text-[#787774] hover:text-[#37352F] transition-colors duration-150">
                           <Download className="w-3 h-3" />
                           Download
                         </a>
@@ -436,43 +413,39 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
               <div className="space-y-3">
                 {(defect.activityLogs || []).slice().reverse().map((log: any) => (
                   <div key={log.id} className="flex gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {log.action === 'comment' ? (
-                        <MessageSquare className="w-4 h-4 text-[#7C3AED]" />
-                      ) : (
-                        <Activity className="w-4 h-4 text-muted-foreground" />
-                      )}
+                    <div className="flex-shrink-0 mt-1 w-6 h-6 flex items-center justify-center">
+                      {log.action === 'comment' ? <MessageSquare className="w-4 h-4 text-[#787774]" /> : <Activity className="w-4 h-4 text-[#9B9A97]" />}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-foreground">{log.userName}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[14px] font-medium text-[#37352F]">{log.userName}</span>
+                        <span className="text-[12px] text-[#9B9A97]">
                           {log.timestamp?.toLocaleDateString?.('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) || ''}
                         </span>
                       </div>
                       {log.action === 'comment' ? (
-                        <p className="text-sm text-foreground mt-1 whitespace-pre-wrap">{log.details}</p>
+                        <p className="text-[14px] text-[#37352F] mt-1 whitespace-pre-wrap leading-relaxed">{log.details}</p>
                       ) : (
-                        <p className="text-sm text-muted-foreground mt-1">{log.details || log.action}</p>
+                        <p className="text-[14px] text-[#787774] mt-1">{log.details || log.action}</p>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <form onSubmit={handleAddComment} className="pt-4 border-t border-[rgba(124,58,237,0.1)]">
-                <label className="block text-sm font-medium text-foreground mb-2">Add Comment</label>
+              <form onSubmit={handleAddComment} className="pt-4 border-t border-[#E9E9E7]">
+                <label className="block text-[14px] font-medium text-[#37352F] mb-2">Add Comment</label>
                 <div className="flex gap-2">
                   <textarea
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
-                    className="flex-1 px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-20 resize-none"
+                    className="flex-1 px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-20 resize-none"
                     placeholder="Add a comment..."
                   />
                   <button
                     type="submit"
                     disabled={!commentText.trim()}
-                    className="self-end px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="self-end p-2.5 bg-[#2383E2] text-white rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -482,11 +455,7 @@ export function DefectDetailModal({ defect, onClose }: DefectDetailModalProps) {
           )}
 
           {activeTab === 'qa' && (
-            <QaWorkPanel
-              workKind="defect"
-              workId={defect.id}
-              qualifies={['pending_qa', 'resolved', 'open', 'in_progress'].includes(defect.status)}
-            />
+            <QaWorkPanel workKind="defect" workId={defect.id} qualifies={['pending_qa', 'resolved', 'open', 'in_progress'].includes(defect.status)} />
           )}
 
           {activeTab === 'deps' && (

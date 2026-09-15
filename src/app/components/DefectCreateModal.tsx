@@ -78,17 +78,14 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
       let attachmentUrls: any[] = [];
       if (attachments.length > 0) {
         setUploadStatus(`Uploading ${attachments.length} file(s)...`);
-
         for (let i = 0; i < attachments.length; i++) {
           const file = attachments[i];
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           setUploadStatus(`Uploading ${file.name} (${i + 1}/${attachments.length})...`);
           setUploadProgress(Math.round(((i) / attachments.length) * 100));
-
           const fileRef = ref(storage, `defects/${Date.now()}_${safeName}`);
           await uploadBytes(fileRef, file);
           const downloadURL = await getDownloadURL(fileRef);
-
           attachmentUrls.push({
             id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             name: file.name,
@@ -99,7 +96,6 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             uploadedBy: currentUser.id
           });
         }
-
         setUploadProgress(100);
       }
 
@@ -138,13 +134,12 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
               });
             }
           } catch (e) {
-            // Issue creation is best-effort; the defect still exists locally.
             console.warn('GitHub issue creation failed', e);
           }
         }
       }
 
-      showToast({ type: 'success', title: 'Defect Created', message: `${formData.defectCode || formData.title} has been reported.` });
+      showToast({ type: 'success', title: 'Defect Created', message: `${formData.title} has been reported.` });
       onClose();
     } catch (error: any) {
       console.error('Error creating defect:', error);
@@ -173,34 +168,35 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-[#0F172A] border border-[rgba(124,58,237,0.1)] w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-[rgba(124,58,237,0.1)] sticky top-0 bg-[#0F172A] z-10">
-          <h2 className="text-xl font-bold text-foreground">Report New Defect</h2>
-          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground">
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] flex items-center justify-center z-50 p-4" style={{ fontFamily: 'Inter, ui-sans-system, sans-serif' }}>
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] w-full max-w-[900px] max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E9E9E7] flex-shrink-0">
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#37352F]">{isEditing ? 'Edit Defect' : 'Report New Defect'}</h2>
+          <button onClick={onClose} className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1 bg-white">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">Title *</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Title *</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent outline-none"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
+                placeholder="Brief summary of the defect"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Application</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Application</label>
               <select
                 value={formData.applicationId}
                 onChange={(e) => setFormData({ ...formData, applicationId: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 {apps.map(app => (
                   <option key={app.id} value={app.id}>{app.name}</option>
@@ -209,22 +205,22 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Module</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Module</label>
               <input
                 type="text"
                 value={formData.module}
                 onChange={(e) => setFormData({ ...formData, module: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
                 placeholder="e.g. Authentication, Payments"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Issue Type</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Issue Type</label>
               <select
                 value={formData.issueType}
                 onChange={(e) => setFormData({ ...formData, issueType: e.target.value as DefectIssueType })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="bug">Bug</option>
                 <option value="ui_issue">UI Issue</option>
@@ -236,11 +232,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Environment</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Environment</label>
               <select
                 value={formData.environment}
                 onChange={(e) => setFormData({ ...formData, environment: e.target.value as any })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="dev">Development</option>
                 <option value="staging">Staging</option>
@@ -250,11 +246,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Severity *</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Severity *</label>
               <select
                 value={formData.severity}
                 onChange={(e) => setFormData({ ...formData, severity: e.target.value as DefectSeverity })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="blocker">Blocker</option>
                 <option value="critical">Critical</option>
@@ -264,11 +260,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Priority</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as DefectPriority })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
@@ -277,11 +273,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Reproducibility</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Reproducibility</label>
               <select
                 value={formData.reproducibility}
                 onChange={(e) => setFormData({ ...formData, reproducibility: e.target.value as DefectReproducibility })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="always">Always</option>
                 <option value="sometimes">Sometimes</option>
@@ -290,11 +286,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Frequency</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Frequency</label>
               <select
                 value={formData.frequency}
                 onChange={(e) => setFormData({ ...formData, frequency: e.target.value as DefectFrequency })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="100">100%</option>
                 <option value="intermittent">Intermittent</option>
@@ -303,11 +299,11 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Assign To</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Assign To</label>
               <select
                 value={formData.assignedTo}
                 onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
               >
                 <option value="">Select developer</option>
                 {employees.map(emp => (
@@ -317,83 +313,84 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Due Date</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Due Date</label>
               <input
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-20 resize-none"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-20 resize-none"
+                placeholder="Detailed description"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">Steps to Reproduce</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Steps to Reproduce</label>
               <textarea
                 value={formData.stepsToReproduce}
                 onChange={(e) => setFormData({ ...formData, stepsToReproduce: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-20 resize-none"
-                placeholder="1. Go to...&#10;2. Click on...&#10;3. Observe..."
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-20 resize-none"
+                placeholder={"1. Go to...\n2. Click on...\n3. Observe..."}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Expected Result</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Expected Result</label>
               <textarea
                 value={formData.expectedResult}
                 onChange={(e) => setFormData({ ...formData, expectedResult: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-20 resize-none"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-20 resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Actual Result</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Actual Result</label>
               <textarea
                 value={formData.actualResult}
                 onChange={(e) => setFormData({ ...formData, actualResult: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-20 resize-none"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-20 resize-none"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">QA Comments</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">QA Comments</label>
               <textarea
                 value={formData.qaComments}
                 onChange={(e) => setFormData({ ...formData, qaComments: e.target.value })}
-                className="w-full px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground h-16 resize-none"
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] h-16 resize-none"
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">Attachments</label>
+              <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Attachments</label>
               <div className="flex items-center gap-2 mb-2">
-                <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[rgba(124,58,237,0.1)] text-foreground cursor-pointer hover:bg-[rgba(124,58,237,0.05)]">
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm">Upload Files</span>
+                <label className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] rounded-[6px] text-[14px] text-[#37352F] cursor-pointer hover:bg-[#F7F7F5] transition-colors duration-150">
+                  <Upload className="w-4 h-4 text-[#787774]" />
+                  <span>Upload Files</span>
                   <input type="file" multiple className="hidden" onChange={handleFileSelect} />
                 </label>
                 {attachments.length > 0 && (
-                  <span className="text-sm text-muted-foreground">{attachments.length} file(s) selected</span>
+                  <span className="text-[14px] text-[#787774]">{attachments.length} file(s) selected</span>
                 )}
               </div>
               {attachments.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {attachments.map((file, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 bg-white border border-[rgba(124,58,237,0.1)]">
-                      <div className="flex items-center gap-2">
-                        <Paperclip className="w-4 h-4 text-[#7C3AED]" />
-                        <span className="text-sm text-foreground">{file.name}</span>
-                        <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
+                    <div key={idx} className="flex items-center justify-between p-3 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Paperclip className="w-4 h-4 text-[#787774] flex-shrink-0" />
+                        <span className="text-[14px] text-[#37352F] truncate">{file.name}</span>
+                        <span className="text-[12px] text-[#9B9A97]">({formatFileSize(file.size)})</span>
                       </div>
-                      <button type="button" onClick={() => removeAttachment(idx)} className="text-[#7C3AED] hover:text-[#ff5c7a]">
+                      <button type="button" onClick={() => removeAttachment(idx)} className="p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white rounded-[6px] transition-colors duration-150 cursor-pointer ml-2">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
@@ -403,33 +400,32 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[rgba(124,58,237,0.1)]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E9E9E7]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white text-foreground border border-[rgba(124,58,237,0.1)] hover:bg-[rgba(255,255,255,0.05)]"
+              className="px-4 py-2 bg-white text-[#37352F] border border-[#E9E9E7] rounded-[6px] text-[14px] font-medium hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || !formData.title}
-              className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-[#020617] font-medium hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white font-medium rounded-[6px] text-[14px] hover:bg-[#1A6FC0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
             >
               {submitting ? (
-                <><Loader className="w-4 h-4 animate-spin" /> {uploadStatus || (isEditing ? 'Updating...' : 'Creating...')}</>
-              ) : (isEditing ? 'Update Defect' : 'Create Defect')}
+                <>
+                  <Loader className="w-4 h-4 animate-spin" /> {uploadStatus || (isEditing ? 'Updating...' : 'Creating...')}
+                </>
+              ) : isEditing ? 'Update Defect' : 'Create Defect'}
             </button>
           </div>
           {submitting && uploadProgress > 0 && (
             <div className="mt-2">
-              <div className="h-1.5 bg-white rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#7C3AED] rounded-full transition-all"
-                  style={{ width: `${uploadProgress}%` }}
-                />
+              <div className="h-1.5 bg-[#F7F7F5] border border-[#E9E9E7] rounded-full overflow-hidden">
+                <div className="h-full bg-[#2383E2] rounded-full transition-all duration-150" style={{ width: `${uploadProgress}%` }} />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{uploadProgress}% complete</p>
+              <p className="text-[12px] text-[#787774] mt-1">{uploadProgress}% complete</p>
             </div>
           )}
         </form>

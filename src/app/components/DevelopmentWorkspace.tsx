@@ -82,7 +82,7 @@ function DiffLines({ patch }: { patch: string }) {
         let bg = '';
         if (line.startsWith('+')) { cls = 'text-foreground'; bg = 'bg-[#F7F7F5]'; }
         else if (line.startsWith('-')) { cls = 'text-[#f87171]'; bg = 'bg-[rgba(255,59,92,0.08)]'; }
-        else if (line.startsWith('@@')) { cls = 'text-[#2383E2]'; bg = 'bg-[rgba(139,92,246,0.08)]'; }
+        else if (line.startsWith('@@')) { cls = 'text-[#2383E2]'; bg = 'bg-[#F7F7F5]'; }
         return (
           <div key={i} className={`${bg} px-3 whitespace-pre`}>
             <span className="select-none text-[#787774]">{line[0] === '+' ? '+' : line[0] === '-' ? '-' : ' '}</span>
@@ -497,31 +497,33 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
   const renderTree = (nodes: TreeNode[] | null, depth = 0) => {
     if (!nodes || nodes.length === 0) {
-      return <p className="text-xs text-muted-foreground p-2">{treeLoading ? 'Loading files...' : 'No files'}</p>;
+      return <p className="text-[12px] text-[#787774] p-2">{treeLoading ? 'Loading files…' : 'No files'}</p>;
     }
-    return nodes.map(node => (
+    return nodes.map(node => {
+      const isSelected = selectedFile === node.path && node.type === 'file';
+      return (
       <React.Fragment key={node.path}>
         <button
           onClick={() => node.type === 'dir' ? toggleDir(node.path) : (setSelectedFile(node.path), setTab('code'))}
-          className="flex items-center gap-1 w-full text-left px-2 py-[3px] hover:bg-[#F7F7F5] text-xs"
+          className={`flex items-center gap-1 w-full text-left px-2 py-[3px] text-[13px] cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-[#E9E9E7] text-[#37352F]' : 'hover:bg-[#F7F7F5] text-[#37352F]'}`}
           style={{ paddingLeft: `${8 + depth * 14}px` }}
         >
           {node.type === 'dir' ? (
             <>
-              {expanded.has(node.path) ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
-              <Folder className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
+              {expanded.has(node.path) ? <ChevronDown className="w-3 h-3 text-[#787774] shrink-0" /> : <ChevronRight className="w-3 h-3 text-[#787774] shrink-0" />}
+              <Folder className="w-3.5 h-3.5 text-[#787774] shrink-0" />
             </>
           ) : (
             <>
               <span className="w-3" />
-              <File className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
+              <File className="w-3.5 h-3.5 text-[#787774] shrink-0" />
             </>
           )}
-          <span className={`truncate ${selectedFile === node.path && node.type === 'file' ? 'text-[#2383E2]' : 'text-[#37352F]'}`}>{node.name}</span>
+          <span className={`truncate font-mono text-[13px] ${isSelected ? 'text-[#37352F] font-medium' : 'text-[#37352F]'}`}>{node.name}</span>
         </button>
         {node.type === 'dir' && expanded.has(node.path) && renderTree(node.children || [], depth + 1)}
       </React.Fragment>
-    ));
+    )});
   };
 
   const tabs: { id: WorkspaceTab; label: string; icon: any }[] = [
@@ -535,9 +537,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Integration status header */}
-      <div className="bg-white border border-[#E9E9E7] p-4 rounded-[6px]">
+    <div className="space-y-4 max-w-[900px] mx-auto" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <span className="flex items-center gap-2 text-[#2383E2]">
             <span className="w-2 h-2 rounded-full bg-[#2383E2]" />
@@ -581,15 +582,14 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
         </div>
       </div>
 
-      {/* Workspace tabs */}
-      <div className="flex gap-1 border-b border-[#E9E9E7]">
+      <div className="flex gap-6 border-b border-[#E9E9E7]">
         {tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             disabled={!repo || (t.id !== 'deploys' && t.id !== 'issue' && !branch) || (t.id === 'pr' && !prNumber)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 transition disabled:opacity-40 ${
-              tab === t.id ? 'border-[#2383E2] text-[#2383E2] font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
+            className={`flex items-center gap-1.5 px-1 py-2 text-[14px] border-b-2 -mb-px cursor-pointer transition-colors duration-150 disabled:opacity-40 ${
+              tab === t.id ? 'border-[#2383E2] text-[#37352F] font-medium' : 'border-transparent text-[#787774] hover:text-[#37352F]'
             }`}
           >
             <t.icon className="w-4 h-4" />
@@ -608,8 +608,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
         )}
       </div>
 
-      {/* Actions: repo select, create branch, open PR */}
-      <div className="bg-white border border-[#E9E9E7] p-3 rounded-[6px] space-y-2">
+      <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-3 space-y-2">
         {appRepos.length > 0 && (
           <select
             value={repo?.id || (g?.repositoryId || '')}
@@ -617,7 +616,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               const r = repositories.find(x => x.id === e.target.value);
               updateWorkGithub(workKind, workId, { repositoryId: r ? `${r.owner}/${r.name}` : e.target.value } as any);
             }}
-            className="w-full bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
+            className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] cursor-pointer transition-colors duration-150"
           >
             <option value="">Select repository...</option>
             {appRepos.map(r => (
@@ -626,12 +625,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
           </select>
         )}
         {repo && (
-          <div className="flex items-center gap-2 bg-white border border-[#E9E9E7] rounded-[6px] px-2">
-            <GitBranch className="w-3.5 h-3.5 text-[#2383E2] shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-[#E0E0DE] rounded-[6px] px-2 focus-within:border-[#2383E2] focus-within:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150">
+            <GitBranch className="w-3.5 h-3.5 text-[#787774] shrink-0" />
             <select
               value={branch}
               onChange={e => setViewBranch(e.target.value)}
-              className="w-full bg-transparent text-foreground text-sm py-1.5 rounded-[6px] outline-none"
+              className="w-full bg-transparent text-[#37352F] text-[14px] py-1.5 outline-none cursor-pointer"
               title="Switch branch"
             >
               <option value={branch}>{branch}</option>
@@ -647,12 +646,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               value={branchName}
               onChange={e => setBranchName(e.target.value)}
               placeholder="New branch name (e.g. feature/sim-142)"
-              className="flex-1 bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
+              className="flex-1 bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150"
             />
             <button
               onClick={handleCreateBranch}
               disabled={busy === 'branch' || !branchName.trim()}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#2383E2] text-[#FFFFFF] text-sm font-medium hover:bg-[#1a6fc0] rounded-[6px] disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               {busy === 'branch' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <GitBranch className="w-3.5 h-3.5" />}
               Create Branch
@@ -665,12 +664,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
               value={prTitle}
               onChange={e => setPrTitle(e.target.value)}
               placeholder="Pull request title"
-              className="flex-1 bg-white border border-[#E9E9E7] text-foreground text-sm px-2 py-1.5 rounded-[6px]"
+              className="flex-1 bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150"
             />
             <button
               onClick={handleOpenPr}
               disabled={busy === 'pr'}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#059669] rounded-[6px] disabled:opacity-50"
+              className="flex items-center gap-1 px-3 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               {busy === 'pr' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <GitPullRequest className="w-3.5 h-3.5" />}
               Open PR
@@ -681,9 +680,11 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* No repo/branch empty state */}
       {(!repo || !branch) && (
-        <div className="text-center py-10 bg-white border border-[#E9E9E7] rounded-[6px]">
-          <GitBranch className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center py-10 bg-white border border-[#E9E9E7] rounded-[8px]">
+          <span className="w-12 h-12 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] flex items-center justify-center mx-auto mb-3">
+            <GitBranch className="w-6 h-6 text-[#9B9A97]" />
+          </span>
+          <p className="text-[14px] text-[#787774]">
             {!repo ? 'Link a repository to this work item to open the workspace.' : 'Create a branch to start the development workspace.'}
           </p>
         </div>
@@ -691,36 +692,36 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* CODE TAB */}
       {repo && branch && tab === 'code' && (
-        <div className="grid grid-cols-[240px_1fr] h-[520px] border border-[#E9E9E7] rounded-[6px] overflow-hidden">
-          <div className="bg-white border-r border-[#E9E9E7] flex flex-col">
-            <div className="p-2 border-b border-[#E9E9E7] flex items-center gap-1">
-              <Search className="w-3.5 h-3.5 text-muted-foreground" />
+        <div className="grid grid-cols-[280px_1fr] h-[520px] border border-[#E9E9E7] rounded-[8px] overflow-hidden bg-white">
+          <div className="bg-[#FBFBFA] border-r border-[#E9E9E7] flex flex-col min-h-0">
+            <div className="p-2 border-b border-[#E9E9E7] flex items-center gap-1.5 bg-white">
+              <Search className="w-3.5 h-3.5 text-[#9B9A97] shrink-0" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search files..."
-                className="flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-[#787774]"
+                placeholder="Search files…"
+                className="flex-1 bg-transparent text-[12px] text-[#37352F] outline-none placeholder:text-[#9B9A97]"
               />
             </div>
-            <div className="flex-1 overflow-y-auto py-1">
+            <div className="flex-1 overflow-y-auto py-1 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-thumb]:bg-[#E9E9E7] hover:[&::-webkit-scrollbar-thumb]:bg-[#E0E0DE]" style={{ scrollbarWidth: 'thin' }}>
               {filteredTree === null ? (
-                <p className="text-xs text-muted-foreground p-2">Loading...</p>
+                <p className="text-[12px] text-[#787774] p-2">Loading…</p>
               ) : filteredTree.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-2">No matching files</p>
+                <p className="text-[12px] text-[#787774] p-2">No matching files</p>
               ) : renderTree(filteredTree)}
             </div>
           </div>
           <div className="bg-white overflow-auto">
             {selectedFile ? (
               fileLoading ? (
-                <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading {selectedFile}...
+                <div className="flex items-center gap-2 p-4 text-[14px] text-[#787774]">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+                  Loading {selectedFile}…
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E9E9E7] text-xs text-muted-foreground sticky top-0 bg-white">
-                    <span className="font-mono">{selectedFile}</span>
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-[#E9E9E7] text-[12px] text-[#787774] sticky top-0 bg-white z-10">
+                    <span className="font-mono text-[#37352F] truncate text-[12px]">{selectedFile}</span>
                     <div className="flex items-center gap-3">
                       {canReview && prNumber && prDetail?.state === 'open' && (
                         <span className="flex items-center gap-1 text-[#2383E2]">
@@ -742,16 +743,16 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                     const commentable = canReview && prNumber && prDetail?.state === 'open';
                     const hasComments = existing.length > 0 || pending.length > 0;
                     return (
-                      <div key={num} className={hasComments ? 'bg-[rgba(250,204,21,0.04)]' : ''}>
+                      <div key={num} className={hasComments ? 'bg-[#F7F7F5]' : ''}>
                         <div
                           onClick={() => commentable && startComment(num)}
                           className={`group flex items-start hover:bg-[#F7F7F5] ${commentable ? 'cursor-pointer' : ''}`}
                         >
-                          <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#facc15]' : 'text-[#787774]'} group-hover:text-muted-foreground`}>
-                            {hasComments && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#facc15] mr-2 align-middle" />}
+                          <span className={`w-10 shrink-0 text-right pr-3 select-none py-px text-xs leading-5 font-mono ${hasComments ? 'text-[#2383E2]' : 'text-[#787774]'} group-hover:text-muted-foreground`}>
+                            {hasComments && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2383E2] mr-2 align-middle" />}
                             {num}
                           </span>
-                          <span className="flex-1 whitespace-pre text-[12px] leading-5 py-px font-mono text-[#37352F]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+                          <span className="flex-1 whitespace-pre text-[13px] leading-5 py-px font-mono text-[#37352F]" style={{ fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace" }}>
                             {line || '\u00A0'}
                           </span>
                           {commentable && !composing && (
@@ -762,8 +763,8 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                         </div>
 
                         {existing.map((c: any) => (
-                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-white border border-[rgba(250,204,21,0.15)] rounded-[6px] p-2 text-xs">
-                            <div className="flex items-center gap-2 text-[#facc15]">
+                          <div key={c.id} className="ml-10 mr-4 mb-1 bg-white border border-[#E9E9E7] rounded-[6px] p-2 text-xs">
+                            <div className="flex items-center gap-2 text-[#2383E2]">
                               <MessageSquare className="w-3 h-3" />
                               <span className="font-medium">{c.author}</span>
                               <span className="text-muted-foreground">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
@@ -830,16 +831,18 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
 
       {/* CHANGES TAB */}
       {repo && branch && tab === 'changes' && (
-        <div className="h-[520px] overflow-auto border border-[#E9E9E7] rounded-[6px] bg-white">
+        <div className="h-[520px] overflow-auto border border-[#E9E9E7] rounded-[8px] bg-white">
           {diffLoading ? (
-            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading diff...
+            <div className="flex items-center gap-2 p-4 text-[14px] text-[#787774]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#2383E2]" />
+              Loading diff…
             </div>
           ) : diff.length === 0 ? (
             <div className="text-center py-10">
-              <GitCompareArrows className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
+              <span className="w-12 h-12 bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] flex items-center justify-center mx-auto mb-3">
+                <GitCompareArrows className="w-6 h-6 text-[#9B9A97]" />
+              </span>
+              <p className="text-[14px] text-[#787774]">
                 {diffMeta ? `No changes between ${diffMeta.base || 'base'} and head.` : 'No diff available yet.'}
               </p>
             </div>
@@ -847,15 +850,15 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
             <div className="space-y-4 p-2">
               {diff.map((f: any) => (
                 <div key={f.filename} className="border border-[#E9E9E7] rounded-[6px] overflow-hidden">
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-white text-xs">
-                    <span className="font-mono text-foreground">{f.filename}</span>
-                    <span className="flex items-center gap-3">
-                      <span className="text-foreground">+{f.additions}</span>
-                      <span className="text-[#f87171]">-{f.deletions}</span>
-                      <span className={`px-1.5 py-0.5 rounded-[6px] ${
-                        f.status === 'added' ? 'bg-[#F7F7F5] text-[#2383E2]'
-                        : f.status === 'removed' ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
-                        : 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+                  <div className="flex items-center justify-between px-3 py-2 bg-[#FBFBFA] border-b border-[#E9E9E7] text-[12px]">
+                    <span className="font-mono text-[#37352F] truncate">{f.filename}</span>
+                    <span className="flex items-center gap-2 shrink-0 ml-3">
+                      <span className="text-[#0F7B6C] font-medium">+{f.additions}</span>
+                      <span className="text-[#EB5757]">-{f.deletions}</span>
+                      <span className={`px-1.5 py-0.5 rounded-[6px] text-[11px] font-medium border ${
+                        f.status === 'added' ? 'bg-white border-[#E9E9E7] text-[#0F7B6C]'
+                        : f.status === 'removed' ? 'bg-white border-[#E9E9E7] text-[#EB5757]'
+                        : 'bg-white border-[#E9E9E7] text-[#787774]'
                       }`}>{f.status}</span>
                     </span>
                   </div>
@@ -941,7 +944,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                       CI: {prDetail.checkStatus || 'pending'}
                     </span>
                     <span className={`px-2 py-0.5 rounded-[6px] ${
-                      prDetail.state === 'merged' ? 'bg-[rgba(139,92,246,0.15)] text-[#2383E2]'
+                      prDetail.state === 'merged' ? 'bg-[#F7F7F5] text-[#2383E2]'
                       : prDetail.state === 'open' ? 'bg-[#F7F7F5] text-[#2383E2]'
                       : 'bg-[rgba(107,107,128,0.1)] text-muted-foreground'
                     }`}>
@@ -986,7 +989,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                           <button
                             onClick={() => handleReview('COMMENT')}
                             disabled={busy === 'review'}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[rgba(148,163,184,0.2)] text-[#37352F] text-sm font-medium hover:bg-[#273449] rounded-[6px] disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E9E9E7] text-[#37352F] text-sm font-medium hover:bg-[#F7F7F5] rounded-[6px] disabled:opacity-50"
                           >
                             <MessageSquare className="w-4 h-4" />
                             Comment
@@ -1013,7 +1016,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                         <button
                           onClick={handleMerge}
                           disabled={busy === 'merge' || prDetail.state === 'merged'}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#7c3aed] rounded-[6px] disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium hover:bg-[#1A6FC0] rounded-[6px] disabled:opacity-50"
                           title={prDetail.reviewState === 'approved' ? 'Merge this PR' : `Review not yet approved (${prDetail.reviewState}) — merge anyway?`}
                         >
                           <GitPullRequest className="w-4 h-4" />
@@ -1069,12 +1072,12 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Comments on code</p>
                     <div className="space-y-2">
                       {prDetail.reviewComments.map((c: any) => (
-                        <div key={c.id} className="flex items-start gap-2 bg-white border border-[rgba(250,204,21,0.12)] p-2 rounded-[6px]">
-                          <MessageSquare className="w-3.5 h-3.5 text-[#facc15] mt-0.5 shrink-0" />
+                        <div key={c.id} className="flex items-start gap-2 bg-white border border-[#E9E9E7] p-2 rounded-[6px]">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#2383E2] mt-0.5 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-xs">
                               <span className="font-medium text-foreground">{c.author}</span>
-                              <span className="text-[#facc15] font-mono">{c.path}:{c.line}</span>
+                              <span className="text-[#2383E2] font-mono">{c.path}:{c.line}</span>
                               {c.createdAt && <span className="text-muted-foreground">{new Date(c.createdAt).toLocaleString()}</span>}
                             </div>
                             <p className="text-xs text-[#37352F] mt-1 whitespace-pre-wrap">{c.body}</p>
@@ -1137,7 +1140,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
                 <Github className="w-5 h-5 text-[#2383E2] mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-[6px] ${g.issue.state === 'closed' ? 'bg-[#2383E2]/20 text-[#37352F]' : 'bg-[#2383E2]/20 text-[#2383E2]'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-[6px] ${g.issue.state === 'closed' ? 'bg-[#F7F7F5] border border-[#E9E9E7] text-[#37352F]' : 'bg-[#F7F7F5] border border-[#E9E9E7] text-[#2383E2]'}`}>
                       {g.issue.state}
                     </span>
                     <span className="text-sm font-mono text-foreground">#{g.issue.issueNumber}</span>

@@ -54,34 +54,34 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Link2 className="w-4 h-4" />
+        <h3 className="text-[14px] font-semibold text-[#37352F] flex items-center gap-2 tracking-[-0.01em]">
+          <Link2 className="w-4 h-4 text-[#787774]" />
           Dependencies
-          <span className="text-xs font-normal text-muted-foreground">({deps.length})</span>
+          <span className="text-[12px] font-normal text-[#787774]">({deps.length})</span>
         </h3>
         {canManage && (
           <button
             onClick={() => setShowAdd(!showAdd)}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-[rgba(124,58,237,0.1)] text-[#7C3AED] hover:bg-[rgba(124,58,237,0.2)] rounded"
+            className="flex items-center gap-1.5 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-white border border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5]"
           >
-            <Plus className="w-3.5 h-3.5" /> Link Work
+            <Plus className="w-3.5 h-3.5" /> Link work
           </button>
         )}
       </div>
 
       {blockedBy.length > 0 && (
-        <div className="bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.3)] p-3 rounded">
-          <p className="text-xs font-medium text-[#ef4444] flex items-center gap-1 mb-2">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-3">
+          <p className="text-[12px] font-medium text-[#EB5757] flex items-center gap-1.5 mb-2">
             <AlertTriangle className="w-3.5 h-3.5" /> Blocked by
           </p>
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {blockedBy.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
-                <span>{labelFor(d.fromKind, d.fromId)}</span>
+              <li key={d.id} className="flex items-center justify-between text-[14px] text-[#37352F] bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] px-2.5 py-1.5">
+                <span className="truncate">{labelFor(d.fromKind, d.fromId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="ml-2 p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] cursor-pointer transition-colors duration-150 shrink-0">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -92,14 +92,14 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {blocking.length > 0 && (
-        <div className="bg-[rgba(234,179,8,0.08)] border border-[rgba(234,179,8,0.3)] p-3 rounded">
-          <p className="text-xs font-medium text-[#eab308] mb-2">Blocks</p>
-          <ul className="space-y-1">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-3">
+          <p className="text-[12px] font-medium text-[#787774] mb-2">Blocks</p>
+          <ul className="space-y-1.5">
             {blocking.map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
-                <span>{labelFor(d.toKind, d.toId)}</span>
+              <li key={d.id} className="flex items-center justify-between text-[14px] text-[#37352F] bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] px-2.5 py-1.5">
+                <span className="truncate">{labelFor(d.toKind, d.toId)}</span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="ml-2 p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] cursor-pointer transition-colors duration-150 shrink-0">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -110,18 +110,18 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
       )}
 
       {deps.filter(d => d.type === 'related_to').length > 0 && (
-        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Related to</p>
-          <ul className="space-y-1">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-3">
+          <p className="text-[12px] font-medium text-[#787774] mb-2">Related to</p>
+          <ul className="space-y-1.5">
             {deps.filter(d => d.type === 'related_to').map(d => (
-              <li key={d.id} className="flex items-center justify-between text-sm text-foreground">
-                <span>
+              <li key={d.id} className="flex items-center justify-between text-[14px] text-[#37352F] bg-[#F7F7F5] border border-[#E9E9E7] rounded-[6px] px-2.5 py-1.5">
+                <span className="truncate">
                   {d.fromKind === workKind && d.fromId === workId
                     ? labelFor(d.toKind, d.toId)
                     : labelFor(d.fromKind, d.fromId)}
                 </span>
                 {canManage && (
-                  <button onClick={() => deleteWorkDependency(d.id)} className="text-muted-foreground hover:text-[#ef4444]">
+                  <button onClick={() => deleteWorkDependency(d.id)} className="ml-2 p-1 text-[#787774] hover:text-[#EB5757] hover:bg-white border border-transparent hover:border-[#E9E9E7] rounded-[6px] cursor-pointer transition-colors duration-150 shrink-0">
                     <Unlink className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -131,12 +131,16 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
         </div>
       )}
 
+      {deps.length === 0 && !showAdd && (
+        <p className="text-[14px] text-[#787774] bg-white border border-[#E9E9E7] rounded-[8px] p-4 text-center">No dependencies linked.</p>
+      )}
+
       {showAdd && (
-        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded space-y-2">
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-3 space-y-3">
           <select
             value={depType}
             onChange={e => setDepType(e.target.value as WorkDependencyType)}
-            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+            className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] cursor-pointer transition-colors duration-150"
           >
             <option value="blocked_by">Blocked by</option>
             <option value="blocks">Blocks</option>
@@ -145,9 +149,9 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <select
             value={targetId}
             onChange={e => setTargetId(e.target.value)}
-            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+            className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] cursor-pointer transition-colors duration-150"
           >
-            <option value="">Select work item...</option>
+            <option value="">Select work item…</option>
             {workRefs.filter(r => r.id !== workId).map(r => (
               <option key={r.kind + r.id} value={r.id}>{r.label}</option>
             ))}
@@ -155,9 +159,9 @@ export function DependenciesPanel({ workKind, workId, workRefs }: DependenciesPa
           <button
             onClick={handleAdd}
             disabled={!targetId}
-            className="w-full px-3 py-1.5 bg-[#7C3AED] text-[#020617] text-sm font-medium hover:bg-[#6D28D9] rounded disabled:opacity-50"
+            className="w-full px-3 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
           >
-            Add Link
+            Add link
           </button>
         </div>
       )}

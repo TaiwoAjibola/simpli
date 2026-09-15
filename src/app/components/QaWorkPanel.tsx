@@ -53,30 +53,37 @@ export function QaWorkPanel({ workKind, workId, qualifies }: QaWorkPanelProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-          QA Cycles
-          <span className="text-xs font-normal text-muted-foreground">({cycles.length})</span>
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-3 flex items-center gap-2 tracking-[-0.01em]">
+          QA cycles
+          <span className="text-[12px] font-normal text-[#787774]">({cycles.length})</span>
         </h3>
         {cycles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No QA cycles recorded yet.</p>
+          <p className="text-[14px] text-[#787774] bg-white border border-[#E9E9E7] rounded-[8px] p-4 text-center">No QA cycles recorded yet.</p>
         ) : (
           <ul className="space-y-2">
             {cycles.map(c => (
-              <li key={c.id} className="flex items-start gap-2 bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded">
-                {c.result === 'pass' ? (
-                  <CheckCircle className="w-4 h-4 text-[#A78BFA] shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-[#ef4444] shrink-0 mt-0.5" />
-                )}
-                <div className="text-sm text-foreground">
-                  <span className="font-medium">Cycle {c.cycleNumber}</span>
-                  <span className="text-muted-foreground"> · {c.environment} · {new Date(c.testedAt).toLocaleDateString()}</span>
-                  {c.notes && <p className="text-sm text-[#CBD5E1] mt-1">{c.notes}</p>}
+              <li key={c.id} className="flex items-start gap-3 bg-white border border-[#E9E9E7] rounded-[8px] p-3 hover:bg-[#F7F7F5] transition-colors duration-150">
+                <span className={`w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 mt-0.5 border ${c.result === 'pass' ? 'bg-white border-[#E9E9E7] text-[#0F7B6C]' : 'bg-white border-[#E9E9E7] text-[#EB5757]'}`}>
+                  {c.result === 'pass' ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <XCircle className="w-4 h-4" />
+                  )}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[14px] font-medium text-[#37352F]">Cycle {c.cycleNumber}</span>
+                    <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded-[6px] border ${c.result === 'pass' ? 'bg-[#F7F7F5] border-[#E9E9E7] text-[#0F7B6C]' : 'bg-[#F7F7F5] border-[#E9E9E7] text-[#EB5757]'}`}>
+                      {c.result === 'pass' ? 'Pass' : 'Fail'}
+                    </span>
+                    <span className="text-[12px] text-[#787774]">{c.environment} · {new Date(c.testedAt).toLocaleDateString()}</span>
+                  </div>
+                  {c.notes && <p className="text-[14px] text-[#37352F] mt-1 leading-[1.5]">{c.notes}</p>}
                   {c.defectsDiscovered.length > 0 && (
-                    <p className="text-xs text-[#ef4444] mt-1">
-                      <Bug className="w-3 h-3 inline mr-1" />
+                    <p className="text-[12px] text-[#EB5757] mt-1 flex items-center gap-1">
+                      <Bug className="w-3 h-3" />
                       Discovered: {c.defectsDiscovered.join(', ')}
                     </p>
                   )}
@@ -88,47 +95,56 @@ export function QaWorkPanel({ workKind, workId, qualifies }: QaWorkPanelProps) {
       </div>
 
       {canTest && (
-        <div className="bg-white border border-[rgba(124,58,237,0.1)] p-3 rounded space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">Record QA Result</h3>
-          <select
-            value={environment}
-            onChange={e => setEnvironment(e.target.value as any)}
-            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
-          >
-            {(['dev', 'staging', 'production', 'uat'] as const).map(e => (
-              <option key={e} value={e}>{e}</option>
-            ))}
-          </select>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="QA notes..."
-            className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded min-h-[80px]"
-          />
-          {workKind === 'task' && (
-            <input
-              value={defectsDiscovered}
-              onChange={e => setDefectsDiscovered(e.target.value)}
-              placeholder="New defect codes discovered (comma separated, e.g. DEF-101)"
-              className="w-full bg-[#020617] border border-[rgba(124,58,237,0.2)] text-foreground text-sm px-2 py-1.5 rounded"
+        <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4 space-y-3">
+          <h3 className="text-[14px] font-semibold text-[#37352F] tracking-[-0.01em]">Record QA result</h3>
+          <div>
+            <label className="block text-[12px] font-medium text-[#787774] mb-1">Environment</label>
+            <select
+              value={environment}
+              onChange={e => setEnvironment(e.target.value as any)}
+              className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] cursor-pointer transition-colors duration-150"
+            >
+              {(['dev', 'staging', 'production', 'uat'] as const).map(e => (
+                <option key={e} value={e}>{e}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-[#787774] mb-1">Notes</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="QA notes…"
+              className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] min-h-[80px] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] resize-none transition-colors duration-150"
             />
+          </div>
+          {workKind === 'task' && (
+            <div>
+              <label className="block text-[12px] font-medium text-[#787774] mb-1">Defects discovered</label>
+              <input
+                value={defectsDiscovered}
+                onChange={e => setDefectsDiscovered(e.target.value)}
+                placeholder="Comma separated, e.g. DEF-101"
+                className="w-full bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] px-2.5 py-[6px] outline-none placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:shadow-[0_0_0_1px_#2383E2] transition-colors duration-150"
+              />
+            </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-1">
             <button
               onClick={() => handleRecord('pass')}
               disabled={busy}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#A78BFA] text-white text-sm hover:bg-[#059669] rounded disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-[6px] bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               {busy ? <Loader className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Mark Passed
+              Mark passed
             </button>
             <button
               onClick={() => handleRecord('fail')}
               disabled={busy}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#dc2626] text-white text-sm hover:bg-[#b91c1c] rounded disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-[6px] bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] hover:text-[#EB5757] hover:border-[#E9E9E7] disabled:opacity-50 cursor-pointer transition-colors duration-150"
             >
               <XCircle className="w-4 h-4" />
-              Mark Failed
+              Mark failed
             </button>
           </div>
         </div>
