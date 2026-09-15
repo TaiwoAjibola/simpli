@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -45,6 +45,30 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
+  const centralFileRef = useRef<HTMLInputElement>(null);
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] || '');
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+  const uploadCentral = async (file: File, appId: string, appName: string): Promise<string> => {
+    const contentBase64 = await fileToBase64(file);
+    const res = await fetch('/api/drive?action=upload-central', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId, appName, fileName: file.name, mimeType: file.type || 'application/octet-stream', contentBase64 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Central upload failed');
+    return data.file?.webViewLink || data.webViewLink || `https://drive.google.com/file/d/${data.file?.id}/view`;
+  };
 
   const handleDriveSelect = (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string }[]) => {
     if (!currentUser) return;
@@ -100,23 +124,45 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
       let attachmentUrls: any[] = [];
       if (attachments.length > 0) {
         setUploadStatus(`Uploading ${attachments.length} file(s)...`);
+        const appName = apps.find(a => a.id === formData.applicationId)?.name || formData.applicationId;
         for (let i = 0; i < attachments.length; i++) {
           const file = attachments[i];
-          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           setUploadStatus(`Uploading ${file.name} (${i + 1}/${attachments.length})...`);
           setUploadProgress(Math.round(((i) / attachments.length) * 100));
-          const fileRef = ref(storage, `defects/${Date.now()}_${safeName}`);
-          await uploadBytes(fileRef, file);
-          const downloadURL = await getDownloadURL(fileRef);
-          attachmentUrls.push({
-            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            name: file.name,
-            url: downloadURL,
-            size: file.size,
-            type: file.type,
-            uploadedAt: new Date(),
-            uploadedBy: currentUser.id
-          });
+          let driveUrl: string | null = null;
+          try {
+            if (formData.applicationId) driveUrl = await uploadCentral(file, formData.applicationId, appName);
+          } catch (centralErr: any) {
+            const msg = centralErr?.message || '';
+            if (msg.includes('Central Drive not configured')) {
+              showToast({ type: 'error', title: 'Central Drive not configured', message: 'Use Import from my Drive or configure GOOGLE_DRIVE_REFRESH_TOKEN.' });
+            }
+          }
+          if (driveUrl) {
+            attachmentUrls.push({
+              id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: file.name,
+              url: driveUrl,
+              size: file.size,
+              type: file.type,
+              uploadedAt: new Date(),
+              uploadedBy: currentUser.id
+            });
+          } else {
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const fileRef = ref(storage, `defects/${Date.now()}_${safeName}`);
+            await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(fileRef);
+            attachmentUrls.push({
+              id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: file.name,
+              url: downloadURL,
+              size: file.size,
+              type: file.type,
+              uploadedAt: new Date(),
+              uploadedBy: currentUser.id
+            });
+          }
         }
         setUploadProgress(100);
       }
@@ -395,10 +441,10 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
             <div className="col-span-2">
               <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Attachments</label>
               <div className="flex items-center gap-2 mb-2">
-                <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+                <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer border border-[#2383E2]">
                   <Upload className="w-4 h-4" />
                   <span>Upload</span>
-                  <input type="file" multiple className="hidden" onChange={handleFileSelect} />
+                  <input ref={centralFileRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
                 </label>
                 <button
                   type="button"
@@ -406,7 +452,7 @@ export function DefectCreateModal({ onClose, appId, editDefect }: DefectCreateMo
                   className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
                 >
                   <Folder className="w-4 h-4 text-[#787774]" />
-                  {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+                  {showDrivePicker ? 'Close Drive' : 'Import from my Drive'}
                 </button>
                 {attachments.length > 0 && (
                   <span className="text-[14px] text-[#787774]">{attachments.length} file(s) selected</span>

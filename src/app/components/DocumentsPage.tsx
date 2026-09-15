@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import {
   FileText,
   Upload,
@@ -16,6 +18,7 @@ import {
   MoreHorizontal,
   Download,
   Folder,
+  Loader,
 } from 'lucide-react';
 import { GoogleDrivePicker } from './GoogleDrivePicker';
 
@@ -23,12 +26,20 @@ type FileType = 'all' | 'document' | 'image' | 'code' | 'spreadsheet' | 'archive
 type ViewMode = 'grid' | 'list';
 
 export function DocumentsPage() {
-  const { apps, appDocuments } = useApp();
+  const { apps, appDocuments, addAppDocument } = useApp();
+  const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<FileType>('all');
   const [showDrivePicker, setShowDrivePicker] = useState(false);
   const [driveFiles, setDriveFiles] = useState<{ id: string; name: string; mimeType: string; webViewLink?: string; size?: string; modifiedTime?: string }[]>([]);
+  const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || '');
+  const [uploadingCentral, setUploadingCentral] = useState(false);
+  const centralInputRef = useRef<HTMLInputElement>(null);
+
+  const effectiveAppId = selectedAppId || apps[0]?.id || '';
+  const effectiveAppName = apps.find(a => a.id === effectiveAppId)?.name || effectiveAppId;
 
   const driveMapped = driveFiles.map(df => ({
     id: df.id,
@@ -61,6 +72,65 @@ export function DocumentsPage() {
     setShowDrivePicker(false);
   };
 
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] || '');
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+  const uploadCentral = async (file: File, appId: string, appName: string): Promise<string> => {
+    const contentBase64 = await fileToBase64(file);
+    const res = await fetch('/api/drive?action=upload-central', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId, appName, fileName: file.name, mimeType: file.type || 'application/octet-stream', contentBase64 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Central upload failed');
+    return data.file?.webViewLink || data.webViewLink || `https://drive.google.com/file/d/${data.file?.id}/view`;
+  };
+
+  const handleCentralUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!effectiveAppId) {
+      showToast({ type: 'error', title: 'Select an app', message: 'Please select an application to upload to.' });
+      return;
+    }
+    if (!currentUser) return;
+    setUploadingCentral(true);
+    try {
+      const webViewLink = await uploadCentral(file, effectiveAppId, effectiveAppName);
+      await addAppDocument({
+        appId: effectiveAppId,
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        fileName: file.name,
+        fileUrl: webViewLink,
+        fileSize: file.size,
+        fileType: file.type,
+        uploadedBy: currentUser.id,
+        uploadedByName: currentUser.name || 'Unknown',
+        version: '1.0'
+      });
+      showToast({ type: 'success', title: 'Uploaded to Drive', message: `${file.name} uploaded to Simpli/${effectiveAppName}.` });
+    } catch (err: any) {
+      const msg = err?.message || 'Upload failed';
+      if (msg.includes('Central Drive not configured')) {
+        showToast({ type: 'error', title: 'Central Drive not configured', message: 'Configure GOOGLE_DRIVE_REFRESH_TOKEN or use Import from my Drive.' });
+      } else {
+        showToast({ type: 'error', title: 'Upload failed', message: msg });
+      }
+    } finally {
+      setUploadingCentral(false);
+      if (centralInputRef.current) centralInputRef.current.value = '';
+    }
+  };
+
   const filteredFiles = allFiles.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || file.type === filterType;
@@ -87,13 +157,24 @@ export function DocumentsPage() {
           <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{allFiles.length} files across {apps.length} projects</p>
         </div>
         <div className="flex items-center gap-2">
+          <select
+            value={effectiveAppId}
+            onChange={(e) => setSelectedAppId(e.target.value)}
+            className="px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] rounded-[6px] text-sm focus:outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] cursor-pointer transition-colors duration-150"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            {apps.map(app => (
+              <option key={app.id} value={app.id}>{app.name}</option>
+            ))}
+          </select>
+          <input ref={centralInputRef} type="file" className="hidden" onChange={handleCentralUpload} />
           <button onClick={() => setShowDrivePicker(!showDrivePicker)} className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E9E9E7] text-[#37352F] font-medium text-sm hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
             <Folder className="w-4 h-4 text-[#787774]" />
-            {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+            {showDrivePicker ? 'Close Drive' : 'Import from my Drive'}
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1a6fc7] rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <Upload className="w-4 h-4" />
-            Upload
+          <button onClick={() => centralInputRef.current?.click()} disabled={uploadingCentral} className="flex items-center gap-2 px-4 py-2 bg-[#2383E2] text-white font-medium text-sm hover:bg-[#1a6fc7] disabled:opacity-50 rounded-[6px] transition-colors duration-150 cursor-pointer" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {uploadingCentral ? <Loader className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploadingCentral ? 'Uploading...' : 'Upload'}
           </button>
         </div>
       </div>

@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 
-const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 function getOAuth2Client() {
   return new google.auth.OAuth2(
@@ -9,6 +10,59 @@ function getOAuth2Client() {
     process.env.GOOGLE_DRIVE_CLIENT_SECRET,
     process.env.GOOGLE_DRIVE_REDIRECT_URI
   );
+}
+
+async function getCentralOAuthClient() {
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  if (!refreshToken) return null;
+  const oauth2Client = getOAuth2Client();
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  try {
+    await oauth2Client.getAccessToken();
+  } catch {}
+  return oauth2Client;
+}
+
+async function ensureFolder(drive: any, name: string, parentId: string | null): Promise<string> {
+  const sanitized = name.replace(/'/g, "\\'");
+  const q = `mimeType='application/vnd.google-apps.folder' and name='${sanitized}' and trashed=false${parentId ? ` and '${parentId}' in parents` : ''}`;
+  const res = await drive.files.list({
+    q,
+    fields: 'files(id, name)',
+    pageSize: 10,
+    spaces: 'drive'
+  });
+  const found = res.data.files && res.data.files[0];
+  if (found) return found.id as string;
+  const created = await drive.files.create({
+    requestBody: {
+      name,
+      mimeType: 'application/vnd.google-apps.folder',
+      ...(parentId ? { parents: [parentId] } : {})
+    },
+    fields: 'id'
+  });
+  return created.data.id as string;
+}
+
+const appFolderCache = new Map<string, { rootId: string; appFolderId: string }>();
+
+async function ensureAppFolder(drive: any, appId: string, appName: string): Promise<{ rootId: string; appFolderId: string }> {
+  const cacheKey = `${appId}:${appName}`;
+  const cached = appFolderCache.get(cacheKey);
+  if (cached) return cached;
+
+  const rootId = await ensureFolder(drive, 'Simpli', null);
+
+  const rawBase = appName && appName.trim() ? appName.trim() : appId;
+  const sanitizedBase = rawBase.replace(/['"\\]/g, '').trim().slice(0, 100) || appId;
+  const folderName = rawBase === appId ? sanitizedBase : `${sanitizedBase} — ${appId.slice(-6)}`;
+
+  const appFolderId = await ensureFolder(drive, folderName, rootId);
+
+  const result = { rootId, appFolderId };
+  appFolderCache.set(cacheKey, result);
+  return result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -41,7 +95,92 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         const oauth2Client = getOAuth2Client();
         const { tokens } = await oauth2Client.getToken(code);
-        return res.status(200).json({ tokens });
+        if (tokens.refresh_token) {
+          console.log('Central Drive refresh_token — add to env GOOGLE_DRIVE_REFRESH_TOKEN:', tokens.refresh_token);
+        }
+        return res.status(200).json({
+          tokens,
+          ...(tokens.refresh_token ? { refresh_token: tokens.refresh_token } : {})
+        });
+      }
+
+      case 'ensure-app-folder': {
+        const { appId, appName, access_token } = req.body;
+        if (!appId) {
+          return res.status(400).json({ error: 'Missing appId' });
+        }
+        let drive: any = null;
+        const centralClient = await getCentralOAuthClient();
+        if (centralClient) {
+          drive = google.drive({ version: 'v3', auth: centralClient });
+        } else if (access_token) {
+          const fallbackClient = getOAuth2Client();
+          fallbackClient.setCredentials({ access_token });
+          drive = google.drive({ version: 'v3', auth: fallbackClient });
+        } else {
+          return res.status(400).json({ error: 'Central Drive not configured — add GOOGLE_DRIVE_REFRESH_TOKEN. Use per-user picker as fallback.' });
+        }
+        const result = await ensureAppFolder(drive, appId, appName || appId);
+        return res.status(200).json(result);
+      }
+
+      case 'upload-central': {
+        const { appId, appName, fileName, mimeType, contentBase64, access_token } = req.body;
+        if (!appId || !fileName || !contentBase64) {
+          return res.status(400).json({ error: 'Missing appId, fileName or contentBase64' });
+        }
+        let drive: any = null;
+        const centralClient = await getCentralOAuthClient();
+        if (centralClient) {
+          drive = google.drive({ version: 'v3', auth: centralClient });
+        } else if (access_token) {
+          const fallbackClient = getOAuth2Client();
+          fallbackClient.setCredentials({ access_token });
+          drive = google.drive({ version: 'v3', auth: fallbackClient });
+        } else {
+          return res.status(400).json({ error: 'Central Drive not configured — add GOOGLE_DRIVE_REFRESH_TOKEN. Use per-user picker as fallback.' });
+        }
+        const { appFolderId } = await ensureAppFolder(drive, appId, appName || appId);
+        const buffer = Buffer.from(contentBase64, 'base64');
+        const stream = Readable.from(buffer);
+        const created = await drive.files.create({
+          requestBody: {
+            name: fileName,
+            parents: [appFolderId]
+          },
+          media: {
+            mimeType: mimeType || 'application/octet-stream',
+            body: stream
+          },
+          fields: 'id, name, webViewLink, webContentLink'
+        });
+        return res.status(200).json({ file: created.data });
+      }
+
+      case 'list-central': {
+        const { appId, appName, access_token } = req.body;
+        if (!appId) {
+          return res.status(400).json({ error: 'Missing appId' });
+        }
+        let drive: any = null;
+        const centralClient = await getCentralOAuthClient();
+        if (centralClient) {
+          drive = google.drive({ version: 'v3', auth: centralClient });
+        } else if (access_token) {
+          const fallbackClient = getOAuth2Client();
+          fallbackClient.setCredentials({ access_token });
+          drive = google.drive({ version: 'v3', auth: fallbackClient });
+        } else {
+          return res.status(400).json({ error: 'Central Drive not configured — add GOOGLE_DRIVE_REFRESH_TOKEN. Use per-user picker as fallback.' });
+        }
+        const { appFolderId } = await ensureAppFolder(drive, appId, appName || appId);
+        const response = await drive.files.list({
+          q: `'${appFolderId}' in parents and trashed=false`,
+          fields: 'files(id, name, mimeType, size, modifiedTime, webViewLink, webContentLink, iconLink, parents)',
+          pageSize: 100,
+          orderBy: 'modifiedTime desc'
+        });
+        return res.status(200).json({ files: response.data.files || [] });
       }
 
       case 'list': {

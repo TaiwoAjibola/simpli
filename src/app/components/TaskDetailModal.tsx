@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
@@ -373,8 +373,9 @@ function DetailsTab({
   priorityColors,
   statusColors
 }: any) {
-  const { tags, employees, updateTask } = useApp();
+  const { tags, employees, updateTask, apps, goals } = useApp();
   const { currentUser } = useAuth();
+  const { showToast } = useToast();
   const [effortInput, setEffortInput] = useState<string>(task.effortHours != null ? String(task.effortHours) : '');
   const [showFollowerPicker, setShowFollowerPicker] = useState(false);
   const [showRecurrence, setShowRecurrence] = useState(false);
@@ -382,11 +383,41 @@ function DetailsTab({
   const [recInterval, setRecInterval] = useState('1');
   const [showDrivePicker, setShowDrivePicker] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const centralInputRef = useRef<HTMLInputElement>(null);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] || '');
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+  const uploadCentral = async (file: File, appId: string, appName: string): Promise<string> => {
+    const contentBase64 = await fileToBase64(file);
+    const res = await fetch('/api/drive?action=upload-central', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId, appName, fileName: file.name, mimeType: file.type || 'application/octet-stream', contentBase64 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Central upload failed');
+    return data.file?.webViewLink || data.webViewLink || `https://drive.google.com/file/d/${data.file?.id}/view`;
+  };
+
+  const getTaskAppInfo = () => {
+    const appId = (task as any).appId || goals.find((g: any) => g.id === task.goalId)?.appId || app?.id || '';
+    const appName = apps.find((a: any) => a.id === appId)?.name || app?.name || appId;
+    return { appId, appName };
   };
 
   const handleDriveSelect = async (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string; size?: string }[]) => {
@@ -408,24 +439,49 @@ function DetailsTab({
     const files = e.target.files;
     if (!files || !currentUser) return;
     setUploading(true);
+    const { appId, appName } = getTaskAppInfo();
     try {
       const uploaded: any[] = [];
       for (const file of Array.from(files)) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const fileRef = ref(storage, `tasks/${task.id}/${Date.now()}_${safeName}`);
-        await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(fileRef);
-        uploaded.push({
-          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          url: downloadURL,
-          size: file.size,
-          uploadedAt: new Date(),
-          uploadedBy: currentUser.id
-        });
+        let driveUrl: string | null = null;
+        try {
+          if (appId) driveUrl = await uploadCentral(file, appId, appName);
+        } catch (centralErr: any) {
+          const msg = centralErr?.message || '';
+          if (msg.includes('Central Drive not configured')) {
+            showToast({ type: 'error', title: 'Central Drive not configured', message: 'Use Import from my Drive or configure GOOGLE_DRIVE_REFRESH_TOKEN.' });
+            continue;
+          }
+        }
+        if (driveUrl) {
+          uploaded.push({
+            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: file.name,
+            url: driveUrl,
+            size: file.size,
+            uploadedAt: new Date(),
+            uploadedBy: currentUser.id
+          });
+        } else {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const fileRef = ref(storage, `tasks/${task.id}/${Date.now()}_${safeName}`);
+          await uploadBytes(fileRef, file);
+          const downloadURL = await getDownloadURL(fileRef);
+          uploaded.push({
+            id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: file.name,
+            url: downloadURL,
+            size: file.size,
+            uploadedAt: new Date(),
+            uploadedBy: currentUser.id
+          });
+        }
       }
       if (uploaded.length > 0) {
         await updateTask(task.id, { attachments: [...(task.attachments || []), ...uploaded] });
+        if (uploaded.some((a: any) => a.url.includes('drive.google.com'))) {
+          showToast({ type: 'success', title: 'Uploaded to Drive', message: `${uploaded.length} file(s) uploaded to Simpli/${appName}.` });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -642,17 +698,17 @@ function DetailsTab({
           Attachments
         </h3>
         <div className="flex items-center gap-2 mb-3">
-          <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer">
+          <label className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] transition-colors duration-150 cursor-pointer border border-[#2383E2]">
             {uploading ? <Loader className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             <span>{uploading ? 'Uploading...' : 'Upload'}</span>
-            <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+            <input ref={centralInputRef} type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
           </label>
           <button
             onClick={() => setShowDrivePicker(!showDrivePicker)}
             className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E9E9E7] text-[#37352F] text-[14px] font-medium rounded-[6px] hover:bg-[#F7F7F5] transition-colors duration-150 cursor-pointer"
           >
             <Folder className="w-4 h-4 text-[#787774]" />
-            {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+            {showDrivePicker ? 'Close Drive' : 'Import from my Drive'}
           </button>
         </div>
         {showDrivePicker && (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function EngineeringDocsSection({ appId }: Props) {
-  const { appDocuments, addAppDocument, deleteAppDocument, getDocumentsForApp } = useApp();
+  const { appDocuments, addAppDocument, deleteAppDocument, getDocumentsForApp, apps, getAppById } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -22,9 +22,84 @@ export function EngineeringDocsSection({ appId }: Props) {
   const [docFile, setDocFile] = useState<File | null>(null);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [showDrivePicker, setShowDrivePicker] = useState(false);
+  const centralInputRef = useRef<HTMLInputElement>(null);
 
   const docs = getDocumentsForApp(appId);
   const canUpload = hasPermission('manage_documents');
+  const appName = getAppById?.(appId)?.name || apps.find(a => a.id === appId)?.name || appId;
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve((result.split(',')[1] || ''));
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+  const uploadCentral = async (file: File, aId: string, aName: string): Promise<string> => {
+    const contentBase64 = await fileToBase64(file);
+    const res = await fetch('/api/drive?action=upload-central', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: aId, appName: aName, fileName: file.name, mimeType: file.type || 'application/octet-stream', contentBase64 })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Central upload failed');
+    return data.file?.webViewLink || data.webViewLink || `https://drive.google.com/file/d/${data.file?.id}/view`;
+  };
+
+  const handleCentralFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+    setUploading(true);
+    try {
+      const webViewLink = await uploadCentral(file, appId, appName);
+      await addAppDocument({
+        appId,
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        version: '1.0',
+        fileName: file.name,
+        fileUrl: webViewLink,
+        fileSize: file.size,
+        fileType: file.type,
+        uploadedBy: currentUser.id,
+        uploadedByName: currentUser.name || 'Unknown'
+      });
+      showToast({ type: 'success', title: 'Uploaded to Drive', message: `${file.name} uploaded to Simpli/${appName}.` });
+    } catch (err: any) {
+      const msg = err?.message || 'Upload failed';
+      if (msg.includes('Central Drive not configured') || msg.includes('Central not configured')) {
+        showToast({ type: 'error', title: 'Central Drive not configured', message: 'Configure GOOGLE_DRIVE_REFRESH_TOKEN or use Import from my Drive.' });
+      } else {
+        try {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const fileRef = ref(storage, `appDocs/${appId}/${Date.now()}_${safeName}`);
+          await uploadBytes(fileRef, file);
+          const fileUrl = await getDownloadURL(fileRef);
+          await addAppDocument({
+            appId,
+            name: file.name.replace(/\.[^/.]+$/, ''),
+            version: '1.0',
+            fileName: file.name,
+            fileUrl,
+            fileSize: file.size,
+            fileType: file.type,
+            uploadedBy: currentUser.id,
+            uploadedByName: currentUser.name || 'Unknown'
+          });
+          showToast({ type: 'success', title: 'Uploaded', message: `${file.name} uploaded (fallback storage).` });
+        } catch (fbErr: any) {
+          showToast({ type: 'error', title: 'Upload Failed', message: fbErr?.message || msg });
+        }
+      }
+    } finally {
+      setUploading(false);
+      if (centralInputRef.current) centralInputRef.current.value = '';
+    }
+  };
 
   const handleDriveImport = async (driveFiles: { id: string; name: string; mimeType: string; webViewLink?: string }[]) => {
     if (!currentUser) return;
@@ -49,11 +124,19 @@ export function EngineeringDocsSection({ appId }: Props) {
     if (!currentUser || !docFile || !docName.trim()) return;
     setUploading(true);
     try {
-      const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileRef = ref(storage, `appDocs/${appId}/${Date.now()}_${safeName}`);
-      await uploadBytes(fileRef, docFile);
-      const fileUrl = await getDownloadURL(fileRef);
-
+      let fileUrl: string;
+      try {
+        fileUrl = await uploadCentral(docFile, appId, appName);
+      } catch (centralErr: any) {
+        const msg = centralErr?.message || '';
+        if (msg.includes('Central Drive not configured') || msg.includes('Central not configured')) {
+          throw centralErr;
+        }
+        const safeName = docFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const fileRef = ref(storage, `appDocs/${appId}/${Date.now()}_${safeName}`);
+        await uploadBytes(fileRef, docFile);
+        fileUrl = await getDownloadURL(fileRef);
+      }
       await addAppDocument({
         appId,
         name: docName.trim(),
@@ -65,14 +148,18 @@ export function EngineeringDocsSection({ appId }: Props) {
         uploadedBy: currentUser.id,
         uploadedByName: currentUser.name || 'Unknown'
       });
-
       showToast({ type: 'success', title: 'Document Uploaded', message: `${docName} v${docVersion || '1.0'} uploaded.` });
       setShowForm(false);
       setDocName('');
       setDocVersion('');
       setDocFile(null);
     } catch (error: any) {
-      showToast({ type: 'error', title: 'Upload Failed', message: error?.message || 'Could not upload document.' });
+      const msg = error?.message || 'Could not upload document.';
+      if (msg.includes('Central Drive not configured')) {
+        showToast({ type: 'error', title: 'Central Drive not configured', message: 'Configure GOOGLE_DRIVE_REFRESH_TOKEN or use Import from my Drive.' });
+      } else {
+        showToast({ type: 'error', title: 'Upload Failed', message: msg });
+      }
     } finally {
       setUploading(false);
     }
@@ -105,21 +192,30 @@ export function EngineeringDocsSection({ appId }: Props) {
         </div>
         {canUpload && (
           <div className="flex items-center gap-2">
+            <input ref={centralInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.md,.txt,.xlsx,.pptx,.png,.jpg,.jpeg" onChange={handleCentralFileChange} />
             <button
               onClick={() => { setShowDrivePicker(!showDrivePicker); setShowForm(false); }}
-              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
-              style={showDrivePicker ? { background: '#37352F', color: '#FFFFFF', border: '1px solid #37352F' } : { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' }}
+              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-white border border-[#E9E9E7] text-[#37352F] hover:bg-[#F7F7F5]"
+              style={showDrivePicker ? { background: '#37352F', color: '#FFFFFF', border: '1px solid #37352F' } : undefined}
             >
               <Folder className="w-4 h-4" />
-              {showDrivePicker ? 'Close Drive' : 'Import from Drive'}
+              {showDrivePicker ? 'Close Drive' : 'Import from my Drive'}
+            </button>
+            <button
+              onClick={() => centralInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-[#2383E2] text-white border border-[#2383E2] hover:bg-[#1A6FC0] disabled:opacity-50"
+            >
+              {uploading ? <Loader className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Upload document
             </button>
             <button
               onClick={() => { setShowForm(!showForm); setShowDrivePicker(false); }}
-              className="flex items-center gap-2 px-3 py-[6px] text-[14px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150"
-              style={showForm ? { background: '#FFFFFF', color: '#37352F', border: '1px solid #E9E9E7' } : { background: '#2383E2', color: '#FFFFFF', border: '1px solid #2383E2' }}
+              className="flex items-center gap-2 px-2 py-[6px] text-[12px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-white border border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]"
+              title="Upload with custom name/version"
             >
-              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {showForm ? 'Cancel' : 'Upload document'}
+              {showForm ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              {showForm ? 'Close' : 'Advanced'}
             </button>
           </div>
         )}
@@ -204,7 +300,7 @@ export function EngineeringDocsSection({ appId }: Props) {
           <p className="text-[14px] text-[#787774]">No engineering documents yet.</p>
           {canUpload && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => centralInputRef.current?.click()}
               className="mt-3 text-[14px] font-medium text-[#2383E2] hover:underline cursor-pointer"
             >
               Upload the first document
