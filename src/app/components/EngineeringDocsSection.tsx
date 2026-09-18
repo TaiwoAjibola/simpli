@@ -184,7 +184,7 @@ export function EngineeringDocsSection({ appId }: Props) {
   };
 
   return (
-    <div className="max-w-[900px] mx-auto space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[16px] font-semibold text-[#37352F] tracking-[-0.01em]">Engineering Documents</h2>

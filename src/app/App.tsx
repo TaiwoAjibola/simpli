@@ -9,6 +9,7 @@ import { SeedPage } from './components/SeedPage';
 
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
 const TasksModule = lazy(() => import('./components/TasksModule').then(m => ({ default: m.TasksModule })));
+const PlansPage = lazy(() => import('./components/PlansPage').then(m => ({ default: m.PlansPage })));
 const CalendarPage = lazy(() => import('./components/CalendarPage').then(m => ({ default: m.CalendarPage })));
 const ClientsPage = lazy(() => import('./components/ClientsPage').then(m => ({ default: m.ClientsPage })));
 const DocumentsPage = lazy(() => import('./components/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
@@ -53,6 +54,7 @@ function AppContent() {
             {currentPage === 'projects' && <ProjectsPage onNavigate={handleNavigate} />}
             {currentPage === 'app-details' && <AppDetailsPage appId={selectedAppId} onNavigate={handleNavigate} />}
             {currentPage === 'tasks' && <TasksModule />}
+            {currentPage === 'plans' && <PlansPage />}
             {currentPage === 'defects' && <DefectDashboard />}
             {currentPage === 'action-points' && <ActionPointsPage />}
             {currentPage === 'calendar' && <CalendarPage />}

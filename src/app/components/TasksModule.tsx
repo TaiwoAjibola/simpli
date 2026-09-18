@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import {
   Plus,
   CheckCircle,
@@ -24,7 +25,9 @@ import {
   FileText,
   X,
   Tag as TagIcon,
-  GitPullRequest
+  GitPullRequest,
+  GripVertical,
+  NotebookText
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
@@ -32,14 +35,25 @@ import { TaskDetailModal } from './TaskDetailModal';
 import { TaskTimeline } from './TaskTimeline';
 import { TagBadges } from './TagBadges';
 import { getWorkTargetStates } from '../../utils/workflow';
+import { monthLabel, sortPlans } from '../../utils/plans';
 
-function availableTaskStatuses(task: Task): TaskStatus[] {
-  const { hasPermission } = useAuth();
+const KANBAN_STATUSES: TaskStatus[] = ['not_started', 'in_progress', 'blocked', 'pending_qa', 'completed', 'approved'];
+
+const KANBAN_COLUMN_META: Record<TaskStatus, { label: string; dot: string }> = {
+  not_started: { label: 'Not Started', dot: 'bg-[#9B9A97]' },
+  in_progress: { label: 'In Progress', dot: 'bg-[#2383E2]' },
+  blocked: { label: 'Blocked', dot: 'bg-[#EB5757]' },
+  pending_qa: { label: 'Pending QA', dot: 'bg-[#787774]' },
+  completed: { label: 'Completed', dot: 'bg-[#0F7B6C]' },
+  approved: { label: 'Approved', dot: 'bg-[#0F7B6C]' }
+};
+
+function availableTaskStatuses(task: Task, can: (permission: string) => boolean): TaskStatus[] {
   const targets = getWorkTargetStates({
     kind: 'task',
     currentStatus: task.status,
     workType: task.workType || 'non-development',
-    can: hasPermission
+    can
   });
   const result = [task.status, ...targets] as TaskStatus[];
   return [...new Set(result)];
@@ -49,6 +63,7 @@ export function TasksModule() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const { currentUser, hasPermission } = useAuth();
+  const { showToast } = useToast();
   const {
     tasks,
     goals,
@@ -66,7 +81,9 @@ export function TasksModule() {
     addComment,
     sendTaskNotification,
     tags,
-    getTagsForApp
+    getTagsForApp,
+    monthlyPlans,
+    getMonthlyPlanById
   } = useApp();
 
   const canAssignTasks = hasPermission('assign_tasks');
@@ -76,11 +93,15 @@ export function TasksModule() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [taskMode, setTaskMode] = useState<'single' | 'multi'>('single');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
+  const [filterPlan, setFilterPlan] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
+  const [dragTaskId, setDragTaskId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<TaskStatus | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     goalId: '',
+    planId: '',
     assignedTo: [] as string[],
     priority: 'medium' as const,
     startDate: '',
@@ -89,6 +110,7 @@ export function TasksModule() {
     workType: 'non-development' as 'development' | 'non-development'
   });
   const [multiGoalId, setMultiGoalId] = useState('');
+  const [multiPlanId, setMultiPlanId] = useState('');
   const [multiTasks, setMultiTasks] = useState<{
     name: string;
     description: string;
@@ -121,8 +143,72 @@ export function TasksModule() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const filteredTasks =
-    filterStatus === 'all' ? tasks : tasks.filter((t) => t.status === filterStatus);
+  const sortedPlans = useMemo(() => sortPlans(monthlyPlans), [monthlyPlans]);
+
+  const filteredTasks = useMemo(() => {
+    let result = tasks;
+    if (filterPlan !== 'all') {
+      const planGoalIds = new Set(goals.filter(g => g.planId === filterPlan).map(g => g.id));
+      result = result.filter(t => t.planId === filterPlan || (t.goalId && planGoalIds.has(t.goalId)));
+    }
+    if (filterStatus !== 'all') {
+      result = result.filter(t => t.status === filterStatus);
+    }
+    return result;
+  }, [tasks, goals, filterPlan, filterStatus]);
+
+  const handleStatusChange = async (task: Task, status: TaskStatus) => {
+    if (status === task.status) return;
+    const ok = await updateTask(task.id, { status });
+    if (!ok) {
+      showToast({
+        type: 'error',
+        title: 'Status change blocked',
+        message: `"${task.name}" can't move from ${task.status.replace(/_/g, ' ')} to ${status.replace(/_/g, ' ')} for your role.`
+      });
+    }
+  };
+
+  const handleKanbanDrop = async (task: Task, targetStatus: TaskStatus) => {
+    setDragOverColumn(null);
+    setDragTaskId(null);
+    if (targetStatus === task.status) return;
+    const allowed = getWorkTargetStates({
+      kind: 'task',
+      currentStatus: task.status,
+      workType: task.workType || 'non-development',
+      can: hasPermission
+    });
+    if (!allowed.includes(targetStatus)) {
+      showToast({
+        type: 'error',
+        title: 'Move not allowed',
+        message: `"${task.name}" can't move from ${task.status.replace(/_/g, ' ')} to ${targetStatus.replace(/_/g, ' ')} for your role.`
+      });
+      return;
+    }
+    const ok = await updateTask(task.id, { status: targetStatus });
+    if (ok) {
+      showToast({ type: 'success', title: 'Task moved', message: `"${task.name}" → ${targetStatus.replace(/_/g, ' ')}` });
+    } else {
+      showToast({
+        type: 'error',
+        title: 'Move blocked',
+        message: `"${task.name}" is blocked by a dependency or workflow rule.`
+      });
+    }
+  };
+
+  const dragTask = dragTaskId ? tasks.find(t => t.id === dragTaskId) : null;
+  const dragValidTargets = useMemo(() => {
+    if (!dragTask) return new Set<TaskStatus>();
+    return new Set(getWorkTargetStates({
+      kind: 'task',
+      currentStatus: dragTask.status,
+      workType: dragTask.workType || 'non-development',
+      can: hasPermission
+    }) as TaskStatus[]);
+  }, [dragTask, hasPermission]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,10 +216,17 @@ export function TasksModule() {
     try {
       if (editingTask) {
         await updateTask(editingTask.id, {
-          ...formData,
-          startDate: formData.startDate ? new Date(formData.startDate) : undefined,
-          endDate: formData.endDate ? new Date(formData.endDate) : undefined
-        });
+          name: formData.name,
+          description: formData.description,
+          goalId: formData.goalId || null,
+          planId: formData.planId || null,
+          assignedTo: formData.assignedTo,
+          priority: formData.priority,
+          tags: formData.tags,
+          workType: formData.workType,
+          startDate: formData.startDate ? new Date(formData.startDate) : null,
+          endDate: formData.endDate ? new Date(formData.endDate) : null
+        } as any);
         resetForm();
       } else if (taskMode === 'multi') {
         const createdTasks = [];
@@ -142,6 +235,7 @@ export function TasksModule() {
             name: row.name,
             description: row.description,
             goalId: multiGoalId || undefined,
+            planId: multiPlanId || undefined,
             assignedTo: row.assignedTo,
             priority: row.priority,
             startDate: row.startDate ? new Date(row.startDate) : undefined,
@@ -155,6 +249,7 @@ export function TasksModule() {
         const newTask = await addTask({
           ...formData,
           goalId: formData.goalId || undefined,
+          planId: formData.planId || undefined,
           startDate: formData.startDate ? new Date(formData.startDate) : undefined,
           endDate: formData.endDate ? new Date(formData.endDate) : undefined,
           status: 'not_started',
@@ -208,6 +303,7 @@ export function TasksModule() {
       name: task.name,
       description: task.description,
       goalId: task.goalId || '',
+      planId: task.planId || '',
       assignedTo: [...task.assignedTo],
       priority: task.priority,
       startDate: task.startDate ? format(task.startDate, 'yyyy-MM-dd') : '',
@@ -294,6 +390,7 @@ export function TasksModule() {
       name: '',
       description: '',
       goalId: '',
+      planId: '',
       assignedTo: [],
       priority: 'medium',
       startDate: '',
@@ -303,6 +400,7 @@ export function TasksModule() {
     });
     setMultiTasks([]);
     setMultiGoalId('');
+    setMultiPlanId('');
     setSubtasks([]);
     setNewSubtask({ name: '', assignedTo: [], priority: 'medium', startDate: '', endDate: '' });
     setShowSubtasksSection(false);
@@ -314,7 +412,7 @@ export function TasksModule() {
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, ui-sans-system, sans-serif' }}>
-      <div className="max-w-[900px] mx-auto px-6 py-8">
+      <div className="px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-[#37352F]">Tasks</h1>
@@ -482,49 +580,96 @@ export function TasksModule() {
                   </div>
 
                   <div>
-                    <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Assign To</label>
-                    <div className="flex flex-wrap gap-2">
-                      {employees.map((emp) => {
-                        const isSelected = formData.assignedTo.includes(emp.id);
+                    <label className="block text-[14px] font-medium text-[#37352F] mb-1.5 flex items-center gap-1.5">
+                      <NotebookText className="w-4 h-4 text-[#787774]" />
+                      Monthly Plan (optional)
+                    </label>
+                    <select
+                      value={formData.planId}
+                      onChange={(e) => setFormData({ ...formData, planId: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
+                    >
+                      <option value="">No Plan</option>
+                      {sortedPlans.map((plan) => {
+                        const app = plan.appId ? getAppById(plan.appId) : null;
                         return (
-                          <button
-                            key={emp.id}
-                            type="button"
-                            onClick={() => toggleAssignee(emp.id)}
-                            className={`px-3 py-1.5 text-[14px] border rounded-[6px] transition-colors duration-150 ${
-                              isSelected
-                                ? 'bg-[#E9E9E7] border-[#E9E9E7] text-[#37352F] font-medium'
-                                : 'bg-white border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]'
-                            }`}
-                          >
-                            {emp.name}
-                          </button>
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name}{app ? ` — ${app.name}` : ` — ${monthLabel(plan.month)}`}
+                          </option>
                         );
                       })}
-                    </div>
-                    {formData.assignedTo.length === 0 && (
-                      <p className="text-[12px] text-[#787774] mt-1">Select one or more assignees</p>
-                    )}
+                    </select>
                   </div>
                 </div>
               ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Goal (optional, all tasks)</label>
+                    <select
+                      value={multiGoalId}
+                      onChange={(e) => setMultiGoalId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
+                    >
+                      <option value="">No Goal</option>
+                      {goals.map((goal) => {
+                        const app = getAppById(goal.appId);
+                        return (
+                          <option key={goal.id} value={goal.id}>
+                            {app?.name} / {goal.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[14px] font-medium text-[#37352F] mb-1.5 flex items-center gap-1.5">
+                      <NotebookText className="w-4 h-4 text-[#787774]" />
+                      Monthly Plan (optional, all tasks)
+                    </label>
+                    <select
+                      value={multiPlanId}
+                      onChange={(e) => setMultiPlanId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
+                    >
+                      <option value="">No Plan</option>
+                      {sortedPlans.map((plan) => {
+                        const app = plan.appId ? getAppById(plan.appId) : null;
+                        return (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name}{app ? ` — ${app.name}` : ` — ${monthLabel(plan.month)}`}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {taskMode === 'single' && (
                 <div>
-                  <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Goal (optional, all tasks)</label>
-                  <select
-                    value={multiGoalId}
-                    onChange={(e) => setMultiGoalId(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
-                  >
-                    <option value="">No Goal</option>
-                    {goals.map((goal) => {
-                      const app = getAppById(goal.appId);
+                  <label className="block text-[14px] font-medium text-[#37352F] mb-1.5">Assign To</label>
+                  <div className="flex flex-wrap gap-2">
+                    {employees.map((emp) => {
+                      const isSelected = formData.assignedTo.includes(emp.id);
                       return (
-                        <option key={goal.id} value={goal.id}>
-                          {app?.name} / {goal.name}
-                        </option>
+                        <button
+                          key={emp.id}
+                          type="button"
+                          onClick={() => toggleAssignee(emp.id)}
+                          className={`px-3 py-1.5 text-[14px] border rounded-[6px] transition-colors duration-150 ${
+                            isSelected
+                              ? 'bg-[#E9E9E7] border-[#E9E9E7] text-[#37352F] font-medium'
+                              : 'bg-white border-[#E9E9E7] text-[#787774] hover:bg-[#F7F7F5] hover:text-[#37352F]'
+                          }`}
+                        >
+                          {emp.name}
+                        </button>
                       );
                     })}
-                  </select>
+                  </div>
+                  {formData.assignedTo.length === 0 && (
+                    <p className="text-[12px] text-[#787774] mt-1">Select one or more assignees</p>
+                  )}
                 </div>
               )}
 
@@ -931,7 +1076,7 @@ export function TasksModule() {
           </div>
         )}
 
-        <div className="mb-6 flex items-center gap-2">
+        <div className="mb-6 flex items-center gap-2 flex-wrap">
           <Filter className="w-4 h-4 text-[#787774]" />
           <select
             value={filterStatus}
@@ -946,6 +1091,32 @@ export function TasksModule() {
             <option value="completed">Completed</option>
             <option value="approved">Approved</option>
           </select>
+          <select
+            value={filterPlan}
+            onChange={(e) => setFilterPlan(e.target.value)}
+            className="px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-[14px] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2]"
+          >
+            <option value="all">All Plans</option>
+            {sortedPlans.map(plan => {
+              const app = plan.appId ? getAppById(plan.appId) : null;
+              return (
+                <option key={plan.id} value={plan.id}>
+                  {plan.name}{app ? ` — ${app.name}` : ` — ${monthLabel(plan.month)}`}
+                </option>
+              );
+            })}
+          </select>
+          {(filterStatus !== 'all' || filterPlan !== 'all') && (
+            <>
+              <span className="text-[13px] text-[#787774]">{filteredTasks.length} matching</span>
+              <button
+                onClick={() => { setFilterStatus('all'); setFilterPlan('all'); }}
+                className="flex items-center gap-1 px-2 py-1 text-[13px] text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] transition-colors duration-150 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" /> Clear filters
+              </button>
+            </>
+          )}
         </div>
 
         {viewMode === 'list' ? (
@@ -954,7 +1125,7 @@ export function TasksModule() {
                 <TaskCard
                   key={task.id}
                   task={task}
-                  onStatusChange={(status) => updateTask(task.id, { status })}
+                  onStatusChange={(status) => handleStatusChange(task, status)}
                   onApprove={() => handleApprove(task.id)}
                   onEdit={() => handleEdit(task)}
                   onDelete={() => handleDelete(task.id)}
@@ -966,36 +1137,80 @@ export function TasksModule() {
                   getGoalById={getGoalById}
                   getAppById={getAppById}
                   getEmployeeById={getEmployeeById}
+                  getPlanById={getMonthlyPlanById}
                   allTags={tags}
                 />
             ))}
           </div>
         ) : viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {(['not_started', 'in_progress', 'blocked', 'pending_qa', 'completed', 'approved'] as TaskStatus[]).map((status) => {
+          <div className={`flex gap-4 items-start pb-4 ${filterStatus === 'all' ? 'overflow-x-auto' : ''}`}>
+            {KANBAN_STATUSES
+              .filter(status => filterStatus === 'all' || filterStatus === status)
+              .map((status) => {
               const statusTasks = filteredTasks.filter(t => t.status === status);
+              const meta = KANBAN_COLUMN_META[status];
+              const isValidTarget = !!dragTask && dragTask.status !== status && dragValidTargets.has(status);
+              const isInvalidTarget = !!dragTask && dragTask.status !== status && !dragValidTargets.has(status);
+              const isOver = dragOverColumn === status;
               return (
-                <div key={status} className="bg-[#F7F7F5] border border-[#E9E9E7] rounded-[8px] p-3">
-                  <h3 className="font-semibold text-[#37352F] mb-3 capitalize text-[12px] tracking-wide">{status.replace('_', ' ')} <span className="text-[#787774] font-normal">· {statusTasks.length}</span></h3>
-                  <div className="space-y-2">
+                <div
+                  key={status}
+                  onDragOver={(e) => {
+                    if (!dragTask) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = isValidTarget ? 'move' : 'none';
+                    if (dragOverColumn !== status) setDragOverColumn(status);
+                  }}
+                  onDragLeave={() => setDragOverColumn(prev => (prev === status ? null : prev))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragTask) handleKanbanDrop(dragTask, status);
+                  }}
+                  className={`bg-[#F7F7F5] border rounded-[8px] p-3 flex flex-col transition-colors duration-150 ${
+                    filterStatus === 'all' ? 'w-[280px] flex-shrink-0' : 'flex-1 min-w-0'
+                  } ${isOver && isValidTarget ? 'border-[#2383E2] bg-[#E8F0FE]' : 'border-[#E9E9E7]'} ${isInvalidTarget ? 'opacity-40' : ''}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
+                    <h3 className="font-semibold text-[#37352F] capitalize text-[12px] tracking-wide">{meta.label}</h3>
+                    <span className="text-[12px] text-[#787774] font-normal ml-auto bg-white border border-[#E9E9E7] rounded-full px-2 py-0.5">{statusTasks.length}</span>
+                  </div>
+                  <div className="space-y-2 min-h-[60px]">
                     {statusTasks.map(task => {
                       const taskGoal = task.goalId ? getGoalById(task.goalId) : null;
-                      const taskApp = taskGoal ? getAppById(taskGoal.appId) : null;
+                      const taskApp = taskGoal ? getAppById(taskGoal.appId) : (task.appId ? getAppById(task.appId) : null);
+                      const isDragging = dragTaskId === task.id;
                       return (
                       <div
                         key={task.id}
-                        className="bg-white border border-[#E9E9E7] rounded-[8px] p-3 cursor-pointer hover:bg-[#F7F7F5] transition-colors duration-150 group"
+                        draggable
+                        onDragStart={(e) => {
+                          setDragTaskId(task.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          try { e.dataTransfer.setData('text/plain', task.id); } catch {}
+                        }}
+                        onDragEnd={() => { setDragTaskId(null); setDragOverColumn(null); }}
+                        className={`bg-white border border-[#E9E9E7] rounded-[8px] p-3 cursor-grab active:cursor-grabbing hover:bg-[#F7F7F5] transition-colors duration-150 group ${isDragging ? 'opacity-40' : ''}`}
                         onClick={() => setSelectedTask(task)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-medium text-[#37352F] leading-snug">{task.name}</p>
+                            <div className="flex items-start gap-1.5">
+                              <GripVertical className="w-3.5 h-3.5 text-[#9B9A97] flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                              <p className="text-[14px] font-medium text-[#37352F] leading-snug">{task.name}</p>
+                            </div>
                             <p className="text-[12px] text-[#787774] mt-0.5 truncate">{taskApp?.name}{taskGoal ? ` → ${taskGoal.name}` : ''}</p>
                             <div className="flex items-center gap-1.5 mt-2">
                               <span className={`text-[11px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${task.priority === 'urgent' ? 'bg-[#FBE9E9] text-[#EB5757] border-[#FBE9E9]' : task.priority === 'high' ? 'bg-white text-[#37352F] border-[#E9E9E7]' : 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 'urgent' ? 'bg-[#EB5757]' : task.priority === 'high' ? 'bg-[#37352F]' : 'bg-[#9B9A97]'}`} />
                                 {task.priority}
                               </span>
+                              {task.dueDate && (
+                                <span className="text-[11px] text-[#787774] inline-flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {format(task.dueDate, 'MMM d')}
+                                </span>
+                              )}
                             </div>
                             <div className="mt-1.5">
                               <TagBadges tagIds={task.tags} allTags={tags} />
@@ -1033,18 +1248,23 @@ export function TasksModule() {
                     );
                   })}
                   {statusTasks.length === 0 && (
-                    <p className="text-[12px] text-[#9B9A97] text-center py-4">No tasks</p>
+                    <div className={`text-[12px] text-[#9B9A97] text-center py-4 border-2 border-dashed rounded-[8px] transition-colors duration-150 ${isOver && isValidTarget ? 'border-[#2383E2] text-[#2383E2]' : 'border-transparent'}`}>
+                      {dragTask && isValidTarget ? 'Drop here' : 'No tasks'}
+                    </div>
                   )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         ) : (
           <TaskTimeline
             tasks={filteredTasks}
             filterStatus={filterStatus}
-            onStatusChange={(id, status) => updateTask(id, { status })}
+            onStatusChange={(id, status) => {
+              const task = tasks.find(t => t.id === id);
+              if (task) handleStatusChange(task, status);
+            }}
             onSelect={(task) => setSelectedTask(task)}
             onFilterChange={(status) => setFilterStatus(status)}
           />
@@ -1081,6 +1301,7 @@ type TaskCardProps = {
   getGoalById: (id: string) => any;
   getAppById: (id: string) => any;
   getEmployeeById: (id: string) => any;
+  getPlanById: (id: string) => any;
   allTags: any[];
 };
 
@@ -1098,11 +1319,13 @@ function TaskCard({
   getGoalById,
   getAppById,
   getEmployeeById,
+  getPlanById,
   allTags
 }: TaskCardProps) {
   const { hasPermission } = useAuth();
   const goal = task.goalId ? getGoalById(task.goalId) : null;
   const app = goal ? getAppById(goal.appId) : null;
+  const plan = task.planId ? getPlanById(task.planId) : (goal?.planId ? getPlanById(goal.planId) : null);
   const assignees = task.assignedTo.map(id => getEmployeeById(id)).filter(Boolean);
   const approver = task.approvedBy ? getEmployeeById(task.approvedBy) : null;
 
@@ -1118,7 +1341,7 @@ function TaskCard({
   const config = statusConfig[task.status] ?? statusConfig.not_started;
   const Icon = config.icon;
 
-  const availableStatuses = availableTaskStatuses(task);
+  const availableStatuses = availableTaskStatuses(task, hasPermission);
 
   return (
     <div
@@ -1188,6 +1411,13 @@ function TaskCard({
             <span className="text-[12px] font-medium px-2 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774]">
               {(task.workType || 'non-development') === 'development' ? 'DEV' : 'OPS'}
             </span>
+
+            {plan && (
+              <span className="text-[12px] font-medium px-2 py-1 rounded-full bg-[#E8F0FE] border border-[#E9E9E7] text-[#2383E2] inline-flex items-center gap-1">
+                <NotebookText className="w-3 h-3" />
+                {plan.name}
+              </span>
+            )}
 
             {task.github?.pullRequest?.prNumber && (
               <span className="text-[12px] font-medium px-2 py-1 rounded-full bg-white border border-[#E9E9E7] text-[#787774] inline-flex items-center gap-1">

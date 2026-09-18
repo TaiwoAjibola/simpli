@@ -174,7 +174,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }, [apps, goals, tasks, defects, phases, repositories]);
 
   return (
-    <div className="p-8 space-y-6 bg-[#FFFFFF] max-w-[900px] mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="p-8 space-y-6 bg-[#FFFFFF]" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[24px] font-semibold text-[#37352F] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Dashboard</h1>

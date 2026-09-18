@@ -537,7 +537,7 @@ export function DevelopmentWorkspace({ workKind, workId, github }: Props) {
   ];
 
   return (
-    <div className="space-y-4 max-w-[900px] mx-auto" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="space-y-4" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <span className="flex items-center gap-2 text-[#2383E2]">

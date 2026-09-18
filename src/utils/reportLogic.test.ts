@@ -101,6 +101,38 @@ describe('buildReportSnapshot', () => {
     expect(snap.goals.total).toBe(2);
     expect(snap.goals.completed).toBe(1);
   });
+
+  it('summarizes monthly plans and their attached work', () => {
+    const plans: any[] = [
+      { id: 'p1', name: 'January 2026 Plan', month: '2026-01', status: 'active', appId: 'a1', objective: 'Ship auth' },
+      { id: 'p2', name: 'Other App Plan', month: '2026-01', status: 'planned', appId: 'aX' }
+    ];
+    const goals: any[] = [
+      { id: 'g1', name: 'Launch', appId: 'a1', status: 'active', planId: 'p1' },
+      { id: 'g2', name: 'Done Goal', appId: 'a1', status: 'completed' }
+    ];
+    const tasks: any[] = [
+      { id: 't1', name: 'Auth', goalId: 'g1', status: 'approved' },
+      { id: 't2', name: 'Direct plan task', planId: 'p1', status: 'in_progress' },
+      { id: 't3', name: 'Unattached', goalId: 'g2', status: 'completed' }
+    ];
+    const snap = buildReportSnapshot({ ...baseInput, plans, goals, tasks });
+    expect(snap.monthlyPlans.total).toBe(1);
+    expect(snap.monthlyPlans.active).toBe(1);
+    expect(snap.monthlyPlans.items[0]).toMatchObject({
+      name: 'January 2026 Plan',
+      month: '2026-01',
+      status: 'active',
+      tasksTotal: 2,
+      tasksDone: 1,
+      percent: 50
+    });
+  });
+
+  it('defaults monthlyPlans to empty when none provided', () => {
+    const snap = buildReportSnapshot(baseInput);
+    expect(snap.monthlyPlans).toEqual({ total: 0, active: 0, items: [] });
+  });
 });
 
 describe('buildReportPrompt', () => {

@@ -22,7 +22,8 @@ export function GoalsModule() {
     addExpectation,
     updateExpectation,
     deleteExpectation,
-    getExpectationsForGoal
+    getExpectationsForGoal,
+    monthlyPlans
   } = useApp();
 
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +37,7 @@ export function GoalsModule() {
     description: '',
     appId: '',
     phaseId: '',
+    planId: '',
     startDate: '',
     endDate: ''
   });
@@ -53,6 +55,7 @@ export function GoalsModule() {
       updateGoal(editingGoal.id, {
         ...formData,
         phaseId: formData.phaseId || undefined,
+        planId: formData.planId || null,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
@@ -60,11 +63,12 @@ export function GoalsModule() {
       addGoal({
         ...formData,
         phaseId: formData.phaseId || undefined,
+        planId: formData.planId || undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined
       });
     }
-    setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' });
+    setFormData({ name: '', description: '', appId: '', phaseId: '', planId: '', startDate: '', endDate: '' });
     setShowForm(false);
     setEditingGoal(null);
   };
@@ -75,6 +79,7 @@ export function GoalsModule() {
       description: goal.description,
       appId: goal.appId,
       phaseId: goal.phaseId || '',
+      planId: goal.planId || '',
       startDate: goal.startDate ? format(goal.startDate, 'yyyy-MM-dd') : '',
       endDate: goal.endDate ? format(goal.endDate, 'yyyy-MM-dd') : ''
     });
@@ -85,8 +90,11 @@ export function GoalsModule() {
   const filteredGoals = goals.filter(g => {
     if (filterAppId !== 'all' && g.appId !== filterAppId) return false;
     if (filterPhaseId !== 'all') {
-      if (filterPhaseId === 'no-phase') return !g.phaseId;
-      return g.phaseId === filterPhaseId;
+      if (filterPhaseId === 'no-phase') {
+        if (g.phaseId) return false;
+      } else if (g.phaseId !== filterPhaseId) {
+        return false;
+      }
     }
     const goalTasks = getTasksForGoal(g.id);
     if (filterStatus !== 'all' && deriveGoalStatus(g, goalTasks) !== filterStatus) return false;
@@ -146,7 +154,7 @@ export function GoalsModule() {
             onClick={() => {
               setShowForm(!showForm);
               setEditingGoal(null);
-              setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' });
+              setFormData({ name: '', description: '', appId: '', phaseId: '', planId: '', startDate: '', endDate: '' });
             }}
             className="flex items-center gap-2 px-3 py-2 bg-[#2383E2] text-white font-medium hover:bg-[#1A6FC0] transition duration-150 rounded-[6px] text-sm cursor-pointer"
           >
@@ -261,6 +269,23 @@ export function GoalsModule() {
               </div>
             )}
 
+            <div>
+              <label className="block text-sm font-medium text-[#37352F] mb-1.5">Monthly Plan (optional)</label>
+              <select
+                value={formData.planId}
+                onChange={(e) => setFormData({ ...formData, planId: e.target.value })}
+                className="w-full px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] rounded-[6px] focus:border-[#2383E2] focus:outline-none focus:ring-[1px] focus:ring-[#2383E2] transition duration-150 text-sm cursor-pointer"
+              >
+                <option value="">No plan</option>
+                {monthlyPlans
+                  .filter(p => !formData.appId || !p.appId || p.appId === formData.appId)
+                  .map(plan => (
+                    <option key={plan.id} value={plan.id}>{plan.name}</option>
+                  ))}
+              </select>
+              <p className="text-xs text-[#787774] mt-1">Attach this goal to a monthly plan to track it as part of that plan.</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#37352F] mb-1.5 flex items-center gap-2">
@@ -294,7 +319,7 @@ export function GoalsModule() {
               </button>
               <button
                 type="button"
-                onClick={() => { setShowForm(false); setEditingGoal(null); setFormData({ name: '', description: '', appId: '', phaseId: '', startDate: '', endDate: '' }); }}
+                onClick={() => { setShowForm(false); setEditingGoal(null); setFormData({ name: '', description: '', appId: '', phaseId: '', planId: '', startDate: '', endDate: '' }); }}
                 className="px-4 py-2 bg-white text-[#37352F] border border-[#E9E9E7] hover:bg-[#F7F7F5] transition duration-150 rounded-[6px] text-sm cursor-pointer"
               >
                 Cancel
@@ -326,8 +351,14 @@ export function GoalsModule() {
                     <Target className="w-5 h-5 text-[#787774]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[#37352F] text-[15px] leading-tight">{goal.name}</h3>
-                    <p className="text-xs text-[#787774] mt-1">{app?.name}{phase && ` • ${phase.name}`}</p>
+                      <h3 className="font-semibold text-[#37352F] text-[15px] leading-tight">{goal.name}</h3>
+                      <p className="text-xs text-[#787774] mt-1">
+                        {app?.name}{phase && ` • ${phase.name}`}
+                        {goal.planId && (() => {
+                          const plan = monthlyPlans.find(p => p.id === goal.planId);
+                          return plan ? ` • Plan: ${plan.name}` : '';
+                        })()}
+                      </p>
                     <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-[4px] border ${
                       deriveGoalStatus(goal, goalTasks) === 'completed'
                         ? 'text-[#0F7B6C] bg-[rgba(15,123,108,0.08)] border-[rgba(15,123,108,0.15)]'

@@ -556,7 +556,7 @@ export function RepositoryBrowser({ repo, initialBranch, onBack }: Props) {
   const commentableLine = (n: number) => reviewOpen && canReview && commentable.has(n);
 
   return (
-    <div className="space-y-3 max-w-[900px] mx-auto" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="space-y-3" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center gap-3">
         <button onClick={onBack} className="p-1.5 text-[#787774] hover:text-[#37352F] hover:bg-[#F7F7F5] rounded-[6px] cursor-pointer transition-colors duration-150">
           <ArrowLeft className="w-4 h-4" />

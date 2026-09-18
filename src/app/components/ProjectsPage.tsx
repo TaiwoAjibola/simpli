@@ -71,7 +71,7 @@ export function ProjectsPage({ onNavigate }: Props) {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] font-['Inter',sans-serif] p-6">
-      <div className="max-w-[900px] mx-auto">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-[24px] font-semibold text-[#37352F] tracking-tight">Projects</h1>

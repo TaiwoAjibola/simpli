@@ -37,7 +37,7 @@ import { TagBadges } from './TagBadges';
 import { QaWorkPanel } from './QaWorkPanel';
 import { DependenciesPanel } from './DependenciesPanel';
 import { DevelopmentWorkspace } from './DevelopmentWorkspace';
-import { isDevelopmentWork } from '../../utils/workflow';
+import { isDevelopmentWork, getWorkTargetStates } from '../../utils/workflow';
 import { PRIORITY_COLORS, TASK_STATUS_COLORS } from '../../utils/colors';
 import { GoogleDrivePicker } from './GoogleDrivePicker';
 import { storage } from '../../firebase/config';
@@ -97,8 +97,16 @@ export function TaskDetailModal({ task: initialTask, onClose }: TaskDetailModalP
   const subtasks = getSubtasksForTask(task.id);
   const canApprove = hasPermission('approve_tasks');
 
-  const handleStatusChange = (newStatus: TaskStatus) => {
-    updateTask(task.id, { status: newStatus });
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    if (newStatus === task.status) return;
+    const ok = await updateTask(task.id, { status: newStatus });
+    if (!ok) {
+      showToast({
+        type: 'error',
+        title: 'Status change blocked',
+        message: `"${task.name}" can't move from ${task.status.replace(/_/g, ' ')} to ${newStatus.replace(/_/g, ' ')} for your role.`
+      });
+    }
   };
 
   const handleApprove = () => {
@@ -373,8 +381,8 @@ function DetailsTab({
   priorityColors,
   statusColors
 }: any) {
-  const { tags, employees, updateTask, apps, goals } = useApp();
-  const { currentUser } = useAuth();
+  const { tags, employees, updateTask, apps, goals, monthlyPlans } = useApp();
+  const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [effortInput, setEffortInput] = useState<string>(task.effortHours != null ? String(task.effortHours) : '');
   const [showFollowerPicker, setShowFollowerPicker] = useState(false);
@@ -540,19 +548,49 @@ function DetailsTab({
 
       <div>
         <h3 className="text-[14px] font-semibold text-[#37352F] mb-2">Status</h3>
+        {(() => {
+          const validStatuses = [
+            task.status,
+            ...getWorkTargetStates({
+              kind: 'task',
+              currentStatus: task.status,
+              workType: task.workType || 'non-development',
+              can: hasPermission
+            })
+          ].filter((s, i, arr) => arr.indexOf(s) === i) as TaskStatus[];
+          return (
+            <select
+              value={task.status}
+              onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
+              disabled={validStatuses.length <= 1}
+              className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {validStatuses.map(s => (
+                <option key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</option>
+              ))}
+            </select>
+          );
+        })()}
+        {task.status === 'approved' && (
+          <p className="text-[12px] text-[#0F7B6C] mt-1.5">Approved — status is locked.</p>
+        )}
+      </div>
+
+      <div>
+        <h3 className="text-[14px] font-semibold text-[#37352F] mb-2">Monthly Plan</h3>
         <select
-          value={task.status}
-          onChange={(e) => onStatusChange(e.target.value as TaskStatus)}
-          disabled={task.status === 'approved'}
-          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          value={task.planId || (goal as any)?.planId || ''}
+          onChange={(e) => updateTask(task.id, { planId: e.target.value || null } as any)}
+          className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] cursor-pointer"
         >
-          <option value="not_started">Not Started</option>
-          <option value="in_progress">In Progress</option>
-          <option value="blocked">Blocked</option>
-          <option value="pending_qa">Pending QA</option>
-          <option value="completed">Completed</option>
-          <option value="approved" disabled>Approved</option>
+          <option value="">No Plan</option>
+          {monthlyPlans.map((plan: any) => (
+            <option key={plan.id} value={plan.id}>{plan.name}</option>
+          ))}
         </select>
+        {!task.planId && (goal as any)?.planId && (
+          <p className="text-[12px] text-[#787774] mt-1.5">Inherited from goal — select a plan to override.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-6">

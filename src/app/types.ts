@@ -122,6 +122,20 @@ export type Sprint = {
   updatedAt?: Date;
 };
 
+export type MonthlyPlanStatus = 'planned' | 'active' | 'completed';
+
+export type MonthlyPlan = {
+  id: string;
+  name: string;
+  month: string;
+  appId?: string;
+  objective?: string;
+  status: MonthlyPlanStatus;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt?: Date;
+};
+
 export type App = {
   id: string;
   name: string;
@@ -204,6 +218,7 @@ export type Goal = {
   id: string;
   appId: string;
   phaseId?: string;
+  planId?: string;
   name: string;
   description: string;
   createdAt: Date;
@@ -226,6 +241,7 @@ export type Task = {
   goalId?: string;
   appId?: string;
   phaseId?: string;
+  planId?: string;
   name: string;
   description: string;
   assignedTo: string[];

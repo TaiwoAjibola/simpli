@@ -48,7 +48,7 @@ export function MilestonesPage() {
   ];
 
   return (
-    <div className="bg-[#FFFFFF] max-w-[900px] mx-auto p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Milestones</h1>

@@ -53,6 +53,11 @@ export type ReportSnapshot = {
     total: number;
     workload: { name: string; assigned: number; completed: number; inProgress: number; blocked: number }[];
   };
+  monthlyPlans: {
+    total: number;
+    active: number;
+    items: { name: string; month: string; status: string; objective?: string; tasksTotal: number; tasksDone: number; percent: number }[];
+  };
   recentActivity: { userName: string; description: string; timestamp: string }[];
 };
 
@@ -63,6 +68,7 @@ type TaskLike = {
   priority?: string;
   workType?: 'development' | 'non-development';
   goalId?: string;
+  planId?: string;
   assignedTo?: string[];
   dueDate?: Date;
   startDate?: Date;
@@ -88,7 +94,8 @@ type DefectLike = {
   };
 };
 
-type GoalLike = { id: string; name: string; appId?: string; status?: string };
+type GoalLike = { id: string; name: string; appId?: string; status?: string; planId?: string };
+type PlanLike = { id: string; name: string; month: string; status: string; objective?: string; appId?: string };
 type RepoLike = { connectionStatus?: string };
 type EmpLike = { id: string; name: string };
 type ActLike = { id: string; userName: string; description: string; timestamp: any };
@@ -132,12 +139,14 @@ export function buildReportSnapshot(input: {
   repositories: RepoLike[];
   employees: EmpLike[];
   activities: ActLike[];
+  plans?: PlanLike[];
   selectedAppId: string;
   now?: number;
 }): ReportSnapshot {
   const {
     apps, goals, tasks, defects, repositories, employees, activities, selectedAppId
   } = input;
+  const plans = input.plans || [];
   const now = input.now ?? Date.now();
 
   const app = apps.find(a => a.id === selectedAppId);
@@ -210,6 +219,28 @@ export function buildReportSnapshot(input: {
     .slice(0, 8)
     .map(a => ({ userName: a.userName, description: a.description, timestamp: fmtTime(a.timestamp) }));
 
+  const scopedPlans = selectedAppId === 'all'
+    ? plans
+    : plans.filter(p => !p.appId || p.appId === selectedAppId);
+  const planItems = scopedPlans
+    .slice()
+    .sort((a, b) => (a.month < b.month ? 1 : -1))
+    .slice(0, 6)
+    .map(p => {
+      const planGoalIds = new Set(goals.filter(g => g.planId === p.id).map(g => g.id));
+      const planTasks = tasks.filter(t => t.planId === p.id || (t.goalId && planGoalIds.has(t.goalId)));
+      const tasksDone = planTasks.filter(t => t.status === 'completed' || t.status === 'approved').length;
+      return {
+        name: p.name,
+        month: p.month,
+        status: p.status,
+        objective: p.objective,
+        tasksTotal: planTasks.length,
+        tasksDone,
+        percent: planTasks.length > 0 ? Math.round((tasksDone / planTasks.length) * 100) : 0
+      };
+    });
+
   return {
     generatedAt: new Date(now).toISOString(),
     scope,
@@ -250,6 +281,11 @@ export function buildReportSnapshot(input: {
       total: employees.length,
       workload
     },
+    monthlyPlans: {
+      total: scopedPlans.length,
+      active: scopedPlans.filter(p => p.status === 'active').length,
+      items: planItems
+    },
     recentActivity
   };
 }
@@ -262,13 +298,13 @@ export function buildReportSnapshot(input: {
 export function buildReportPrompt(snapshot: ReportSnapshot): { system: string; user: string } {
   const system = [
     'You are the engineering lead for the "Simpli" product management platform.',
-    'You are given a JSON snapshot of one application (or all apps) in Simpli: tasks, defects, goals, GitHub activity, and team workload.',
+    'You are given a JSON snapshot of one application (or all apps) in Simpli: tasks, defects, goals, monthly plans, GitHub activity, and team workload.',
     'Write a concise but insightful progress report in plain Markdown (headings, bullet lists, short paragraphs).',
     'Cover, in this order:',
     '1. **Health overview** — is the app on track? completion rate, blocked items, open critical defects.',
     '2. **What is working** — cite specific strengths from the data (e.g. high completion, clean PR review states, low defect count).',
     '3. **What needs improvement / risks** — overdue or blocked work, changes-requested PRs, open critical defects, team overload.',
-    '4. **Where we are right now** — status distribution, goal progress, GitHub lifecycle (branches, PRs, merges, issues).',
+    '4. **Where we are right now** — status distribution, goal progress, monthly plan progress (call out the active plan by name and how close it is to its objective), GitHub lifecycle (branches, PRs, merges, issues).',
     '5. **Concrete recommendations** — 3-6 actionable, prioritized suggestions grounded ONLY in the snapshot.',
     'Rules:',
     '- Only reference numbers/items that actually appear in the snapshot. Never invent metrics.',

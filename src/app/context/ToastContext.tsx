@@ -7,7 +7,7 @@ type Toast = {
   id: string;
   type: ToastType;
   title: string;
-  message: string;
+  message?: string;
   duration?: number;
 };
 

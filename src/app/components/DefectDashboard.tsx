@@ -116,7 +116,7 @@ export function DefectDashboard() {
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: 'Inter, ui-sans-system, sans-serif' }}>
-      <div className="max-w-[900px] mx-auto px-6 py-8">
+      <div className="px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-[#37352F]">Defect Tracker</h1>

@@ -126,7 +126,7 @@ export function MyWork() {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <div className="max-w-[900px] mx-auto">
+      <div className="w-full">
         <div className="mb-6">
           <h1 className="text-[24px] font-semibold text-[#37352F] tracking-tight">My Work</h1>
           <p className="text-[14px] text-[#787774] mt-1">

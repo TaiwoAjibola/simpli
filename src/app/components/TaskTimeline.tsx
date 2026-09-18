@@ -129,7 +129,7 @@ export function TaskTimeline({ tasks, filterStatus, onStatusChange, onSelect, on
         .filter(g => g.tasks.length > 0);
 
   return (
-    <div className="bg-white border border-[#E9E9E7] rounded-[8px] overflow-hidden max-w-[900px] mx-auto" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="bg-white border border-[#E9E9E7] rounded-[8px] overflow-hidden" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <div className="flex items-center justify-between p-4 border-b border-[#E9E9E7]">
         <button onClick={prevQuarter} className="p-1.5 hover:bg-[#F7F7F5] rounded-[6px] cursor-pointer transition-colors duration-150">
           <ChevronLeft className="w-4 h-4 text-[#787774]" />

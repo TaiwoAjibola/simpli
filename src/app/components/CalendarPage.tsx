@@ -1,15 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../context/ToastContext';
 import {
   ChevronLeft,
   ChevronRight,
+  Plus,
+  NotebookText
 } from 'lucide-react';
+import { monthLabel } from '../../utils/plans';
 
 type CalendarEvent = {
   id: string;
   title: string;
   date: Date;
-  type: 'task_due' | 'task_start' | 'goal_start' | 'goal_end' | 'phase_start' | 'phase_end' | 'sprint_start' | 'sprint_end';
+  type: 'task_due' | 'task_start' | 'goal_start' | 'goal_end' | 'phase_start' | 'phase_end' | 'sprint_start' | 'sprint_end' | 'plan';
   color: string;
   projectName?: string;
 };
@@ -17,12 +21,13 @@ type CalendarEvent = {
 const EVENT_COLORS: Record<CalendarEvent['type'], string> = {
   task_due: '#2383E2',
   task_start: '#2383E2',
-  goal_start: '#2383E2',
-  goal_end: '#2383E2',
-  phase_start: '#2383E2',
-  phase_end: '#2383E2',
-  sprint_start: '#2383E2',
-  sprint_end: '#2383E2'
+  goal_start: '#0F7B6C',
+  goal_end: '#0F7B6C',
+  phase_start: '#D9730D',
+  phase_end: '#D9730D',
+  sprint_start: '#9065B0',
+  sprint_end: '#9065B0',
+  plan: '#37352F'
 };
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -47,11 +52,14 @@ function isDraggableType(type: string) {
 }
 
 export function CalendarPage() {
-  const { apps, goals, tasks, phases, sprints, updateTask, updateGoal, updatePhase, updateSprint } = useApp();
+  const { apps, goals, tasks, phases, sprints, monthlyPlans, updateTask, updateGoal, updatePhase, updateSprint, addTask } = useApp();
+  const { showToast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverDay, setDragOverDay] = useState<number | null>(null);
+  const [quickAddText, setQuickAddText] = useState('');
+  const [quickAddSaving, setQuickAddSaving] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -80,8 +88,21 @@ export function CalendarPage() {
       if (s.startDate) evts.push({ id: `ss-${s.id}`, title: s.name, date: s.startDate, type: 'sprint_start', color: EVENT_COLORS.sprint_start, projectName: app?.name });
       if (s.endDate) evts.push({ id: `se-${s.id}`, title: s.name, date: s.endDate, type: 'sprint_end', color: EVENT_COLORS.sprint_end, projectName: app?.name });
     });
+    monthlyPlans.forEach(p => {
+      const m = /^(\d{4})-(\d{2})$/.exec(p.month || '');
+      if (!m) return;
+      const app = p.appId ? apps.find(a => a.id === p.appId) : null;
+      evts.push({
+        id: `pl-${p.id}`,
+        title: p.name || monthLabel(p.month),
+        date: new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1, 12, 0, 0, 0),
+        type: 'plan',
+        color: EVENT_COLORS.plan,
+        projectName: app?.name
+      });
+    });
     return evts;
-  }, [tasks, goals, phases, sprints, apps]);
+  }, [tasks, goals, phases, sprints, monthlyPlans, apps]);
 
   const eventsForDay = (day: number) => {
     const date = new Date(year, month, day);
@@ -152,12 +173,34 @@ export function CalendarPage() {
     }
   };
 
+  const handleQuickAddTask = async () => {
+    if (!selectedDay || !quickAddText.trim() || quickAddSaving) return;
+    setQuickAddSaving(true);
+    try {
+      const dueDate = new Date(selectedDay.getFullYear(), selectedDay.getMonth(), selectedDay.getDate(), 12, 0, 0, 0);
+      await addTask({
+        name: quickAddText.trim(),
+        description: '',
+        assignedTo: [],
+        status: 'not_started',
+        priority: 'medium',
+        dueDate
+      });
+      setQuickAddText('');
+      showToast({ type: 'success', title: 'Task added', message: `"${quickAddText.trim()}" due ${dueDate.toLocaleDateString()}` });
+    } catch (e: any) {
+      showToast({ type: 'error', title: 'Could not add task', message: e?.message || 'Unknown error' });
+    } finally {
+      setQuickAddSaving(false);
+    }
+  };
+
   return (
-    <div className="bg-[#FFFFFF] max-w-[900px] mx-auto p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="bg-[#FFFFFF] p-8" style={{ fontFamily: 'Inter, sans-serif' }}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Calendar</h1>
-          <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Cross-project timeline view</p>
+          <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Tasks, goals, phases, sprints and monthly plans appear automatically — click a day to add a task, drag end markers to reschedule</p>
         </div>
         <div className="flex items-center gap-1 bg-[#E9E9E7] rounded-md p-1">
           <button onClick={prevMonth} className="p-1.5 rounded-[6px] hover:bg-[#FFFFFF] transition-colors duration-150 cursor-pointer">
@@ -207,10 +250,14 @@ export function CalendarPage() {
                         onDragStart={(e) => handleDragStart(e, evt)}
                         onDragEnd={handleDragEnd}
                         onClick={(e) => { if (draggable) e.stopPropagation(); }}
-                        className={`flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded truncate bg-[#E8F0FE] text-[#2383E2] border border-[#E9E9E7] transition-colors duration-150 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isDragging ? 'opacity-50' : 'opacity-100'}`}
-                        style={{ fontFamily: 'Inter, sans-serif' }}
+                        className={`flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded truncate border border-[#E9E9E7] transition-colors duration-150 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+                        style={{ fontFamily: 'Inter, sans-serif', color: evt.color, backgroundColor: `${evt.color}14` }}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#2383E2] flex-shrink-0" />
+                        {evt.type === 'plan' ? (
+                          <NotebookText className="w-3 h-3 flex-shrink-0" style={{ color: evt.color }} />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: evt.color }} />
+                        )}
                         <span className="truncate">{evt.title}</span>
                       </div>
                     );
@@ -225,9 +272,31 @@ export function CalendarPage() {
 
       {selectedDay && (
         <div className="mt-6 bg-white border border-[#E9E9E7] rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-[#37352F] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>{selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3>
+          <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
+            <h3 className="text-sm font-semibold text-[#37352F]" style={{ fontFamily: 'Inter, sans-serif' }}>{selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h3>
+            <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
+              <input
+                type="text"
+                value={quickAddText}
+                onChange={(e) => setQuickAddText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleQuickAddTask(); } }}
+                placeholder="Add a task due this day..."
+                className="flex-1 px-3 py-1.5 bg-white border border-[#E0E0DE] rounded-[6px] text-[#37352F] text-sm placeholder:text-[#9B9A97] focus:outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] transition-colors duration-150"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              />
+              <button
+                onClick={handleQuickAddTask}
+                disabled={!quickAddText.trim() || quickAddSaving}
+                className="flex items-center gap-1 px-3 py-1.5 bg-[#2383E2] text-white text-sm font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {quickAddSaving ? 'Adding...' : 'Add Task'}
+              </button>
+            </div>
+          </div>
           {selectedEvents.length === 0 ? (
-            <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>No events on this day.</p>
+            <p className="text-sm text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>No events on this day. Add a task above, or drag an existing due date onto this day.</p>
           ) : (
             <div className="space-y-2">
               {selectedEvents.map(evt => {
@@ -241,7 +310,11 @@ export function CalendarPage() {
                     onDragEnd={handleDragEnd}
                     className={`flex items-center gap-3 p-3 bg-white border border-[#E9E9E7] rounded-lg hover:bg-[#F7F7F5] transition-colors duration-150 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} ${isDragging ? 'opacity-50' : 'opacity-100'}`}
                   >
-                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-[#2383E2]" />
+                    {evt.type === 'plan' ? (
+                      <NotebookText className="w-4 h-4 flex-shrink-0" style={{ color: evt.color }} />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: evt.color }} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[#37352F] truncate" style={{ fontFamily: 'Inter, sans-serif' }}>{evt.title}</p>
                       <p className="text-xs text-[#787774] capitalize" style={{ fontFamily: 'Inter, sans-serif' }}>{evt.type.replace(/_/g, ' ')}{evt.projectName ? ` · ${evt.projectName}` : ''}</p>
@@ -255,12 +328,19 @@ export function CalendarPage() {
       )}
 
       <div className="mt-4 flex flex-wrap gap-4">
-        {Object.entries(EVENT_COLORS).slice(0, 4).map(([type]) => (
-          <div key={type} className="flex items-center gap-2 text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <div className="w-2 h-2 rounded-full bg-[#2383E2]" />
-            {type.replace(/_/g, ' ')}
+        {[
+          { label: 'Task', color: EVENT_COLORS.task_due },
+          { label: 'Goal', color: EVENT_COLORS.goal_end },
+          { label: 'Phase', color: EVENT_COLORS.phase_end },
+          { label: 'Sprint', color: EVENT_COLORS.sprint_end },
+          { label: 'Monthly plan', color: EVENT_COLORS.plan }
+        ].map(item => (
+          <div key={item.label} className="flex items-center gap-2 text-xs text-[#787774]" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+            {item.label}
           </div>
         ))}
+        <span className="text-xs text-[#9B9A97]" style={{ fontFamily: 'Inter, sans-serif' }}>Drag task/goal/phase/sprint end markers to reschedule · Click a day to add a task</span>
       </div>
     </div>
   );

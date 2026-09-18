@@ -48,6 +48,7 @@ import {
   ModuleExpectation,
   AppDocument,
   Sprint,
+  MonthlyPlan,
   QaCycle,
   WorkDependency,
   WorkTemplate,
@@ -77,6 +78,7 @@ type AppContextType = {
   actionPoints: ActionPoint[];
   tags: Tag[];
   sprints: Sprint[];
+  monthlyPlans: MonthlyPlan[];
   qaCycles: QaCycle[];
   workDependencies: WorkDependency[];
   reports: AppReport[];
@@ -94,7 +96,7 @@ type AppContextType = {
   deleteGoal: (goalId: string) => Promise<void>;
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
-  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Task>) => Promise<boolean>;
   approveTask: (taskId: string, approverId: string) => Promise<void>;
   addSubtask: (subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateSubtask: (subtaskId: string, updates: Partial<Subtask>) => Promise<void>;
@@ -163,6 +165,11 @@ type AppContextType = {
   deleteSprint: (sprintId: string) => Promise<void>;
   getSprintsForApp: (appId: string) => Sprint[];
   getSprintById: (sprintId: string) => Sprint | undefined;
+  addMonthlyPlan: (plan: Omit<MonthlyPlan, 'id' | 'createdAt'>) => Promise<string>;
+  updateMonthlyPlan: (planId: string, updates: Partial<MonthlyPlan>) => Promise<void>;
+  deleteMonthlyPlan: (planId: string) => Promise<void>;
+  getMonthlyPlanById: (planId: string) => MonthlyPlan | undefined;
+  getMonthlyPlansForApp: (appId: string) => MonthlyPlan[];
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -375,6 +382,16 @@ function docToSprint(doc: any): Sprint {
   };
 }
 
+function docToMonthlyPlan(doc: any): MonthlyPlan {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    createdAt: safeDate(data.createdAt) || new Date(),
+    updatedAt: safeDate(data.updatedAt)
+  };
+}
+
 function docToQaCycle(doc: any): QaCycle {
   const data = doc.data();
   return {
@@ -467,6 +484,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [actionPoints, setActionPoints] = useState<ActionPoint[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [monthlyPlans, setMonthlyPlans] = useState<MonthlyPlan[]>([]);
   const [qaCycles, setQaCycles] = useState<QaCycle[]>([]);
   const [workDependencies, setWorkDependencies] = useState<WorkDependency[]>([]);
   const [workTemplates, setWorkTemplates] = useState<WorkTemplate[]>([]);
@@ -498,6 +516,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       { ref: query(collection(db, 'actionPoints'), orderBy('weekStart', 'desc')), setter: setActionPoints, transformer: docToActionPoint },
       { ref: query(collection(db, 'notifications'), orderBy('createdAt', 'desc')), setter: setNotifications, transformer: docToNotification },
       { ref: collection(db, 'sprints'), setter: setSprints, transformer: docToSprint },
+      { ref: collection(db, 'monthlyPlans'), setter: setMonthlyPlans, transformer: docToMonthlyPlan },
       { ref: query(collection(db, 'qaCycles'), orderBy('testedAt', 'desc')), setter: setQaCycles, transformer: docToQaCycle },
       { ref: collection(db, 'workDependencies'), setter: setWorkDependencies, transformer: docToWorkDependency },
       { ref: collection(db, 'workTemplates'), setter: setWorkTemplates, transformer: docToWorkTemplate },
@@ -1035,7 +1054,7 @@ const sendActionPointNotification = useCallback(async (apId: string) => {
 
 const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) => {
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task) return false;
 
     const statusChanged = !!updates.status && updates.status !== task.status;
 
@@ -1049,7 +1068,7 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
       });
       if (!allowed) {
         console.warn(`[Workflow] Task ${taskId} transition ${task.status} -> ${updates.status} blocked for current role.`);
-        return;
+        return false;
       }
       const doneStates = ['completed', 'approved'];
       if (doneStates.includes(updates.status)) {
@@ -1058,7 +1077,7 @@ const updateTask = useCallback(async (taskId: string, updates: Partial<Task>) =>
         );
         if (blockers.length > 0) {
           console.warn(`[Workflow] Task ${taskId} blocked by ${blockers.length} dependency(ies); cannot complete.`);
-          return;
+          return false;
         }
       }
     }
@@ -1154,6 +1173,7 @@ await createNotification(
         workType: task.workType || 'non-development'
       });
     }
+    return true;
   }, [tasks, employees, addActivity, createNotification, hasPermission, workDependencies, spawnRecurringNext]);
 
   const approveTask = useCallback(async (taskId: string, approverId: string) => {
@@ -1317,8 +1337,8 @@ await createNotification(
     if (obj instanceof Timestamp) return obj;
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (value !== undefined && value !== null) {
-        result[key] = sanitizeForFirestore(value);
+      if (value !== undefined) {
+        result[key] = value === null ? null : sanitizeForFirestore(value);
       }
     }
     return result;
@@ -1857,6 +1877,38 @@ await createNotification(
     return sprints.find(s => s.id === sprintId);
   }, [sprints]);
 
+  const addMonthlyPlan = useCallback(async (plan: Omit<MonthlyPlan, 'id' | 'createdAt'>) => {
+    const planId = `plan-${Date.now()}`;
+    await setDoc(doc(db, 'monthlyPlans', planId), sanitizeForFirestore({
+      ...plan,
+      id: planId,
+      createdAt: serverTimestamp()
+    }));
+    setMonthlyPlans(prev => [{ ...plan, id: planId, createdAt: new Date() } as MonthlyPlan, ...prev]);
+    return planId;
+  }, []);
+
+  const updateMonthlyPlan = useCallback(async (planId: string, updates: Partial<MonthlyPlan>) => {
+    await updateDoc(doc(db, 'monthlyPlans', planId), sanitizeForFirestore({
+      ...updates,
+      updatedAt: serverTimestamp()
+    }));
+    setMonthlyPlans(prev => prev.map(p => p.id === planId ? { ...p, ...updates, updatedAt: new Date() } : p));
+  }, []);
+
+  const deleteMonthlyPlan = useCallback(async (planId: string) => {
+    await deleteDoc(doc(db, 'monthlyPlans', planId));
+    setMonthlyPlans(prev => prev.filter(p => p.id !== planId));
+  }, []);
+
+  const getMonthlyPlanById = useCallback((planId: string) => {
+    return monthlyPlans.find(p => p.id === planId);
+  }, [monthlyPlans]);
+
+  const getMonthlyPlansForApp = useCallback((appId: string) => {
+    return monthlyPlans.filter(p => p.appId === appId);
+  }, [monthlyPlans]);
+
   const addQaCycle = useCallback(async (cycle: Omit<QaCycle, 'id' | 'createdAt' | 'cycleNumber'>) => {
     const cycleId = `qa-cycle-${Date.now()}`;
     const existing = qaCycles.filter(c => c.workKind === cycle.workKind && c.workId === cycle.workId);
@@ -2332,6 +2384,12 @@ await createNotification(
         deleteSprint,
         getSprintsForApp,
         getSprintById,
+        monthlyPlans,
+        addMonthlyPlan,
+        updateMonthlyPlan,
+        deleteMonthlyPlan,
+        getMonthlyPlanById,
+        getMonthlyPlansForApp,
         qaCycles,
         addQaCycle,
         getQaCyclesForWork,

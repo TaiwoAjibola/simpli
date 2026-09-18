@@ -227,7 +227,7 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] font-['Inter',sans-serif]">
-      <div className="max-w-[900px] mx-auto p-8">
+      <div className="p-8">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => onNavigate('portfolio')}

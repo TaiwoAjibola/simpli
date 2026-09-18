@@ -24,11 +24,19 @@ import { Sparkles, RefreshCw } from 'lucide-react';
 
 type Tab = 'analytics' | 'activities' | 'archive' | 'ai';
 
-export function InsightsPage() {
-  const { apps, goals, tasks, subtasks, employees, activities, defects, repositories } = useApp();
+type InsightsPageProps = {
+  initialTab?: Tab;
+  embedded?: boolean;
+  appId?: string;
+};
+
+export function InsightsPage({ initialTab = 'analytics', embedded = false, appId }: InsightsPageProps = {}) {
+  const { apps, goals, tasks, subtasks, employees, activities, defects, repositories, monthlyPlans } = useApp();
   const { currentUser, hasPermission } = useAuth();
-  const [tab, setTab] = useState<Tab>('analytics');
-  const [selectedAppId, setSelectedAppId] = useState<string>(apps[0]?.id || 'all');
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [internalAppId, setInternalAppId] = useState<string>(apps[0]?.id || 'all');
+  const selectedAppId = appId ?? internalAppId;
+  const setSelectedAppId = setInternalAppId;
 
   const canViewAll = hasPermission('view_all_apps');
 
@@ -65,24 +73,26 @@ export function InsightsPage() {
   ];
 
   return (
-    <div className="p-8 bg-[#FFFFFF] max-w-[900px] mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Insights</h1>
-          <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Performance, activity, and history in one place</p>
+    <div className={`${embedded ? 'p-4' : 'p-8'} bg-[#FFFFFF]`} style={{ fontFamily: 'Inter, sans-serif' }}>
+      {!embedded && (
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-[24px] font-semibold text-[#37352F] leading-none" style={{ fontFamily: 'Inter, sans-serif' }}>Insights</h1>
+            <p className="text-sm text-[#787774] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>Performance, activity, and history in one place</p>
+          </div>
+          <select
+            value={selectedAppId}
+            onChange={(e) => setSelectedAppId(e.target.value)}
+            className="px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] rounded-[6px] text-sm focus:outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] cursor-pointer transition-colors duration-150"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            <option value="all">All Apps</option>
+            {apps.map(app => (
+              <option key={app.id} value={app.id}>{app.name}</option>
+            ))}
+          </select>
         </div>
-        <select
-          value={selectedAppId}
-          onChange={(e) => setSelectedAppId(e.target.value)}
-          className="px-3 py-2 bg-white border border-[#E0E0DE] text-[#37352F] rounded-[6px] text-sm focus:outline-none focus:border-[#2383E2] focus:ring-1 focus:ring-[#2383E2] cursor-pointer transition-colors duration-150"
-          style={{ fontFamily: 'Inter, sans-serif' }}
-        >
-          <option value="all">All Apps</option>
-          {apps.map(app => (
-            <option key={app.id} value={app.id}>{app.name}</option>
-          ))}
-        </select>
-      </div>
+      )}
 
       <div className="flex items-center bg-[#E9E9E7] rounded-md p-1 w-fit mb-6">
         {tabs.map(t => {
@@ -130,6 +140,7 @@ export function InsightsPage() {
           repositories={repositories}
           employees={employees}
           activities={activities}
+          plans={monthlyPlans}
           selectedAppId={selectedAppId}
         />
       )}
@@ -137,7 +148,7 @@ export function InsightsPage() {
   );
 }
 
-function AiReportTab({ apps, goals, tasks, defects, repositories, employees, activities, selectedAppId }: {
+function AiReportTab({ apps, goals, tasks, defects, repositories, employees, activities, plans, selectedAppId }: {
   apps: any[];
   goals: any[];
   tasks: any[];
@@ -145,6 +156,7 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
   repositories: any[];
   employees: any[];
   activities: any[];
+  plans: any[];
   selectedAppId: string;
 }) {
   const [loading, setLoading] = useState(false);
@@ -157,7 +169,7 @@ function AiReportTab({ apps, goals, tasks, defects, repositories, employees, act
     setError(null);
     try {
       const snapshot = buildReportSnapshot({
-        apps, goals, tasks, defects, repositories, employees, activities, selectedAppId
+        apps, goals, tasks, defects, repositories, employees, activities, plans, selectedAppId
       });
       const res = await fetch('/api/report', {
         method: 'POST',
