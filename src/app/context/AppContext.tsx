@@ -917,8 +917,9 @@ const sendActionPointNotification = useCallback(async (apId: string) => {
 
   const addApp = useCallback(async (app: Omit<App, 'id' | 'createdAt'>) => {
     const appId = `app-${Date.now()}`;
+    const clean = Object.fromEntries(Object.entries(app).filter(([_, v]) => v !== undefined));
     await setDoc(doc(db, 'apps', appId), {
-      ...app,
+      ...clean,
       id: appId,
       createdAt: serverTimestamp()
     });
@@ -1817,7 +1818,8 @@ await createNotification(
   }, [tags]);
 
   const addClient = useCallback(async (client: Omit<Client, 'id' | 'createdAt'>) => {
-    await addDoc(collection(db, 'clients'), { ...client, createdAt: serverTimestamp() });
+    const clean = Object.fromEntries(Object.entries(client).filter(([_, v]) => v !== undefined));
+    await addDoc(collection(db, 'clients'), { ...clean, createdAt: serverTimestamp() });
   }, []);
 
   const updateClient = useCallback(async (clientId: string, updates: Partial<Client>) => {
