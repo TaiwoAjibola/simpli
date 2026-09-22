@@ -30,6 +30,7 @@ export function ProjectsPage({ onNavigate }: Props) {
       name: formName.trim(),
       description: formDesc.trim(),
       status: 'active',
+      currentStage: 'pre-development',
       createdBy: currentUser.id,
       clientId: formClientId || undefined,
       projectManagerId: formPmId || undefined,
