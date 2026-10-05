@@ -111,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasPermission = (permission: string): boolean => {
     if (!currentRole) return false;
+    if (currentRole.id === 'role-admin' || currentRole.name?.toLowerCase() === 'admin') return true;
     return currentRole.permissions.includes(permission as any);
   };
 
