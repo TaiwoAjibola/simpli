@@ -18,16 +18,31 @@ import {
   Edit2,
   Trash2,
   Mail,
-  GitPullRequest
+  GitPullRequest,
+  LayoutGrid,
+  List,
+  GripVertical
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { Defect, DefectSeverity, DefectStatus } from '../types';
 import { DefectDetailModal } from './DefectDetailModal';
 import { DefectCreateModal } from './DefectCreateModal';
 import { DefectBulkCreateModal } from './DefectBulkCreateModal';
+import { getWorkTargetStates } from '../../utils/workflow';
+
+const DEFECT_BOARD_STATUSES: DefectStatus[] = ['open', 'in_progress', 'pending_qa', 'resolved', 'closed', 'reopened'];
+
+const DEFECT_COLUMN_META: Record<DefectStatus, { label: string }> = {
+  open: { label: 'Open' },
+  in_progress: { label: 'In Progress' },
+  pending_qa: { label: 'Pending QA' },
+  resolved: { label: 'Resolved' },
+  closed: { label: 'Closed' },
+  reopened: { label: 'Reopened' }
+};
 
 export function DefectDashboard() {
-  const { apps, defects, employees, deleteDefect, sendDefectNotification } = useApp();
+  const { apps, defects, employees, deleteDefect, sendDefectNotification, updateDefect } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { showToast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -39,8 +54,39 @@ export function DefectDashboard() {
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'dashboard' | 'board'>('dashboard');
+  const [dragDefectId, setDragDefectId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<DefectStatus | null>(null);
+  const [dragValidTargets, setDragValidTargets] = useState<Set<DefectStatus>>(new Set());
 
   const appDefects = defects.filter(d => d.applicationId === selectedAppId);
+
+  const handleDefectDragStart = (defect: Defect) => {
+    const targets = getWorkTargetStates({
+      kind: 'defect',
+      currentStatus: defect.status,
+      workType: defect.workType || 'development',
+      can: hasPermission
+    });
+    setDragDefectId(defect.id);
+    setDragValidTargets(new Set<DefectStatus>([defect.status, ...targets]));
+  };
+
+  const handleDefectDrop = async (defect: Defect, targetStatus: DefectStatus) => {
+    setDragOverColumn(null);
+    setDragDefectId(null);
+    if (targetStatus === defect.status) return;
+    if (!dragValidTargets.has(targetStatus)) {
+      showToast({
+        type: 'error',
+        title: 'Move not allowed',
+        message: `"${defect.defectCode}" can't move from ${defect.status.replace(/_/g, ' ')} to ${targetStatus.replace(/_/g, ' ')} for your role.`
+      });
+      return;
+    }
+    await updateDefect(defect.id, { status: targetStatus }, currentUser?.id, currentUser?.name);
+    showToast({ type: 'success', title: 'Defect moved', message: `"${defect.defectCode}" → ${targetStatus.replace(/_/g, ' ')}` });
+  };
 
   const filteredDefects = useMemo(() => {
     return appDefects.filter(d => {
@@ -123,6 +169,24 @@ export function DefectDashboard() {
             <p className="text-[14px] text-[#787774] mt-1">Track bugs, issues, and QA observations</p>
           </div>
           <div className="flex items-center gap-2">
+            {selectedAppId && (
+              <div className="flex items-center bg-white border border-[#E9E9E7] rounded-[6px] p-0.5">
+                <button
+                  onClick={() => setViewMode('dashboard')}
+                  className={`px-3 py-1.5 text-[14px] font-medium rounded-[6px] transition-colors duration-150 flex items-center gap-1.5 ${viewMode === 'dashboard' ? 'bg-[#E9E9E7] text-[#37352F]' : 'text-[#787774] hover:bg-[#F7F7F5]'}`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => setViewMode('board')}
+                  className={`px-3 py-1.5 text-[14px] font-medium rounded-[6px] transition-colors duration-150 flex items-center gap-1.5 ${viewMode === 'board' ? 'bg-[#E9E9E7] text-[#37352F]' : 'text-[#787774] hover:bg-[#F7F7F5]'}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Board
+                </button>
+              </div>
+            )}
             <select
               value={selectedAppId}
               onChange={(e) => setSelectedAppId(e.target.value)}
@@ -160,7 +224,82 @@ export function DefectDashboard() {
           </div>
         )}
 
-        {selectedAppId && (
+        {selectedAppId && viewMode === 'board' && (
+          <div className="flex gap-4 items-start pb-4 overflow-x-auto">
+            {DEFECT_BOARD_STATUSES.map((status) => {
+              const colDefects = appDefects.filter(d => d.status === status);
+              const meta = DEFECT_COLUMN_META[status];
+              const isValidTarget = !!dragDefectId && dragValidTargets.has(status);
+              const isInvalidTarget = !!dragDefectId && !dragValidTargets.has(status);
+              const isOver = dragOverColumn === status;
+              return (
+                <div
+                  key={status}
+                  onDragOver={(e) => {
+                    if (!dragDefectId) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = isValidTarget ? 'move' : 'none';
+                    if (dragOverColumn !== status) setDragOverColumn(status);
+                  }}
+                  onDragLeave={() => setDragOverColumn(prev => (prev === status ? null : prev))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const def = appDefects.find(d => d.id === dragDefectId);
+                    if (def) handleDefectDrop(def, status);
+                  }}
+                  className={`bg-[#F7F7F5] border rounded-[8px] p-3 flex flex-col w-[280px] flex-shrink-0 transition-colors duration-150 ${isOver && isValidTarget ? 'border-[#2383E2] bg-[#E8F0FE]' : 'border-[#E9E9E7]'} ${isInvalidTarget ? 'opacity-40' : ''}`}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`w-2 h-2 rounded-full ${statusBarColor[status]}`} />
+                    <h3 className="font-semibold text-[#37352F] capitalize text-[12px] tracking-wide">{meta.label}</h3>
+                    <span className="text-[12px] text-[#787774] font-normal ml-auto bg-white border border-[#E9E9E7] rounded-full px-2 py-0.5">{colDefects.length}</span>
+                  </div>
+                  <div className="space-y-2 min-h-[60px]">
+                    {colDefects.map(defect => {
+                      const isDragging = dragDefectId === defect.id;
+                      return (
+                        <div
+                          key={defect.id}
+                          draggable
+                          onDragStart={(e) => {
+                            handleDefectDragStart(defect);
+                            e.dataTransfer.effectAllowed = 'move';
+                            try { e.dataTransfer.setData('text/plain', defect.id); } catch {}
+                          }}
+                          onDragEnd={() => { setDragDefectId(null); setDragOverColumn(null); }}
+                          onClick={() => setSelectedDefect(defect)}
+                          className={`bg-white border border-[#E9E9E7] rounded-[8px] p-3 cursor-grab active:cursor-grabbing hover:bg-[#F7F7F5] transition-colors duration-150 group ${isDragging ? 'opacity-40' : ''}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[14px] font-medium text-[#37352F] leading-snug">{defect.title}</p>
+                              <p className="text-[12px] text-[#787774] mt-0.5 truncate">{defect.defectCode} · {defect.module}</p>
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <span className={`text-[11px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${defect.severity === 'blocker' ? 'bg-[#FBE9E9] text-[#EB5757] border-[#EB5757]/20' : 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${defect.severity === 'blocker' ? 'bg-[#EB5757]' : defect.severity === 'critical' ? 'bg-[#37352F]' : 'bg-[#9B9A97]'}`} />
+                                  {defect.severity}
+                                </span>
+                                {defect.fixVerified && <CheckCircle className="w-3.5 h-3.5 text-[#0F7B6C]" />}
+                              </div>
+                            </div>
+                            <GripVertical className="w-3.5 h-3.5 text-[#9B9A97] flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {colDefects.length === 0 && (
+                      <div className={`text-[12px] text-[#9B9A97] text-center py-4 border-2 border-dashed rounded-[8px] transition-colors duration-150 ${isOver && isValidTarget ? 'border-[#2383E2] text-[#2383E2]' : 'border-transparent'}`}>
+                        {dragDefectId && isValidTarget ? 'Drop here' : 'No defects'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedAppId && viewMode === 'dashboard' && (
           <>
             <div className="grid grid-cols-4 gap-4 mb-6">
               <div className="bg-white border border-[#E9E9E7] rounded-[8px] p-4">

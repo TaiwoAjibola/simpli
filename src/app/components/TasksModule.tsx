@@ -8,6 +8,7 @@ import {
   Clock,
   AlertCircle,
   XCircle,
+  Bug,
   Star,
   User,
   Check,
@@ -30,8 +31,9 @@ import {
   NotebookText
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Task, TaskStatus, Subtask, SubtaskStatus } from '../types';
+import { Task, TaskStatus, Subtask, SubtaskStatus, Defect, DefectStatus } from '../types';
 import { TaskDetailModal } from './TaskDetailModal';
+import { DefectDetailModal } from './DefectDetailModal';
 import { TaskTimeline } from './TaskTimeline';
 import { TagBadges } from './TagBadges';
 import { getWorkTargetStates } from '../../utils/workflow';
@@ -46,6 +48,17 @@ const KANBAN_COLUMN_META: Record<TaskStatus, { label: string; dot: string }> = {
   pending_qa: { label: 'Pending QA', dot: 'bg-[#787774]' },
   completed: { label: 'Completed', dot: 'bg-[#0F7B6C]' },
   approved: { label: 'Approved', dot: 'bg-[#0F7B6C]' }
+};
+
+const DEFECT_BOARD_STATUSES: DefectStatus[] = ['open', 'in_progress', 'pending_qa', 'resolved', 'closed', 'reopened'];
+
+const DEFECT_COLUMN_META: Record<DefectStatus, { label: string; dot: string }> = {
+  open: { label: 'Open', dot: 'bg-[#787774]' },
+  in_progress: { label: 'In Progress', dot: 'bg-[#37352F]' },
+  pending_qa: { label: 'Pending QA', dot: 'bg-[#9B9A97]' },
+  resolved: { label: 'Resolved', dot: 'bg-[#0F7B6C]' },
+  closed: { label: 'Closed', dot: 'bg-[#2383E2]' },
+  reopened: { label: 'Reopened', dot: 'bg-[#EB5757]' }
 };
 
 function availableTaskStatuses(task: Task, can: (permission: string) => boolean): TaskStatus[] {
@@ -83,7 +96,9 @@ export function TasksModule() {
     tags,
     getTagsForApp,
     monthlyPlans,
-    getMonthlyPlanById
+    getMonthlyPlanById,
+    defects,
+    updateDefect
   } = useApp();
 
   const canAssignTasks = hasPermission('assign_tasks');
@@ -97,6 +112,11 @@ export function TasksModule() {
   const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'timeline'>('list');
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<TaskStatus | null>(null);
+  const [showDefects, setShowDefects] = useState(false);
+  const [selectedDefect, setSelectedDefect] = useState<Defect | null>(null);
+  const [dragDefectId, setDragDefectId] = useState<string | null>(null);
+  const [dragOverDefectColumn, setDragOverDefectColumn] = useState<DefectStatus | null>(null);
+  const [dragDefectValidTargets, setDragDefectValidTargets] = useState<Set<DefectStatus>>(new Set());
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -197,6 +217,33 @@ export function TasksModule() {
         message: `"${task.name}" is blocked by a dependency or workflow rule.`
       });
     }
+  };
+
+  const handleDefectDragStart = (defect: Defect) => {
+    const targets = getWorkTargetStates({
+      kind: 'defect',
+      currentStatus: defect.status,
+      workType: defect.workType || 'development',
+      can: hasPermission
+    });
+    setDragDefectId(defect.id);
+    setDragDefectValidTargets(new Set<DefectStatus>([defect.status, ...targets]));
+  };
+
+  const handleDefectDrop = async (defect: Defect, targetStatus: DefectStatus) => {
+    setDragOverDefectColumn(null);
+    setDragDefectId(null);
+    if (targetStatus === defect.status) return;
+    if (!dragDefectValidTargets.has(targetStatus)) {
+      showToast({
+        type: 'error',
+        title: 'Move not allowed',
+        message: `"${defect.defectCode}" can't move from ${defect.status.replace(/_/g, ' ')} to ${targetStatus.replace(/_/g, ' ')} for your role.`
+      });
+      return;
+    }
+    await updateDefect(defect.id, { status: targetStatus }, currentUser?.id, currentUser?.name);
+    showToast({ type: 'success', title: 'Defect moved', message: `"${defect.defectCode}" → ${targetStatus.replace(/_/g, ' ')}` });
   };
 
   const dragTask = dragTaskId ? tasks.find(t => t.id === dragTaskId) : null;
@@ -439,6 +486,15 @@ export function TasksModule() {
                 <CalendarRange className="w-4 h-4" /> Timeline
               </button>
             </div>
+            <button
+              onClick={() => setShowDefects(!showDefects)}
+              disabled={viewMode !== 'kanban'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[14px] font-medium rounded-[6px] border transition-colors duration-150 disabled:opacity-40 ${showDefects ? 'bg-[#FBE9E9] text-[#EB5757] border-[#EB5757]/20' : 'bg-white text-[#787774] border-[#E9E9E7] hover:bg-[#F7F7F5]'}`}
+              title={viewMode !== 'kanban' ? 'Available in Board view' : 'Toggle defects on board'}
+            >
+              <Bug className="w-4 h-4" />
+              {showDefects ? 'Hide Defects' : 'Show Defects'}
+            </button>
             {canAssignTasks && (
               <button
                 onClick={() => {
@@ -1143,7 +1199,8 @@ export function TasksModule() {
             ))}
           </div>
         ) : viewMode === 'kanban' ? (
-          <div className={`flex gap-4 items-start pb-4 ${filterStatus === 'all' ? 'overflow-x-auto' : ''}`}>
+          <>
+            <div className={`flex gap-4 items-start pb-4 ${filterStatus === 'all' ? 'overflow-x-auto' : ''}`}>
             {KANBAN_STATUSES
               .filter(status => filterStatus === 'all' || filterStatus === status)
               .map((status) => {
@@ -1257,6 +1314,89 @@ export function TasksModule() {
               );
             })}
           </div>
+          {showDefects && (
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <Bug className="w-4 h-4 text-[#EB5757]" />
+                <h3 className="font-semibold text-[#37352F] text-[14px]">Defects</h3>
+                <span className="text-[12px] text-[#787774]">{defects.length}</span>
+              </div>
+              <div className="flex gap-4 items-start pb-4 overflow-x-auto">
+                {DEFECT_BOARD_STATUSES.map((status) => {
+                  const draggedDefect = dragDefectId ? defects.find(d => d.id === dragDefectId) : null;
+                  const colDefects = defects.filter(d => d.status === status);
+                  const meta = DEFECT_COLUMN_META[status];
+                  const isValidTarget = !!draggedDefect && draggedDefect.status !== status && dragDefectValidTargets.has(status);
+                  const isInvalidTarget = !!draggedDefect && draggedDefect.status !== status && !dragDefectValidTargets.has(status);
+                  const isOver = dragOverDefectColumn === status;
+                  return (
+                    <div
+                      key={status}
+                      onDragOver={(e) => {
+                        if (!dragDefectId) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = isValidTarget ? 'move' : 'none';
+                        if (dragOverDefectColumn !== status) setDragOverDefectColumn(status);
+                      }}
+                      onDragLeave={() => setDragOverDefectColumn(prev => (prev === status ? null : prev))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const def = defects.find(d => d.id === dragDefectId);
+                        if (def) handleDefectDrop(def, status);
+                      }}
+                      className={`bg-[#F7F7F5] border rounded-[8px] p-3 flex flex-col transition-colors duration-150 w-[280px] flex-shrink-0 ${isOver && isValidTarget ? 'border-[#2383E2] bg-[#E8F0FE]' : 'border-[#E9E9E7]'} ${isInvalidTarget ? 'opacity-40' : ''}`}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`w-2 h-2 rounded-full ${meta.dot}`} />
+                        <h3 className="font-semibold text-[#37352F] capitalize text-[12px] tracking-wide">{meta.label}</h3>
+                        <span className="text-[12px] text-[#787774] font-normal ml-auto bg-white border border-[#E9E9E7] rounded-full px-2 py-0.5">{colDefects.length}</span>
+                      </div>
+                      <div className="space-y-2 min-h-[60px]">
+                        {colDefects.map(defect => {
+                          const isDragging = dragDefectId === defect.id;
+                          return (
+                            <div
+                              key={defect.id}
+                              draggable
+                              onDragStart={(e) => {
+                                handleDefectDragStart(defect);
+                                e.dataTransfer.effectAllowed = 'move';
+                                try { e.dataTransfer.setData('text/plain', defect.id); } catch {}
+                              }}
+                              onDragEnd={() => { setDragDefectId(null); setDragOverDefectColumn(null); }}
+                              onClick={() => setSelectedDefect(defect)}
+                              className={`bg-white border border-[#E9E9E7] rounded-[8px] p-3 cursor-grab active:cursor-grabbing hover:bg-[#F7F7F5] transition-colors duration-150 group ${isDragging ? 'opacity-40' : ''}`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[14px] font-medium text-[#37352F] leading-snug">{defect.title}</p>
+                                  <p className="text-[12px] text-[#787774] mt-0.5 truncate">{defect.defectCode} · {defect.module}</p>
+                                  <div className="flex items-center gap-1.5 mt-2">
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${defect.severity === 'blocker' ? 'bg-[#FBE9E9] text-[#EB5757] border-[#EB5757]/20' : 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${defect.severity === 'blocker' ? 'bg-[#EB5757]' : defect.severity === 'critical' ? 'bg-[#37352F]' : 'bg-[#9B9A97]'}`} />
+                                      {defect.severity}
+                                    </span>
+                                    {defect.fixVerified && <CheckCircle className="w-3.5 h-3.5 text-[#0F7B6C]" />}
+                                  </div>
+                                </div>
+                                <GripVertical className="w-3.5 h-3.5 text-[#9B9A97] flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {colDefects.length === 0 && (
+                          <div className={`text-[12px] text-[#9B9A97] text-center py-4 border-2 border-dashed rounded-[8px] transition-colors duration-150 ${isOver && isValidTarget ? 'border-[#2383E2] text-[#2383E2]' : 'border-transparent'}`}>
+                            {dragDefectId && isValidTarget ? 'Drop here' : 'No defects'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          </> 
         ) : (
           <TaskTimeline
             tasks={filteredTasks}
@@ -1280,6 +1420,12 @@ export function TasksModule() {
           <TaskDetailModal
             task={selectedTask}
             onClose={() => setSelectedTask(null)}
+          />
+        )}
+        {selectedDefect && (
+          <DefectDetailModal
+            defect={selectedDefect}
+            onClose={() => setSelectedDefect(null)}
           />
         )}
       </div>
