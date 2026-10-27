@@ -82,18 +82,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
   const [overviewEditing, setOverviewEditing] = useState(false);
   const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '', budgetAmount: '', budgetCurrency: 'USD', budgetNotes: '' });
   const [overviewSaving, setOverviewSaving] = useState(false);
-  const [execSummary, setExecSummary] = useState(app.executiveSummary || '');
+  const app = apps.find(a => a.id === appId);
+  const [execSummary, setExecSummary] = useState(app?.executiveSummary || '');
   const [execSaving, setExecSaving] = useState(false);
 
   useEffect(() => {
-    setExecSummary(app.executiveSummary || '');
+    setExecSummary(app?.executiveSummary || '');
   }, [appId]);
   const [teamSelectId, setTeamSelectId] = useState('');
   const [extraTeamIds, setExtraTeamIds] = useState<string[]>([]);
   const [clientLinkId, setClientLinkId] = useState('');
   const [clientLinkSaving, setClientLinkSaving] = useState(false);
 
-  const app = apps.find(a => a.id === appId);
   const appPhases = phases.filter(p => p.appId === appId);
   const appGoals = goals.filter(g => g.appId === appId);
   const appGoalIds = new Set(appGoals.map(g => g.id));
