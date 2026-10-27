@@ -60,7 +60,7 @@ export function ExecutiveAppDashboard({ appId, onNavigate }: { appId: string; on
               <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-[#37352F]">{app.name}</h1>
               <span className={`text-[12px] font-medium px-2.5 py-1 rounded-full border ${statusColor[app.status] || 'bg-[#F7F7F5] text-[#787774] border-[#E9E9E7]'}`}>{app.status}</span>
             </div>
-            <p className="text-[14px] text-[#787774] mt-1 capitalize">{app.currentStage.replace('_', ' ')} stage</p>
+            <p className="text-[14px] text-[#787774] mt-1 capitalize">{(app.currentStage || 'pre-development').replace('_', ' ')} stage</p>
             <div className="flex items-center gap-3 mt-2 text-[13px] text-[#787774] flex-wrap">
               {client && <span className="inline-flex items-center gap-1"><Building className="w-3.5 h-3.5" />{client.name}</span>}
               {pm && <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" />{pm.name}</span>}
@@ -120,7 +120,7 @@ export function ExecutiveAppDashboard({ appId, onNavigate }: { appId: string; on
                       <span className="text-[#37352F] truncate pr-3">{phase.name}</span>
                       <span className={`text-[11px] px-2 py-0.5 rounded-full bg-white border border-[#E9E9E7] capitalize ${pc}`}>
                         <span className={`inline-block w-1.5 h-1.5 rounded-full ${pc.split(' ')[0]} mr-1.5`} />
-                        {phase.status.replace('_', ' ')}
+                        {(phase.status || 'planned').replace('_', ' ')}
                       </span>
                     </div>
                   );
