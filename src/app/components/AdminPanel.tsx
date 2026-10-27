@@ -390,7 +390,9 @@ function RolesTab() {
     'manage_templates',
     'manage_automations',
     'manage_workflow',
-    'view_portfolio'
+    'view_portfolio',
+    'view_executive_summary',
+    'edit_executive_summary'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {

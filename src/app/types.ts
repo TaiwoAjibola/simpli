@@ -87,7 +87,9 @@ export type Permission =
   | 'manage_templates'
   | 'manage_automations'
   | 'manage_workflow'
-  | 'view_portfolio';
+  | 'view_portfolio'
+  | 'view_executive_summary'
+  | 'edit_executive_summary';
 
 export type Employee = {
   id: string;
@@ -158,6 +160,9 @@ export type App = {
   budgetAmount?: number;
   budgetCurrency?: string;
   budgetNotes?: string;
+  executiveSummary?: string;
+  executiveSummaryUpdatedAt?: Date;
+  executiveSummaryUpdatedBy?: string;
 };
 
 export type AppDocument = {

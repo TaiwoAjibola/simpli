@@ -34,7 +34,8 @@ import {
   Search,
   Building,
   Mail,
-  Phone
+  Phone,
+  Gauge
 } from 'lucide-react';
 import { Phase } from '../types';
 import { EngineeringDocsSection } from './EngineeringDocsSection';
@@ -75,12 +76,18 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
     deploymentTarget: ''
   });
   const [planningNotesText, setPlanningNotesText] = useState('');
-  const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Team' | 'Client' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity'>('Overview');
+  const [activeProfileTab, setActiveProfileTab] = useState<'Overview' | 'Team' | 'Client' | 'Phases' | 'Tasks' | 'Milestones' | 'Defects' | 'Calendar' | 'Documents' | 'GitHub' | 'Sprints' | 'Activity' | 'Executive'>('Overview');
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
   const [activityFilter, setActivityFilter] = useState<'all' | 'task' | 'app' | 'goal'>('all');
   const [overviewEditing, setOverviewEditing] = useState(false);
   const [overviewForm, setOverviewForm] = useState({ clientId: '', projectManagerId: '', techStack: '', projectType: '', expectedCompletionDate: '', budgetAmount: '', budgetCurrency: 'USD', budgetNotes: '' });
   const [overviewSaving, setOverviewSaving] = useState(false);
+  const [execSummary, setExecSummary] = useState(app.executiveSummary || '');
+  const [execSaving, setExecSaving] = useState(false);
+
+  useEffect(() => {
+    setExecSummary(app.executiveSummary || '');
+  }, [appId]);
   const [teamSelectId, setTeamSelectId] = useState('');
   const [extraTeamIds, setExtraTeamIds] = useState<string[]>([]);
   const [clientLinkId, setClientLinkId] = useState('');
@@ -257,7 +264,8 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
             { key: 'Documents', icon: Folder },
             { key: 'GitHub', icon: GitBranch },
             { key: 'Sprints', icon: Layers },
-            { key: 'Activity', icon: MessageCircle }
+            { key: 'Activity', icon: MessageCircle },
+            { key: 'Executive', icon: Gauge }
           ] as const).map(({ key, icon: Icon }) => (
             <button
               key={key}
@@ -1800,6 +1808,74 @@ export function AppDetailsPage({ appId, onNavigate }: AppDetailsPageProps) {
                 addReport={addReport}
                 deleteReport={deleteReport}
               />
+            </div>
+          </div>
+          );
+        })()}
+
+        {activeProfileTab === 'Executive' && (() => {
+          const canEdit = hasPermission('edit_executive_summary');
+          const fmtExecDate = (d: any): Date | undefined => {
+            if (!d) return undefined;
+            const dt = d instanceof Date ? d : (typeof d.toDate === 'function' ? d.toDate() : new Date(d));
+            return isNaN(dt.getTime()) ? undefined : dt;
+          };
+          const updatedAt = fmtExecDate(app.executiveSummaryUpdatedAt);
+          return (
+          <div className="space-y-6">
+            <div className="p-6 bg-white border border-[#E9E9E7] rounded-[8px]">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[15px] font-semibold text-[#37352F]">Executive Summary</h3>
+                {!canEdit && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#F7F7F5] border border-[#E9E9E7] text-[#787774] font-medium">Read only</span>
+                )}
+              </div>
+              {canEdit ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={execSummary}
+                    onChange={(e) => setExecSummary(e.target.value)}
+                    rows={8}
+                    placeholder="Summarize this application for executives: progress, key wins, risks, and what's next…"
+                    className="w-full px-3 py-2 bg-white border border-[#E0E0DE] rounded-[6px] text-[14px] text-[#37352F] placeholder:text-[#9B9A97] focus:border-[#2383E2] focus:outline-none focus:ring-1 focus:ring-[#2383E2] resize-y"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={execSaving}
+                      onClick={async () => {
+                        setExecSaving(true);
+                        await updateApp(appId, {
+                          executiveSummary: execSummary.trim(),
+                          executiveSummaryUpdatedAt: new Date(),
+                          executiveSummaryUpdatedBy: currentUser?.name || currentUser?.email || 'Unknown'
+                        });
+                        setExecSaving(false);
+                      }}
+                      className="px-4 py-2 bg-[#2383E2] text-white text-[14px] font-medium rounded-[6px] hover:bg-[#1A6FC0] disabled:opacity-50 transition-colors duration-150"
+                    >
+                      {execSaving ? 'Saving…' : 'Save Summary'}
+                    </button>
+                    {updatedAt && (
+                      <span className="text-[12px] text-[#787774]">
+                        Last updated {formatDate(updatedAt)}{app.executiveSummaryUpdatedBy ? ` by ${app.executiveSummaryUpdatedBy}` : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {app.executiveSummary ? (
+                    <p className="text-[14px] text-[#37352F] leading-relaxed whitespace-pre-wrap">{app.executiveSummary}</p>
+                  ) : (
+                    <p className="text-[14px] text-[#9B9A97]">No executive summary has been provided yet.</p>
+                  )}
+                  {updatedAt && (
+                    <p className="text-[12px] text-[#787774] mt-3">
+                      Last updated {formatDate(updatedAt)}{app.executiveSummaryUpdatedBy ? ` by ${app.executiveSummaryUpdatedBy}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           );

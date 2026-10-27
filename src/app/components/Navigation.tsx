@@ -19,7 +19,8 @@ import {
   ScrollText,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Gauge
 } from 'lucide-react';
 import { NotificationInbox } from './NotificationInbox';
 
@@ -46,7 +47,8 @@ export function Navigation({ currentPage, onNavigate }: NavigationProps) {
     { id: 'milestones', label: 'Milestones', icon: Target, show: true },
     { id: 'reports', label: 'Reports', icon: BarChart3, show: true },
     { id: 'admin', label: 'Settings / Administration', icon: Clock, show: true },
-    { id: 'logs', label: 'System Logs', icon: ScrollText, show: true }
+    { id: 'logs', label: 'System Logs', icon: ScrollText, show: true },
+    { id: 'executive', label: 'Executive View', icon: Gauge, show: hasPermission('view_executive_summary') }
   ];
 
   const handleNavClick = (page: string) => {

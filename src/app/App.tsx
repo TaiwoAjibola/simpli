@@ -23,9 +23,12 @@ const MyWork = lazy(() => import('./components/MyWork').then(m => ({ default: m.
 const DefectDashboard = lazy(() => import('./components/DefectDashboard').then(m => ({ default: m.DefectDashboard })));
 const ActionPointsPage = lazy(() => import('./components/ActionPointsPage').then(m => ({ default: m.ActionPointsPage })));
 const LogsPage = lazy(() => import('./components/LogsPage').then(m => ({ default: m.LogsPage })));
+const ExecutiveOverviewPage = lazy(() => import('./components/ExecutiveOverviewPage').then(m => ({ default: m.ExecutiveOverviewPage })));
+const ExecutiveAppDashboard = lazy(() => import('./components/ExecutiveAppDashboard').then(m => ({ default: m.ExecutiveAppDashboard })));
+const ExecutiveShell = lazy(() => import('./components/ExecutiveShell').then(m => ({ default: m.ExecutiveShell })));
 
 function AppContent() {
-  const { currentUser, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading, hasPermission } = useAuth();
   const { loading: appLoading } = useApp();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedAppId, setSelectedAppId] = useState<string>('');
@@ -41,6 +44,16 @@ function AppContent() {
 
   if (!currentUser) {
     return <LoginPage />;
+  }
+
+  const isExecutiveOnly = hasPermission('view_executive_summary') && !hasPermission('view_all_apps');
+
+  if (isExecutiveOnly) {
+    return (
+      <Suspense fallback={<PageLoader message="Loading..." />}>
+        <ExecutiveShell />
+      </Suspense>
+    );
   }
 
   return (
@@ -65,6 +78,8 @@ function AppContent() {
             {currentPage === 'notifications' && <NotificationsPage />}
             {currentPage === 'admin' && <AdminPanel />}
             {currentPage === 'logs' && <LogsPage />}
+            {currentPage === 'executive' && <ExecutiveOverviewPage onNavigate={handleNavigate} />}
+            {currentPage === 'executive-app' && <ExecutiveAppDashboard appId={selectedAppId} onNavigate={handleNavigate} />}
           </div>
         </Suspense>
       </main>

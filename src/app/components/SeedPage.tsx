@@ -18,17 +18,17 @@ const roles = [
   {
     id: 'role-admin',
     name: 'Admin',
-    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules', 'manage_documents', 'develop_work', 'review_code', 'merge_code', 'run_qa', 'manage_repositories', 'manage_sprints', 'manage_templates', 'manage_automations', 'manage_workflow', 'view_portfolio']
+    permissions: ['create_app', 'create_goal', 'assign_tasks', 'manage_users', 'configure_notifications', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'handle_defects', 'verify_defects', 'manage_action_points', 'manage_modules', 'manage_documents', 'develop_work', 'review_code', 'merge_code', 'run_qa', 'manage_repositories', 'manage_sprints', 'manage_templates', 'manage_automations', 'manage_workflow', 'view_portfolio', 'view_executive_summary', 'edit_executive_summary']
   },
   {
     id: 'role-ceo',
     name: 'CEO',
-    permissions: ['create_app', 'create_goal', 'approve_tasks', 'view_all_apps', 'report_defects', 'view_portfolio']
+    permissions: ['create_app', 'create_goal', 'approve_tasks', 'view_all_apps', 'report_defects', 'view_portfolio', 'view_executive_summary']
   },
   {
     id: 'role-manager',
     name: 'Manager',
-    permissions: ['create_goal', 'assign_tasks', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'verify_defects', 'manage_sprints', 'manage_templates', 'manage_workflow', 'view_portfolio']
+    permissions: ['create_goal', 'assign_tasks', 'approve_tasks', 'view_all_apps', 'report_defects', 'manage_defects', 'verify_defects', 'manage_sprints', 'manage_templates', 'manage_workflow', 'view_portfolio', 'view_executive_summary', 'edit_executive_summary']
   },
   {
     id: 'role-developer',
@@ -49,6 +49,11 @@ const roles = [
     id: 'role-employee',
     name: 'Employee',
     permissions: ['view_assigned_only', 'report_defects']
+  },
+  {
+    id: 'role-executive',
+    name: 'Executive',
+    permissions: ['view_executive_summary']
   }
 ];
 
